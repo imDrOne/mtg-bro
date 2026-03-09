@@ -17,7 +17,7 @@ class CollectionImportController(
 ) {
 
     @PostMapping("/import/tcgplayer", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun importFromTcgPlayer(@RequestParam("file") file: MultipartFile): ImportResultResponse {
+    suspend fun importFromTcgPlayer(@RequestParam("file") file: MultipartFile): ImportResultResponse {
         val content = file.inputStream.bufferedReader().readText()
         val result = tcgPlayerImportService.import(content)
 

@@ -17,6 +17,7 @@ class CollectionEntrySqlMapper {
         CollectionEntriesTable.batchUpsert(
             records,
             keys = arrayOf(CollectionEntriesTable.cardId),
+            onUpdateExclude = listOf(CollectionEntriesTable.createdAt),
             shouldReturnGeneratedValues = false,
         ) { record ->
             this[CollectionEntriesTable.cardId] = record.cardId
