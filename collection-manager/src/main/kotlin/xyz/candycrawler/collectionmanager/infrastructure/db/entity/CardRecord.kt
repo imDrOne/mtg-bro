@@ -1,0 +1,40 @@
+package xyz.candycrawler.collectionmanager.infrastructure.db.entity
+
+import java.time.LocalDate
+import java.util.UUID
+
+data class CardRecord(
+    val id: Long?,
+    val scryfallId: UUID,
+    val oracleId: UUID,
+    val name: String,
+    val lang: String,
+    val layout: String,
+    val manaCost: String?,
+    val cmc: Double,
+    val typeLine: String,
+    val oracleText: String?,
+    val colors: List<String>,
+    val colorIdentity: List<String>,
+    val keywords: List<String>,
+    val power: String?,
+    val toughness: String?,
+    val loyalty: String?,
+    val setCode: String,
+    val setName: String,
+    val collectorNumber: String,
+    val rarity: String,
+    val releasedAt: LocalDate?,
+    val imageUriSmall: String?,
+    val imageUriNormal: String?,
+    val imageUriLarge: String?,
+    val imageUriPng: String?,
+    val imageUriArtCrop: String?,
+    val imageUriBorderCrop: String?,
+    val priceUsd: String?,
+    val priceUsdFoil: String?,
+    val priceEur: String?,
+    val priceEurFoil: String?,
+    val flavorText: String?,
+    val artist: String?,
+)
