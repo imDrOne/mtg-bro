@@ -23,7 +23,7 @@ class CollectionEntrySqlMapperTest(
     fun `upsertBatch persists all fields correctly`() {
         val cardId = insertCard(setCode = "dsk", collectorNumber = "10")
 
-        val record = CollectionEntryRecord(id = null, cardId = cardId, quantity = 3, createdAt = null, updatedAt = null)
+        val record = CollectionEntryRecord(id = null, cardId = cardId, quantity = 3, foil = false, createdAt = null, updatedAt = null)
         sqlMapper.upsertBatch(listOf(record))
 
         val result = sqlMapper.selectByCardId(cardId)
@@ -42,9 +42,9 @@ class CollectionEntrySqlMapperTest(
         val cardId3 = insertCard(setCode = "dsk", collectorNumber = "22")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 2, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId3, quantity = 4, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 2, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, cardId = cardId3, quantity = 4, foil = false, createdAt = null, updatedAt = null),
         ))
 
         val all = sqlMapper.selectAll()
@@ -57,10 +57,10 @@ class CollectionEntrySqlMapperTest(
         val cardId = insertCard(setCode = "dsk", collectorNumber = "30")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
         ))
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 5, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, cardId = cardId, quantity = 5, foil = false, createdAt = null, updatedAt = null)
         ))
 
         val result = sqlMapper.selectByCardId(cardId)
@@ -73,14 +73,14 @@ class CollectionEntrySqlMapperTest(
         val cardId = insertCard(setCode = "dsk", collectorNumber = "40")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 1, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, cardId = cardId, quantity = 1, foil = false, createdAt = null, updatedAt = null)
         ))
         val firstCreatedAt = sqlMapper.selectByCardId(cardId)!!.createdAt
 
         Thread.sleep(10)
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
         ))
         val secondCreatedAt = sqlMapper.selectByCardId(cardId)!!.createdAt
 
@@ -100,8 +100,8 @@ class CollectionEntrySqlMapperTest(
         val cardId2 = insertCard(setCode = "ecl", collectorNumber = "51")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 3, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 3, foil = false, createdAt = null, updatedAt = null),
         ))
 
         val all = sqlMapper.selectAll()

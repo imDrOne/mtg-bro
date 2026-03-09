@@ -24,7 +24,7 @@ class CollectionPersistenceServiceTest {
     @Test
     fun `saveImportedData saves cards and creates collection entries`() {
         val card = buildCard(id = 1L, setCode = "dsk", collectorNumber = "100")
-        val quantityByKey = mapOf(("dsk" to "100") to 3)
+        val quantityByKey = mapOf(Triple("dsk", "100", false) to 3)
 
         whenever(cardRepository.saveAll(listOf(card))).thenReturn(listOf(card))
 
@@ -38,14 +38,15 @@ class CollectionPersistenceServiceTest {
         val entry = entriesCaptor.firstValue.single()
         assertEquals(1L, entry.cardId)
         assertEquals(3, entry.quantity)
+        assertEquals(false, entry.foil)
     }
 
     @Test
     fun `saveImportedData skips cards not returned by cardRepository`() {
         val card = buildCard(id = 10L, setCode = "dsk", collectorNumber = "200")
         val quantityByKey = mapOf(
-            ("dsk" to "200") to 2,
-            ("dsk" to "999") to 1,
+            Triple("dsk", "200", false) to 2,
+            Triple("dsk", "999", false) to 1,
         )
 
         whenever(cardRepository.saveAll(listOf(card))).thenReturn(listOf(card))
@@ -82,9 +83,9 @@ class CollectionPersistenceServiceTest {
             buildCard(id = 3L, setCode = "dsk", collectorNumber = "3"),
         )
         val quantityByKey = mapOf(
-            ("dsk" to "1") to 4,
-            ("dsk" to "2") to 2,
-            ("dsk" to "3") to 1,
+            Triple("dsk", "1", false) to 4,
+            Triple("dsk", "2", false) to 2,
+            Triple("dsk", "3", false) to 1,
         )
 
         whenever(cardRepository.saveAll(cards)).thenReturn(cards)

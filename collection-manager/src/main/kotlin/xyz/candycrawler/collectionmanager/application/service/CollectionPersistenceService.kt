@@ -18,19 +18,20 @@ class CollectionPersistenceService(
     @Transactional
     fun saveImportedData(
         cards: List<Card>,
-        quantityByKey: Map<Pair<String, String>, Int>,
+        quantityByKey: Map<Triple<String, String, Boolean>, Int>,
     ): Int {
         val savedCards = cardRepository.saveAll(cards)
         log.info("Upserted {} cards into DB", savedCards.size)
 
-        val cardIdByKey = savedCards.associateBy(
+        val cardIdBySetAndNumber = savedCards.associateBy(
             { it.setCode to it.collectorNumber },
             { it.id!! }
         )
 
         val collectionEntries = quantityByKey.mapNotNull { (key, quantity) ->
-            cardIdByKey[key]?.let { cardId ->
-                CollectionEntry(cardId = cardId, quantity = quantity)
+            val (setCode, collectorNumber, foil) = key
+            cardIdBySetAndNumber[setCode to collectorNumber]?.let { cardId ->
+                CollectionEntry(cardId = cardId, quantity = quantity, foil = foil)
             }
         }
 

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import xyz.candycrawler.collectionmanager.application.parser.TcgPlayerFileParser
@@ -18,35 +19,34 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TcgPlayerImportServiceTest {
+class CollectionImportServiceTest {
 
-    private val parser: TcgPlayerFileParser = TcgPlayerFileParser()
+    private val parser = TcgPlayerFileParser()
     private val scryfallApiClient: ScryfallApiClient = mock()
-    private val scryfallMapper: ScryfallCardResponseToCardMapper = ScryfallCardResponseToCardMapper()
+    private val scryfallMapper = ScryfallCardResponseToCardMapper()
     private val persistenceService: CollectionPersistenceService = mock()
 
-    private val service = TcgPlayerImportService(
-        parser, scryfallApiClient, scryfallMapper, persistenceService,
-    )
+    private val service = CollectionImportService(scryfallApiClient, scryfallMapper, persistenceService)
 
     @Test
     fun `import parses file, fetches from scryfall and persists`() = runTest {
-        val fileContent = """
+        val content = """
             2 Eclipsed Elf [ECL] 218
             3 Lys Alana Dignitary [ECL] 180
         """.trimIndent()
 
-        val scryfallResponse = buildScryfallResponse(
-            data = listOf(
-                buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218"),
-                buildScryfallCardResponse(setCode = "ecl", collectorNumber = "180"),
-            ),
-            notFound = emptyList(),
+        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
+            buildScryfallResponse(
+                data = listOf(
+                    buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218"),
+                    buildScryfallCardResponse(setCode = "ecl", collectorNumber = "180"),
+                ),
+                notFound = emptyList(),
+            )
         )
-        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(scryfallResponse)
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(2)
 
-        val result = service.import(fileContent)
+        val result = service.import(parser, content)
 
         assertEquals(2, result.importedCount)
         assertTrue(result.notFound.isEmpty())
@@ -54,19 +54,20 @@ class TcgPlayerImportServiceTest {
 
     @Test
     fun `import merges duplicate entries before calling scryfall`() = runTest {
-        val fileContent = """
+        val content = """
             2 Eclipsed Elf [ECL] 218
             3 Eclipsed Elf [ECL] 218
         """.trimIndent()
 
-        val scryfallResponse = buildScryfallResponse(
-            data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
-            notFound = emptyList(),
+        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
+            buildScryfallResponse(
+                data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
+                notFound = emptyList(),
+            )
         )
-        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(scryfallResponse)
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(1)
 
-        service.import(fileContent)
+        service.import(parser, content)
 
         val requestCaptor = argumentCaptor<ScryfallCollectionRequest>()
         verify(scryfallApiClient).fetchCollection(requestCaptor.capture())
@@ -78,37 +79,38 @@ class TcgPlayerImportServiceTest {
 
     @Test
     fun `import passes merged quantities to persistenceService`() = runTest {
-        val fileContent = """
+        val content = """
             2 Eclipsed Elf [ECL] 218
             3 Eclipsed Elf [ECL] 218
         """.trimIndent()
 
-        val scryfallResponse = buildScryfallResponse(
-            data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
-            notFound = emptyList(),
+        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
+            buildScryfallResponse(
+                data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
+                notFound = emptyList(),
+            )
         )
-        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(scryfallResponse)
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(1)
 
-        service.import(fileContent)
+        service.import(parser, content)
 
-        val quantityCaptor = argumentCaptor<Map<Pair<String, String>, Int>>()
+        val quantityCaptor = argumentCaptor<Map<Triple<String, String, Boolean>, Int>>()
         verify(persistenceService).saveImportedData(any(), quantityCaptor.capture())
 
-        val quantityByKey = quantityCaptor.firstValue
-        assertEquals(5, quantityByKey["ecl" to "218"])
+        assertEquals(5, quantityCaptor.firstValue[Triple("ecl", "218", false)])
     }
 
     @Test
     fun `import returns notFound from scryfall response`() = runTest {
-        val fileContent = "1 Unknown Card [XXX] 999"
+        val content = "1 Unknown Card [XXX] 999"
 
         val notFound = listOf(CardIdentifier(set = "xxx", collectorNumber = "999"))
-        val scryfallResponse = buildScryfallResponse(data = emptyList(), notFound = notFound)
-        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(scryfallResponse)
+        whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
+            buildScryfallResponse(data = emptyList(), notFound = notFound)
+        )
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
 
-        val result = service.import(fileContent)
+        val result = service.import(parser, content)
 
         assertEquals(1, result.notFound.size)
         assertEquals(notFound.single(), result.notFound.single())
@@ -116,7 +118,7 @@ class TcgPlayerImportServiceTest {
 
     @Test
     fun `import calls scryfall in batches when more than 75 unique cards`() = runTest {
-        val fileContent = (1..80).joinToString("\n") { n ->
+        val content = (1..80).joinToString("\n") { n ->
             "1 Card $n [DSK] ${n.toString().padStart(3, '0')}"
         }
 
@@ -125,17 +127,16 @@ class TcgPlayerImportServiceTest {
         )
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
 
-        service.import(fileContent)
+        service.import(parser, content)
 
-        // 80 unique cards → 2 batches (75 + 5)
-        verify(scryfallApiClient, org.mockito.kotlin.times(2)).fetchCollection(any())
+        verify(scryfallApiClient, times(2)).fetchCollection(any())
     }
 
     @Test
     fun `import with empty file returns zero imported and no notFound`() = runTest {
         whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
 
-        val result = service.import("")
+        val result = service.import(parser, "")
 
         assertEquals(0, result.importedCount)
         assertTrue(result.notFound.isEmpty())

@@ -1,21 +1,21 @@
 package xyz.candycrawler.collectionmanager.application.parser
 
 import org.springframework.stereotype.Component
-import xyz.candycrawler.collectionmanager.application.parser.dto.TcgPlayerEntry
+import xyz.candycrawler.collectionmanager.application.parser.dto.ParsedCollectionEntry
 
 @Component
-class TcgPlayerFileParser {
+class TcgPlayerFileParser : CollectionFileParser {
 
-    fun parse(content: String): List<TcgPlayerEntry> =
+    override fun parse(content: String): List<ParsedCollectionEntry> =
         content.lines()
             .filter { it.isNotBlank() }
             .mapNotNull { line -> LINE_PATTERN.matchEntire(line.trim())?.toEntry() }
 
-    private fun MatchResult.toEntry() = TcgPlayerEntry(
+    private fun MatchResult.toEntry() = ParsedCollectionEntry(
         quantity = groupValues[1].toInt(),
-        name = groupValues[2].trim(),
         setCode = groupValues[3].lowercase(),
         collectorNumber = groupValues[4],
+        foil = false,
     )
 
     companion object {

@@ -12,6 +12,7 @@ class CollectionEntryToCollectionEntryRecordMapper : Function<CollectionEntry, C
         id = entry.id,
         cardId = entry.cardId,
         quantity = entry.quantity,
+        foil = entry.foil,
         createdAt = entry.createdAt,
         updatedAt = entry.updatedAt,
     )

@@ -96,6 +96,7 @@ class ExposedCollectionEntryRepositoryTest {
             id = id,
             cardId = cardId,
             quantity = quantity,
+            foil = false,
             createdAt = now,
             updatedAt = now,
         )

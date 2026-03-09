@@ -7,8 +7,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import xyz.candycrawler.collectionmanager.application.parser.TcgPlayerFileParser
-import xyz.candycrawler.collectionmanager.application.parser.dto.TcgPlayerEntry
+import xyz.candycrawler.collectionmanager.application.parser.CollectionFileParser
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.CardIdentifier
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.ScryfallCollectionRequest
@@ -16,22 +15,24 @@ import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.res
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.mapper.ScryfallCardResponseToCardMapper
 
 @Service
-class TcgPlayerImportService(
-    private val parser: TcgPlayerFileParser,
+class CollectionImportService(
     private val scryfallApiClient: ScryfallApiClient,
     private val scryfallMapper: ScryfallCardResponseToCardMapper,
     private val persistenceService: CollectionPersistenceService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    suspend fun import(fileContent: String): ImportResult {
-        val entries = parser.parse(fileContent)
-        log.info("Parsed {} lines from TCG Player file", entries.size)
+    suspend fun import(parser: CollectionFileParser, content: String): ImportResult {
+        val entries = parser.parse(content)
+        log.info("Parsed {} lines from file", entries.size)
 
-        val merged = mergeEntries(entries)
-        log.info("Merged into {} unique cards", merged.size)
+        val merged = entries
+            .groupBy { Triple(it.setCode, it.collectorNumber, it.foil) }
+            .mapValues { (_, group) -> group.sumOf { it.quantity } }
+        log.info("Merged into {} unique entries", merged.size)
 
-        val responses = fetchFromScryfall(merged.keys)
+        val cardKeys = merged.keys.map { it.first to it.second }.toSet()
+        val responses = fetchFromScryfall(cardKeys)
 
         val cards = responses.flatMap { it.data.map(scryfallMapper::apply) }
         val notFound = responses.flatMap { it.notFound }
@@ -44,10 +45,7 @@ class TcgPlayerImportService(
             persistenceService.saveImportedData(cards, merged)
         }
 
-        return ImportResult(
-            importedCount = importedCount,
-            notFound = notFound,
-        )
+        return ImportResult(importedCount = importedCount, notFound = notFound)
     }
 
     private suspend fun fetchFromScryfall(
@@ -62,10 +60,6 @@ class TcgPlayerImportService(
             }
         }.awaitAll()
     }
-
-    private fun mergeEntries(entries: List<TcgPlayerEntry>): Map<Pair<String, String>, Int> =
-        entries.groupBy { it.setCode to it.collectorNumber }
-            .mapValues { (_, group) -> group.sumOf { it.quantity } }
 
     data class ImportResult(
         val importedCount: Int,

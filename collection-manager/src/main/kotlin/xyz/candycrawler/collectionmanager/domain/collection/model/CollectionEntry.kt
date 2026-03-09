@@ -7,6 +7,7 @@ data class CollectionEntry(
     val id: Long? = null,
     val cardId: Long,
     val quantity: Int,
+    val foil: Boolean = false,
     val createdAt: LocalDateTime? = null,
     val updatedAt: LocalDateTime? = null,
 ) {

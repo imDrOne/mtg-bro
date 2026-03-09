@@ -1,8 +1,8 @@
 package xyz.candycrawler.collectionmanager.application.parser.dto
 
-data class TcgPlayerEntry(
+data class ParsedCollectionEntry(
     val quantity: Int,
-    val name: String,
     val setCode: String,
     val collectorNumber: String,
+    val foil: Boolean,
 )

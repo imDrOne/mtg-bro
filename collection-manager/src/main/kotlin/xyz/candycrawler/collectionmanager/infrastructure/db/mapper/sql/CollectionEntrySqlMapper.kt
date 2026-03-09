@@ -16,12 +16,13 @@ class CollectionEntrySqlMapper {
         val now = LocalDateTime.now()
         CollectionEntriesTable.batchUpsert(
             records,
-            keys = arrayOf(CollectionEntriesTable.cardId),
+            keys = arrayOf(CollectionEntriesTable.cardId, CollectionEntriesTable.foil),
             onUpdateExclude = listOf(CollectionEntriesTable.createdAt),
             shouldReturnGeneratedValues = false,
         ) { record ->
             this[CollectionEntriesTable.cardId] = record.cardId
             this[CollectionEntriesTable.quantity] = record.quantity
+            this[CollectionEntriesTable.foil] = record.foil
             this[CollectionEntriesTable.createdAt] = record.createdAt ?: now
             this[CollectionEntriesTable.updatedAt] = now
         }
@@ -41,6 +42,7 @@ class CollectionEntrySqlMapper {
         id = this[CollectionEntriesTable.id].value,
         cardId = this[CollectionEntriesTable.cardId],
         quantity = this[CollectionEntriesTable.quantity],
+        foil = this[CollectionEntriesTable.foil],
         createdAt = this[CollectionEntriesTable.createdAt],
         updatedAt = this[CollectionEntriesTable.updatedAt],
     )
