@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntry
 import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryRecordToCollectionEntryMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntrySqlMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryToCollectionEntryRecordMapper
 
 @Repository

@@ -1,4 +1,4 @@
-package xyz.candycrawler.collectionmanager.infrastructure.db.mapper
+package xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CollectionEntryRecord
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import xyz.candycrawler.collectionmanager.lib.AbstractIntegrationTest
 import java.time.LocalDate
 import java.util.UUID

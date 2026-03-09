@@ -1,4 +1,4 @@
-package xyz.candycrawler.collectionmanager.infrastructure.db.mapper
+package xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
@@ -9,8 +9,10 @@ import org.springframework.stereotype.Component
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.table.CardsTable
 import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
-@OptIn(kotlin.uuid.ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class)
 @Component
 class CardSqlMapper {
 
@@ -20,8 +22,8 @@ class CardSqlMapper {
             keys = arrayOf(CardsTable.setCode, CardsTable.collectorNumber, CardsTable.lang),
             shouldReturnGeneratedValues = true,
         ) { record ->
-            this[CardsTable.scryfallId] = kotlin.uuid.Uuid.parse(record.scryfallId.toString())
-            this[CardsTable.oracleId] = kotlin.uuid.Uuid.parse(record.oracleId.toString())
+            this[CardsTable.scryfallId] = Uuid.parse(record.scryfallId.toString())
+            this[CardsTable.oracleId] = Uuid.parse(record.oracleId.toString())
             this[CardsTable.name] = record.name
             this[CardsTable.lang] = record.lang
             this[CardsTable.layout] = record.layout

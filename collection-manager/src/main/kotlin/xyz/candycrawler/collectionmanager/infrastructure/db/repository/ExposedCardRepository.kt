@@ -6,7 +6,7 @@ import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundExce
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToCardMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardSqlMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardToCardRecordMapper
 
 @Repository
