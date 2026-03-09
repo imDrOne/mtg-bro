@@ -21,6 +21,7 @@ dependencies {
     "liquibaseRuntime"("org.liquibase:liquibase-groovy-dsl:4.0.1")
     "liquibaseRuntime"("info.picocli:picocli:4.6.1")
     "liquibaseRuntime"("org.postgresql:postgresql:42.7.3")
+    "liquibaseRuntime"(files("src/main/resources"))
 
     "testImplementation"("org.springframework.boot:spring-boot-liquibase")
     "testImplementation"("org.liquibase:liquibase-core:$liquibaseVersion")
@@ -30,7 +31,7 @@ liquibase {
     activities.register("main") {
         arguments = mapOf(
             "logLevel" to "info",
-            "changelogFile" to project.file("src/main/resources/db/changelog/db.changelog-master.yaml").path,
+            "changelogFile" to "db/changelog/db.changelog-master.yaml",
             "url" to dbProp("DB_MIGRATION_URL", "db.migration.url"),
             "username" to dbProp("DB_MIGRATION_USERNAME", "db.migration.username"),
             "password" to dbProp("DB_MIGRATION_PASSWORD", "db.migration.password"),

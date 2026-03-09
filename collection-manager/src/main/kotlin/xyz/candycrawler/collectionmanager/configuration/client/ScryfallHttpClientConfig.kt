@@ -36,6 +36,7 @@ class ScryfallHttpClientConfig(
         val restClient = RestClient.builder()
             .baseUrl(props.baseUrl)
             .defaultHeader("User-Agent", "MtgBroCollectionManager/1.0")
+            .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE)
             .configureMessageConverters { it.addCustomConverter(jsonConverter).build() }
             .requestInterceptors { interceptors ->
                 interceptors.add(
