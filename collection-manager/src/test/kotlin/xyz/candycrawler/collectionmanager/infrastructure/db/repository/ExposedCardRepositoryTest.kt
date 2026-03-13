@@ -2,6 +2,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.repository
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
@@ -163,7 +164,7 @@ class ExposedCardRepositoryTest {
                 anyOrNull(),
                 any(),
                 any(),
-                any(),
+                anyInt(),
                 anyLong(),
             ),
         ).thenReturn(emptyList())

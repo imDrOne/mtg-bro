@@ -26,12 +26,16 @@ class TcgPlayerToMoxfieldConverterService {
         }.trimEnd()
     }
 
-    private fun MatchResult.toRow(): Row = Row(
-        quantity = groupValues[1].toInt(),
-        name = groupValues[2],
-        setCode = groupValues[3].uppercase(),
-        collectorNumber = groupValues[4],
-    )
+    private fun MatchResult.toRow(): Row {
+        val rawName = groupValues[2].trim()
+        val name = rawName.removeSurrounding("\"")
+        return Row(
+            quantity = groupValues[1].toInt(),
+            name = name,
+            setCode = groupValues[3].uppercase(),
+            collectorNumber = groupValues[4],
+        )
+    }
 
     private fun List<Row>.mergeByKey(): List<String> =
         groupBy { it.setCode to it.collectorNumber }
