@@ -2,11 +2,18 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.repository
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundException
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
+import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
+import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
+import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
+import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToCardMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
@@ -90,6 +97,120 @@ class ExposedCardRepositoryTest {
         val result = repository.findBySetCodeAndCollectorNumber("xxx", "000")
 
         assertNull(result)
+    }
+
+    @Test
+    fun `search delegates to sqlMapper and returns CardPage with mapped cards`() {
+        val criteria = CardSearchCriteria(
+            query = "bolt",
+            setCode = "neo",
+            rarity = "common",
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            page = 1,
+            pageSize = 20,
+        )
+        val records = listOf(
+            buildRecord(id = 1L, setCode = "neo", collectorNumber = "100"),
+            buildRecord(id = 2L, setCode = "neo", collectorNumber = "101"),
+        )
+
+        whenever(
+            sqlMapper.search(
+                queryText = "bolt",
+                setCode = "neo",
+                rarity = "common",
+                order = CardSortOrder.NAME,
+                direction = SortDirection.ASC,
+                limit = 20,
+                offset = 0L,
+            ),
+        ).thenReturn(records)
+        whenever(
+            sqlMapper.countSearch(
+                queryText = "bolt",
+                setCode = "neo",
+                rarity = "common",
+            ),
+        ).thenReturn(42L)
+
+        val result = repository.search(criteria)
+
+        assertEquals(2, result.cards.size)
+        assertEquals(42L, result.totalCards)
+        assertEquals(true, result.hasMore)
+        assertEquals(1, result.page)
+        assertEquals(20, result.pageSize)
+        assertEquals(1L, result.cards[0].id)
+        assertEquals(2L, result.cards[1].id)
+    }
+
+    @Test
+    fun `search hasMore false when no more pages`() {
+        val criteria = CardSearchCriteria(
+            query = null,
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            page = 1,
+            pageSize = 10,
+        )
+        whenever(
+            sqlMapper.search(
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                any(),
+                any(),
+                any(),
+                anyLong(),
+            ),
+        ).thenReturn(emptyList())
+        whenever(sqlMapper.countSearch(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(5L)
+
+        val result = repository.search(criteria)
+
+        assertEquals(5L, result.totalCards)
+        assertEquals(false, result.hasMore)
+        assertEquals(0, result.cards.size)
+    }
+
+    @Test
+    fun `search computes offset for page 2`() {
+        val criteria = CardSearchCriteria(
+            query = null,
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            page = 2,
+            pageSize = 10,
+        )
+        whenever(
+            sqlMapper.search(
+                queryText = null,
+                setCode = null,
+                rarity = null,
+                order = CardSortOrder.NAME,
+                direction = SortDirection.ASC,
+                limit = 10,
+                offset = 10L,
+            ),
+        ).thenReturn(emptyList())
+        whenever(sqlMapper.countSearch(null, null, null)).thenReturn(15L)
+
+        repository.search(criteria)
+
+        verify(sqlMapper).search(
+            queryText = null,
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 10L,
+        )
     }
 
     private fun buildCard(

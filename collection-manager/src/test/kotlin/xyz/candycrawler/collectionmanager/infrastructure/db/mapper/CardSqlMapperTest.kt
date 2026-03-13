@@ -3,6 +3,8 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.mapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
+import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
+import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 import xyz.candycrawler.collectionmanager.lib.AbstractIntegrationTest
@@ -11,6 +13,7 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @Transactional
 class CardSqlMapperTest(
@@ -144,12 +147,272 @@ class CardSqlMapperTest(
         assertNull(result)
     }
 
+    @Test
+    fun `search returns records matching query in name`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "neo", collectorNumber = "1", name = "Burning Sun"),
+                buildRecord(setCode = "neo", collectorNumber = "2", name = "Cold Moon"),
+                buildRecord(setCode = "neo", collectorNumber = "3", name = "Sunrise"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = "sun",
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.name == "Burning Sun" })
+        assertTrue(result.any { it.name == "Sunrise" })
+    }
+
+    @Test
+    fun `search returns records matching query in type line`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "dmu", collectorNumber = "1", typeLine = "Creature — Human"),
+                buildRecord(setCode = "dmu", collectorNumber = "2", typeLine = "Instant"),
+                buildRecord(setCode = "dmu", collectorNumber = "3", typeLine = "Creature — Elf"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = "instant",
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(1, result.size)
+        assertEquals("Instant", result.single().typeLine)
+    }
+
+    @Test
+    fun `search returns records matching query in oracle text`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "bro", collectorNumber = "1", oracleText = "Draw two cards."),
+                buildRecord(setCode = "bro", collectorNumber = "2", oracleText = "Flying. Lifelink."),
+                buildRecord(setCode = "bro", collectorNumber = "3", oracleText = "Draw a card."),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = "lifelink",
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(1, result.size)
+        assertTrue(result.single().oracleText!!.contains("Lifelink"))
+    }
+
+    @Test
+    fun `search filters by set code`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "neo", collectorNumber = "1", name = "Card A"),
+                buildRecord(setCode = "dmu", collectorNumber = "1", name = "Card B"),
+                buildRecord(setCode = "neo", collectorNumber = "2", name = "Card C"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "neo",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(2, result.size)
+        assertTrue(result.all { it.setCode == "neo" })
+    }
+
+    @Test
+    fun `search filters by rarity`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "x", collectorNumber = "1", name = "C1", rarity = "common"),
+                buildRecord(setCode = "x", collectorNumber = "2", name = "C2", rarity = "rare"),
+                buildRecord(setCode = "x", collectorNumber = "3", name = "C3", rarity = "common"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = null,
+            rarity = "rare",
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(1, result.size)
+        assertEquals("rare", result.single().rarity)
+    }
+
+    @Test
+    fun `search applies limit and offset`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "lim", collectorNumber = "1", name = "Card 1"),
+                buildRecord(setCode = "lim", collectorNumber = "2", name = "Card 2"),
+                buildRecord(setCode = "lim", collectorNumber = "3", name = "Card 3"),
+                buildRecord(setCode = "lim", collectorNumber = "4", name = "Card 4"),
+                buildRecord(setCode = "lim", collectorNumber = "5", name = "Card 5"),
+            ),
+        )
+
+        val page1 = sqlMapper.search(
+            queryText = null,
+            setCode = "lim",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 2,
+            offset = 0L,
+        )
+        val page2 = sqlMapper.search(
+            queryText = null,
+            setCode = "lim",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 2,
+            offset = 2L,
+        )
+
+        assertEquals(2, page1.size)
+        assertEquals(2, page2.size)
+        assertEquals("Card 1", page1.first().name)
+        assertEquals("Card 3", page2.first().name)
+    }
+
+    @Test
+    fun `search orders by name ascending`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "ord", collectorNumber = "1", name = "Zebra"),
+                buildRecord(setCode = "ord", collectorNumber = "2", name = "Alpha"),
+                buildRecord(setCode = "ord", collectorNumber = "3", name = "Mono"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "ord",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(listOf("Alpha", "Mono", "Zebra"), result.map { it.name })
+    }
+
+    @Test
+    fun `search orders by name descending`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "ord2", collectorNumber = "1", name = "A"),
+                buildRecord(setCode = "ord2", collectorNumber = "2", name = "B"),
+                buildRecord(setCode = "ord2", collectorNumber = "3", name = "C"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "ord2",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.DESC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(listOf("C", "B", "A"), result.map { it.name })
+    }
+
+    @Test
+    fun `countSearch returns total count without pagination`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "cnt", collectorNumber = "1", name = "One"),
+                buildRecord(setCode = "cnt", collectorNumber = "2", name = "Two"),
+                buildRecord(setCode = "cnt", collectorNumber = "3", name = "Three"),
+            ),
+        )
+
+        val total = sqlMapper.countSearch(queryText = null, setCode = "cnt", rarity = null)
+
+        assertEquals(3L, total)
+    }
+
+    @Test
+    fun `countSearch returns count matching query`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "cnt2", collectorNumber = "1", name = "Lightning Bolt"),
+                buildRecord(setCode = "cnt2", collectorNumber = "2", name = "Lightning Helix"),
+                buildRecord(setCode = "cnt2", collectorNumber = "3", name = "Shock"),
+            ),
+        )
+
+        val total = sqlMapper.countSearch(queryText = "lightning", setCode = "cnt2", rarity = null)
+
+        assertEquals(2L, total)
+    }
+
+    @Test
+    fun `search with no criteria returns all records ordered`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "all", collectorNumber = "1", name = "First"),
+                buildRecord(setCode = "all", collectorNumber = "2", name = "Second"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertTrue(result.size >= 2)
+        val names = result.map { it.name }
+        assertEquals(names.sorted(), names)
+    }
+
     private fun buildRecord(
         setCode: String = "dsk",
         collectorNumber: String = "1",
         name: String = "Eclipsed Elf",
+        typeLine: String = "Creature — Elf",
         manaCost: String? = "{G}",
         oracleText: String? = "When Eclipsed Elf enters, draw a card.",
+        rarity: String = "common",
         power: String? = "1",
         toughness: String? = "1",
         releasedAt: LocalDate? = LocalDate.of(2024, 9, 27),
@@ -166,7 +429,7 @@ class CardSqlMapperTest(
         layout = "normal",
         manaCost = manaCost,
         cmc = 1.0,
-        typeLine = "Creature — Elf",
+        typeLine = typeLine,
         oracleText = oracleText,
         colors = listOf("G"),
         colorIdentity = listOf("G"),
@@ -177,7 +440,7 @@ class CardSqlMapperTest(
         setCode = setCode,
         setName = "Duskmourn: House of Horror",
         collectorNumber = collectorNumber,
-        rarity = "common",
+        rarity = rarity,
         releasedAt = releasedAt,
         imageUriSmall = null,
         imageUriNormal = imageUriNormal,
