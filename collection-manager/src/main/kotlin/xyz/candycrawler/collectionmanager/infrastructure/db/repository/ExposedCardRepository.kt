@@ -4,10 +4,12 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundException
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
+import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
+import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToCardMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardToCardRecordMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 
 @Repository
 @Transactional
@@ -26,4 +28,33 @@ class ExposedCardRepository(
 
     override fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card? =
         sqlMapper.selectBySetCodeAndCollectorNumber(setCode, collectorNumber)?.let(toDomain::apply)
+
+    @Transactional(readOnly = true)
+    override fun search(criteria: CardSearchCriteria): CardPage {
+        val offset = ((criteria.page - 1) * criteria.pageSize).toLong()
+
+        val records = sqlMapper.search(
+            queryText = criteria.query,
+            setCode = criteria.setCode,
+            rarity = criteria.rarity,
+            order = criteria.order,
+            direction = criteria.direction,
+            limit = criteria.pageSize,
+            offset = offset,
+        )
+
+        val totalCards = sqlMapper.countSearch(
+            queryText = criteria.query,
+            setCode = criteria.setCode,
+            rarity = criteria.rarity,
+        )
+
+        return CardPage(
+            cards = records.map(toDomain::apply),
+            totalCards = totalCards,
+            hasMore = offset + criteria.pageSize < totalCards,
+            page = criteria.page,
+            pageSize = criteria.pageSize,
+        )
+    }
 }

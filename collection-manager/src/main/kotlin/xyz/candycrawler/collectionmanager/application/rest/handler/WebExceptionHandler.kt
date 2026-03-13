@@ -1,15 +1,25 @@
 package xyz.candycrawler.collectionmanager.application.rest.handler
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 class WebExceptionHandler {
+
+    @ExceptionHandler(RestClientResponseException::class)
+    fun handleRestClientError(ex: RestClientResponseException): ResponseEntity<String> =
+        ResponseEntity
+            .status(ex.statusCode)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(ex.responseBodyAsString)
 
     @ExceptionHandler(MissingServletRequestParameterException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -1,11 +1,19 @@
 package xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql
 
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
+import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
+import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.table.CardsTable
 import java.util.UUID
@@ -71,6 +79,96 @@ class CardSqlMapper {
             }
             .map { it.toRecord() }
             .singleOrNull()
+
+    internal fun search(
+        queryText: String?,
+        setCode: String?,
+        rarity: String?,
+        order: CardSortOrder,
+        direction: SortDirection,
+        limit: Int,
+        offset: Long,
+    ): List<CardRecord> {
+        val query = CardsTable.selectAll()
+
+        buildSearchCondition(queryText, setCode, rarity)?.let { condition ->
+            query.where { condition }
+        }
+
+        val sortColumn = resolveOrderColumn(order)
+        val sortOrder = resolveDirection(order, direction)
+
+        return query
+            .orderBy(sortColumn to sortOrder)
+            .limit(limit)
+            .offset(offset)
+            .map { it.toRecord() }
+    }
+
+    internal fun countSearch(
+        queryText: String?,
+        setCode: String?,
+        rarity: String?,
+    ): Long {
+        val query = CardsTable.selectAll()
+
+        buildSearchCondition(queryText, setCode, rarity)?.let { condition ->
+            query.where { condition }
+        }
+
+        return query.count()
+    }
+
+    private fun buildSearchCondition(
+        queryText: String?,
+        setCode: String?,
+        rarity: String?,
+    ): Op<Boolean>? {
+        val conditions = mutableListOf<Op<Boolean>>()
+
+        if (!queryText.isNullOrBlank()) {
+            val pattern = "%${queryText.lowercase()}%"
+            conditions.add(
+                (CardsTable.name.lowerCase() like pattern) or
+                    (CardsTable.typeLine.lowerCase() like pattern) or
+                    (CardsTable.oracleText.lowerCase() like pattern),
+            )
+        }
+
+        if (!setCode.isNullOrBlank()) {
+            conditions.add(CardsTable.setCode eq setCode.lowercase())
+        }
+
+        if (!rarity.isNullOrBlank()) {
+            conditions.add(CardsTable.rarity eq rarity.lowercase())
+        }
+
+        return conditions.reduceOrNull { acc, op -> acc and op }
+    }
+
+    private fun resolveOrderColumn(order: CardSortOrder): Expression<*> = when (order) {
+        CardSortOrder.NAME -> CardsTable.name
+        CardSortOrder.SET -> CardsTable.setCode
+        CardSortOrder.RELEASED -> CardsTable.releasedAt
+        CardSortOrder.RARITY -> CardsTable.rarity
+        CardSortOrder.COLOR -> CardsTable.colorIdentity
+        CardSortOrder.USD -> CardsTable.priceUsd
+        CardSortOrder.EUR -> CardsTable.priceEur
+        CardSortOrder.CMC -> CardsTable.cmc
+        CardSortOrder.POWER -> CardsTable.power
+        CardSortOrder.TOUGHNESS -> CardsTable.toughness
+        CardSortOrder.ARTIST -> CardsTable.artist
+    }
+
+    private fun resolveDirection(order: CardSortOrder, direction: SortDirection): SortOrder =
+        when (direction) {
+            SortDirection.ASC -> SortOrder.ASC
+            SortDirection.DESC -> SortOrder.DESC
+            SortDirection.AUTO -> when (order) {
+                CardSortOrder.RELEASED -> SortOrder.DESC
+                else -> SortOrder.ASC
+            }
+        }
 
     private fun ResultRow.toRecord(): CardRecord = CardRecord(
         id = this[CardsTable.id].value,
