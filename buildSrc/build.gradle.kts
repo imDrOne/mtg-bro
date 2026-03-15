@@ -15,4 +15,5 @@ dependencies {
     implementation("org.liquibase:liquibase-gradle-plugin:3.1.0")
     implementation("org.liquibase:liquibase-core:5.0.1")
     implementation("org.apache.commons:commons-lang3:3.20.0")
+    implementation("com.google.cloud.tools:jib-gradle-plugin:3.4.4")
 }

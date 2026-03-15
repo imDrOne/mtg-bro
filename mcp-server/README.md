@@ -39,46 +39,45 @@ MCP (Model Context Protocol) server for deck building. Exposes tools so Claude (
 
 ## Claude web (Streamable HTTP) — quick start
 
-The easiest way to run everything locally with a Cloudflare tunnel:
+The easiest way to run everything locally with Docker and ngrok:
 
 ```bash
 ./gradlew runLocal
 ```
 
 This single command:
-1. Builds `collection-manager` (bootJar) and `mcp-server` (installDist).
-2. Starts **collection-manager** on port 8080.
-3. Starts **mcp-server** in HTTP mode on port 3000.
-4. Starts **cloudflared** tunnel and prints the public URL.
+1. Builds Docker images via JIB (`mtg-bro/collection-manager`, `mtg-bro/mcp-server`).
+2. Starts **postgres**, **collection-manager**, **mcp-server**, **ngrok** in Docker.
 
-Override ports with Gradle properties: `-PcmPort=9090 -PmcpPort=4000`.
+Requires: Docker. Set `NGROK_AUTHTOKEN` (env or `docker/.env` from `docker/.env.example`).
 
-Requires `cloudflared` (`brew install cloudflared`).
+If run from IDE fails with "Cannot run program docker", use `./runLocal.sh` from terminal instead.
 
-Copy the printed tunnel URL (e.g. `https://xxxx.trycloudflare.com/mcp`) into Claude: Settings → Connectors → Add custom connector.
+Copy the printed tunnel URL (e.g. `https://xxxx.ngrok-free.app/mcp`) into Claude: Settings → Connectors → Add custom connector.
 
-Press Ctrl+C to stop all processes.
-
-> **Note:** ngrok free tier is not suitable — its interstitial page blocks requests from Claude's servers.
+Press Ctrl+C to stop all processes (containers are torn down automatically).
 
 ### Manual start (without runLocal)
 
-1. Start the MCP server in HTTP mode:
+**Option A — Docker Compose**
+
+```bash
+# Set NGROK_AUTHTOKEN in docker/.env or env
+./gradlew jibDockerBuild
+docker compose -f docker/docker-compose.local.yml up -d
+```
+
+**Option B — Local processes**
+
+1. Start collection-manager and postgres (or use `docker compose -f docker/docker-compose.local.yml up -d postgres collection-manager`).
+2. Start the MCP server:
 
 ```bash
 COLLECTION_MANAGER_BASE_URL=http://localhost:8080 \
   ./mcp-server/build/install/mcp-server/bin/mcp-server --transport http --port 3000
 ```
 
-The server listens on `http://localhost:3000/mcp`.
-
-2. For Claude web, the server must be reachable from the internet:
-
-```bash
-cloudflared tunnel --url http://localhost:3000 --no-autoupdate
-```
-
-3. In Claude: Settings → Connectors → Add custom connector → enter the URL (e.g. `https://xxxx.trycloudflare.com/mcp`).
+3. For Claude web: `ngrok http 3000`, then add the URL in Claude: Settings → Connectors.
 
 ## Configuration
 

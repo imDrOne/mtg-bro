@@ -1,0 +1,56 @@
+# Local run: postgres + collection-manager + mcp-server + ngrok
+# Images built via: ./gradlew runLocal (or jibDockerBuild)
+# Requires NGROK_AUTHTOKEN (set env or create .env from .env.example)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wizard_stat_db
+      POSTGRES_USER: wizard_user
+      POSTGRES_PASSWORD: wizard_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wizard_user -d collection_manager_db"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  collection-manager:
+    image: mtg-bro/collection-manager:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/collection_manager_db
+      SPRING_DATASOURCE_USERNAME: wizard_user
+      SPRING_DATASOURCE_PASSWORD: wizard_pass
+    ports:
+      - "8080:8080"
+
+  mcp-server:
+    image: mtg-bro/mcp-server:latest
+    depends_on:
+      - collection-manager
+    environment:
+      COLLECTION_MANAGER_BASE_URL: http://collection-manager:8080
+    ports:
+      - "3000:3000"
+    command: ["--transport", "http", "--port", "3000"]
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    depends_on:
+      - mcp-server
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    command: ["http", "mcp-server:3000"]
+    ports:
+      - "4040:4040"
+
+volumes:
+  postgres_local_data:

@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     application
+    id("jib-module")
 }
 
 group = "xyz.candy-crawler"
@@ -31,6 +32,12 @@ dependencies {
 
 application {
     mainClass.set("xyz.candycrawler.mcpserver.MainKt")
+}
+
+jib {
+    container {
+        mainClass = "xyz.candycrawler.mcpserver.MainKt"
+    }
 }
 
 tasks.named<JavaExec>("run") {

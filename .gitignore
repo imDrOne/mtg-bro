@@ -41,3 +41,6 @@ out/
 .kotlin
 
 **/db.properties
+
+### Docker ###
+docker/.env
