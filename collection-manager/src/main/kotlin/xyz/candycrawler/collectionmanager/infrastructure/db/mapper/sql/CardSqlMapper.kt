@@ -5,10 +5,13 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.anyFrom
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.stringParam
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
@@ -71,6 +74,12 @@ class CardSqlMapper {
             .map { it.toRecord() }
             .singleOrNull()
 
+    internal fun selectByIds(ids: List<Long>): List<CardRecord> =
+        if (ids.isEmpty()) emptyList()
+        else CardsTable.selectAll()
+            .where { CardsTable.id inList ids }
+            .map { it.toRecord() }
+
     internal fun selectBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): CardRecord? =
         CardsTable.selectAll()
             .where {
@@ -83,6 +92,10 @@ class CardSqlMapper {
     internal fun search(
         queryText: String?,
         setCode: String?,
+        collectorNumber: String?,
+        colors: List<String>?,
+        colorIdentity: List<String>?,
+        type: String?,
         rarity: String?,
         order: CardSortOrder,
         direction: SortDirection,
@@ -91,7 +104,7 @@ class CardSqlMapper {
     ): List<CardRecord> {
         val query = CardsTable.selectAll()
 
-        buildSearchCondition(queryText, setCode, rarity)?.let { condition ->
+        buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)?.let { condition ->
             query.where { condition }
         }
 
@@ -108,11 +121,15 @@ class CardSqlMapper {
     internal fun countSearch(
         queryText: String?,
         setCode: String?,
+        collectorNumber: String?,
+        colors: List<String>?,
+        colorIdentity: List<String>?,
+        type: String?,
         rarity: String?,
     ): Long {
         val query = CardsTable.selectAll()
 
-        buildSearchCondition(queryText, setCode, rarity)?.let { condition ->
+        buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)?.let { condition ->
             query.where { condition }
         }
 
@@ -122,6 +139,10 @@ class CardSqlMapper {
     private fun buildSearchCondition(
         queryText: String?,
         setCode: String?,
+        collectorNumber: String?,
+        colors: List<String>?,
+        colorIdentity: List<String>?,
+        type: String?,
         rarity: String?,
     ): Op<Boolean>? {
         val conditions = mutableListOf<Op<Boolean>>()
@@ -137,6 +158,22 @@ class CardSqlMapper {
 
         if (!setCode.isNullOrBlank()) {
             conditions.add(CardsTable.setCode eq setCode.lowercase())
+        }
+
+        if (!collectorNumber.isNullOrBlank()) {
+            conditions.add(CardsTable.collectorNumber eq collectorNumber)
+        }
+
+        colors?.forEach { color ->
+            conditions.add(stringParam(color.uppercase()) eq anyFrom(CardsTable.colors))
+        }
+
+        colorIdentity?.forEach { color ->
+            conditions.add(stringParam(color.uppercase()) eq anyFrom(CardsTable.colorIdentity))
+        }
+
+        if (!type.isNullOrBlank()) {
+            conditions.add(CardsTable.typeLine.lowerCase() like "%${type.lowercase()}%")
         }
 
         if (!rarity.isNullOrBlank()) {

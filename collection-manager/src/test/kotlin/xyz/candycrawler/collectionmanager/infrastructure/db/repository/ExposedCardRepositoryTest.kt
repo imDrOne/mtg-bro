@@ -11,7 +11,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundException
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
-import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
@@ -101,6 +100,27 @@ class ExposedCardRepositoryTest {
     }
 
     @Test
+    fun `findByIds returns cards for given ids`() {
+        val records = listOf(
+            buildRecord(id = 1L, setCode = "neo", collectorNumber = "1"),
+            buildRecord(id = 2L, setCode = "neo", collectorNumber = "2"),
+        )
+        whenever(sqlMapper.selectByIds(listOf(1L, 2L))).thenReturn(records)
+
+        val result = repository.findByIds(listOf(1L, 2L))
+
+        assertEquals(2, result.size)
+        assertEquals(listOf(1L, 2L), result.map { it.id })
+    }
+
+    @Test
+    fun `findByIds returns empty list when ids empty`() {
+        val result = repository.findByIds(emptyList())
+
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
     fun `search delegates to sqlMapper and returns CardPage with mapped cards`() {
         val criteria = CardSearchCriteria(
             query = "bolt",
@@ -120,6 +140,10 @@ class ExposedCardRepositoryTest {
             sqlMapper.search(
                 queryText = "bolt",
                 setCode = "neo",
+                collectorNumber = null,
+                colors = null,
+                colorIdentity = null,
+                type = null,
                 rarity = "common",
                 order = CardSortOrder.NAME,
                 direction = SortDirection.ASC,
@@ -131,6 +155,10 @@ class ExposedCardRepositoryTest {
             sqlMapper.countSearch(
                 queryText = "bolt",
                 setCode = "neo",
+                collectorNumber = null,
+                colors = null,
+                colorIdentity = null,
+                type = null,
                 rarity = "common",
             ),
         ).thenReturn(42L)
@@ -151,6 +179,10 @@ class ExposedCardRepositoryTest {
         val criteria = CardSearchCriteria(
             query = null,
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -162,13 +194,17 @@ class ExposedCardRepositoryTest {
                 anyOrNull(),
                 anyOrNull(),
                 anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 any(),
                 any(),
                 anyInt(),
                 anyLong(),
             ),
         ).thenReturn(emptyList())
-        whenever(sqlMapper.countSearch(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(5L)
+        whenever(sqlMapper.countSearch(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(5L)
 
         val result = repository.search(criteria)
 
@@ -182,6 +218,10 @@ class ExposedCardRepositoryTest {
         val criteria = CardSearchCriteria(
             query = null,
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -192,6 +232,10 @@ class ExposedCardRepositoryTest {
             sqlMapper.search(
                 queryText = null,
                 setCode = null,
+                collectorNumber = null,
+                colors = null,
+                colorIdentity = null,
+                type = null,
                 rarity = null,
                 order = CardSortOrder.NAME,
                 direction = SortDirection.ASC,
@@ -199,13 +243,17 @@ class ExposedCardRepositoryTest {
                 offset = 10L,
             ),
         ).thenReturn(emptyList())
-        whenever(sqlMapper.countSearch(null, null, null)).thenReturn(15L)
+        whenever(sqlMapper.countSearch(null, null, null, null, null, null, null)).thenReturn(15L)
 
         repository.search(criteria)
 
         verify(sqlMapper).search(
             queryText = null,
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,

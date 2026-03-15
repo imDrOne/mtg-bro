@@ -2,6 +2,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
@@ -33,6 +34,12 @@ class CollectionEntrySqlMapper {
             .where { CollectionEntriesTable.cardId eq cardId }
             .map { it.toRecord() }
             .singleOrNull()
+
+    internal fun selectByCardIds(cardIds: List<Long>): List<CollectionEntryRecord> =
+        if (cardIds.isEmpty()) emptyList()
+        else CollectionEntriesTable.selectAll()
+            .where { CollectionEntriesTable.cardId inList cardIds }
+            .map { it.toRecord() }
 
     internal fun selectAll(): List<CollectionEntryRecord> =
         CollectionEntriesTable.selectAll()

@@ -23,6 +23,9 @@ class ExposedCollectionEntryRepository(
     override fun findByCardId(cardId: Long): CollectionEntry? =
         sqlMapper.selectByCardId(cardId)?.let(toDomain::apply)
 
+    override fun findByCardIds(cardIds: List<Long>): List<CollectionEntry> =
+        sqlMapper.selectByCardIds(cardIds).map(toDomain::apply)
+
     override fun findAll(): List<CollectionEntry> =
         sqlMapper.selectAll().map(toDomain::apply)
 }

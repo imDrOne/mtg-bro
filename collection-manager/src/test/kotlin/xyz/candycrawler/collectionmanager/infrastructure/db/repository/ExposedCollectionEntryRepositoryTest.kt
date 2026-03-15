@@ -87,16 +87,38 @@ class ExposedCollectionEntryRepositoryTest {
         assertEquals(emptyList(), result)
     }
 
+    @Test
+    fun `findByCardIds returns entries for given card ids`() {
+        val records = listOf(
+            buildRecord(id = 1L, cardId = 10L, quantity = 2, foil = false),
+            buildRecord(id = 2L, cardId = 10L, quantity = 1, foil = true),
+            buildRecord(id = 3L, cardId = 20L, quantity = 3, foil = false),
+        )
+        whenever(sqlMapper.selectByCardIds(listOf(10L, 20L))).thenReturn(records)
+
+        val result = repository.findByCardIds(listOf(10L, 20L))
+
+        assertEquals(3, result.size)
+        assertEquals(listOf(10L, 10L, 20L), result.map { it.cardId })
+    }
+
+    @Test
+    fun `findByCardIds returns empty list when cardIds empty`() {
+        val result = repository.findByCardIds(emptyList())
+
+        assertEquals(emptyList(), result)
+    }
+
     private fun buildEntry(cardId: Long, quantity: Int): CollectionEntry =
         CollectionEntry(id = null, cardId = cardId, quantity = quantity)
 
-    private fun buildRecord(id: Long, cardId: Long, quantity: Int): CollectionEntryRecord {
+    private fun buildRecord(id: Long, cardId: Long, quantity: Int, foil: Boolean = false): CollectionEntryRecord {
         val now = LocalDateTime.now()
         return CollectionEntryRecord(
             id = id,
             cardId = cardId,
             quantity = quantity,
-            foil = false,
+            foil = foil,
             createdAt = now,
             updatedAt = now,
         )

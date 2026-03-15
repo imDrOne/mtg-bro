@@ -10,6 +10,8 @@ import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
+import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntry
+import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -17,7 +19,8 @@ import kotlin.test.assertEquals
 class CardSearchControllerTest {
 
     private val cardRepository: CardRepository = mock()
-    private val controller = CardSearchController(cardRepository)
+    private val collectionEntryRepository: CollectionEntryRepository = mock()
+    private val controller = CardSearchController(cardRepository, collectionEntryRepository)
 
     @Test
     fun `searchCards builds criteria from params and returns paginated response`() {
@@ -36,10 +39,15 @@ class CardSearchControllerTest {
                 criteria.page == 1 &&
                 criteria.pageSize == 20
         })).thenReturn(page)
+        whenever(collectionEntryRepository.findByCardIds(listOf(1L))).thenReturn(emptyList())
 
         val response = controller.searchCards(
             q = "bolt",
             set = "neo",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = "rare",
             order = "name",
             dir = "asc",
@@ -60,8 +68,9 @@ class CardSearchControllerTest {
     fun `searchCards coerces page to at least 1`() {
         whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.page == 1 }))
             .thenReturn(CardPage(emptyList(), 0L, false, 1, 20))
+        whenever(collectionEntryRepository.findByCardIds(emptyList())).thenReturn(emptyList())
 
-        controller.searchCards(q = null, set = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
+        controller.searchCards(q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
 
         verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.page == 1 })
     }
@@ -70,8 +79,9 @@ class CardSearchControllerTest {
     fun `searchCards coerces pageSize to max 175`() {
         whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.pageSize == 175 }))
             .thenReturn(CardPage(emptyList(), 0L, false, 1, 175))
+        whenever(collectionEntryRepository.findByCardIds(emptyList())).thenReturn(emptyList())
 
-        controller.searchCards(q = null, set = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
+        controller.searchCards(q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
 
         verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.pageSize == 175 })
     }
@@ -88,14 +98,35 @@ class CardSearchControllerTest {
         )
         whenever(cardRepository.search(any()))
             .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
+        whenever(collectionEntryRepository.findByCardIds(listOf(2L))).thenReturn(emptyList())
 
-        val response = controller.searchCards(q = "test", set = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+        val response = controller.searchCards(q = "test", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
 
         val dto = response.data.single()
         assertEquals("https://small", dto.imageUris?.small)
         assertEquals("https://normal", dto.imageUris?.normal)
         assertEquals("1.50", dto.prices?.usd)
         assertEquals("1.20", dto.prices?.eur)
+    }
+
+    @Test
+    fun `searchCards includes collection info when card is in collection`() {
+        val card = buildCard(id = 3L, name = "Bolt")
+        whenever(cardRepository.search(any()))
+            .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
+        whenever(collectionEntryRepository.findByCardIds(listOf(3L))).thenReturn(
+            listOf(
+                CollectionEntry(cardId = 3L, quantity = 2, foil = false),
+                CollectionEntry(cardId = 3L, quantity = 1, foil = true),
+            ),
+        )
+
+        val response = controller.searchCards(q = "bolt", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+
+        val dto = response.data.single()
+        assertEquals(2, dto.collection?.quantityNonFoil)
+        assertEquals(1, dto.collection?.quantityFoil)
+        assertEquals(3, dto.collection?.totalQuantity)
     }
 
     private fun buildCard(

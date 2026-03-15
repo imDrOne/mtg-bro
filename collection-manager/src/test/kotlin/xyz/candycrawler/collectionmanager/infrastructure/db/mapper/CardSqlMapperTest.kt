@@ -160,6 +160,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = "sun",
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -185,6 +189,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = "instant",
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -209,6 +217,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = "lifelink",
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -233,6 +245,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = null,
             setCode = "neo",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -242,6 +258,93 @@ class CardSqlMapperTest(
 
         assertEquals(2, result.size)
         assertTrue(result.all { it.setCode == "neo" })
+    }
+
+    @Test
+    fun `search filters by colors`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "x", collectorNumber = "1", name = "A", colors = listOf("W", "U")),
+                buildRecord(setCode = "x", collectorNumber = "2", name = "B", colors = listOf("R")),
+                buildRecord(setCode = "x", collectorNumber = "3", name = "C", colors = listOf("W", "U", "B")),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "x",
+            collectorNumber = null,
+            colors = listOf("W", "U"),
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.name == "A" })
+        assertTrue(result.any { it.name == "C" })
+        assert(!result.any { it.name == "B" })
+    }
+
+    @Test
+    fun `search filters by type`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "x", collectorNumber = "1", name = "Creature A", typeLine = "Creature — Human"),
+                buildRecord(setCode = "x", collectorNumber = "2", name = "Instant B", typeLine = "Instant"),
+                buildRecord(setCode = "x", collectorNumber = "3", name = "Land C", typeLine = "Basic Land — Forest"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "x",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = "creature",
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(1, result.size)
+        assertEquals("Creature A", result.single().name)
+    }
+
+    @Test
+    fun `search filters by collector number`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(setCode = "neo", collectorNumber = "100", name = "Card A"),
+                buildRecord(setCode = "neo", collectorNumber = "101", name = "Card B"),
+                buildRecord(setCode = "neo", collectorNumber = "102", name = "Card C"),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            queryText = null,
+            setCode = "neo",
+            collectorNumber = "101",
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = CardSortOrder.NAME,
+            direction = SortDirection.ASC,
+            limit = 10,
+            offset = 0L,
+        )
+
+        assertEquals(1, result.size)
+        assertEquals("101", result.single().collectorNumber)
+        assertEquals("Card B", result.single().name)
     }
 
     @Test
@@ -257,6 +360,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = null,
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = "rare",
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -283,6 +390,10 @@ class CardSqlMapperTest(
         val page1 = sqlMapper.search(
             queryText = null,
             setCode = "lim",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -292,6 +403,10 @@ class CardSqlMapperTest(
         val page2 = sqlMapper.search(
             queryText = null,
             setCode = "lim",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -318,6 +433,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = null,
             setCode = "ord",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -341,6 +460,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = null,
             setCode = "ord2",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.DESC,
@@ -361,7 +484,7 @@ class CardSqlMapperTest(
             ),
         )
 
-        val total = sqlMapper.countSearch(queryText = null, setCode = "cnt", rarity = null)
+        val total = sqlMapper.countSearch(queryText = null, setCode = "cnt", collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null)
 
         assertEquals(3L, total)
     }
@@ -376,7 +499,7 @@ class CardSqlMapperTest(
             ),
         )
 
-        val total = sqlMapper.countSearch(queryText = "lightning", setCode = "cnt2", rarity = null)
+        val total = sqlMapper.countSearch(queryText = "lightning", setCode = "cnt2", collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null)
 
         assertEquals(2L, total)
     }
@@ -393,6 +516,10 @@ class CardSqlMapperTest(
         val result = sqlMapper.search(
             queryText = null,
             setCode = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
             rarity = null,
             order = CardSortOrder.NAME,
             direction = SortDirection.ASC,
@@ -420,6 +547,8 @@ class CardSqlMapperTest(
         priceUsd: String? = "0.10",
         flavorText: String? = "A whisper in the dark.",
         artist: String? = "Some Artist",
+        colors: List<String> = listOf("G"),
+        colorIdentity: List<String> = listOf("G"),
     ): CardRecord = CardRecord(
         id = null,
         scryfallId = UUID.randomUUID(),
@@ -431,8 +560,8 @@ class CardSqlMapperTest(
         cmc = 1.0,
         typeLine = typeLine,
         oracleText = oracleText,
-        colors = listOf("G"),
-        colorIdentity = listOf("G"),
+        colors = colors,
+        colorIdentity = colorIdentity,
         keywords = emptyList(),
         power = power,
         toughness = toughness,

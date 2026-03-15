@@ -37,7 +37,15 @@ data class CardResponse(
     val prices: CardPrices?,
     val flavorText: String?,
     val artist: String?,
+    val collection: CardCollectionInfo?,
 )
+
+data class CardCollectionInfo(
+    val quantityNonFoil: Int,
+    val quantityFoil: Int,
+) {
+    val totalQuantity: Int get() = quantityNonFoil + quantityFoil
+}
 
 data class CardImageUris(
     val small: String?,

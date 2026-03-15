@@ -26,6 +26,9 @@ class ExposedCardRepository(
         sqlMapper.selectById(id)?.let(toDomain::apply)
             ?: throw CardNotFoundException(id)
 
+    override fun findByIds(ids: List<Long>): List<Card> =
+        sqlMapper.selectByIds(ids).map(toDomain::apply)
+
     override fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card? =
         sqlMapper.selectBySetCodeAndCollectorNumber(setCode, collectorNumber)?.let(toDomain::apply)
 
@@ -36,6 +39,10 @@ class ExposedCardRepository(
         val records = sqlMapper.search(
             queryText = criteria.query,
             setCode = criteria.setCode,
+            collectorNumber = criteria.collectorNumber,
+            colors = criteria.colors,
+            colorIdentity = criteria.colorIdentity,
+            type = criteria.type,
             rarity = criteria.rarity,
             order = criteria.order,
             direction = criteria.direction,
@@ -46,6 +53,10 @@ class ExposedCardRepository(
         val totalCards = sqlMapper.countSearch(
             queryText = criteria.query,
             setCode = criteria.setCode,
+            collectorNumber = criteria.collectorNumber,
+            colors = criteria.colors,
+            colorIdentity = criteria.colorIdentity,
+            type = criteria.type,
             rarity = criteria.rarity,
         )
 

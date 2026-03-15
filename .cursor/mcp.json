@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "mtg-bro": {
+      "command": "/Users/a.tikholoz/IdeaProjects/mtg-bro/mcp-server/build/install/mcp-server/bin/mcp-server",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "COLLECTION_MANAGER_BASE_URL": "http://localhost:8080"
+      }
+    }
+  }
+}

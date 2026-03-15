@@ -3,6 +3,10 @@ package xyz.candycrawler.collectionmanager.domain.card.model
 data class CardSearchCriteria(
     val query: String? = null,
     val setCode: String? = null,
+    val collectorNumber: String? = null,
+    val colors: List<String>? = null,
+    val colorIdentity: List<String>? = null,
+    val type: String? = null,
     val rarity: String? = null,
     val order: CardSortOrder = CardSortOrder.NAME,
     val direction: SortDirection = SortDirection.AUTO,
