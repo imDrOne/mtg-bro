@@ -1,0 +1,63 @@
+package xyz.candycrawler.wizardstataggregator.application.rest.dto.response
+
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStats
+
+data class CardLimitedStatsResponse(
+    val mtgaId: Int,
+    val name: String,
+    val setCode: String,
+    val matchType: String,
+    val color: String,
+    val rarity: String,
+    val types: List<String>,
+    val url: String,
+    val urlBack: String,
+    val seenCount: Int,
+    val avgSeen: Double?,
+    val pickCount: Int,
+    val avgPick: Double?,
+    val gameCount: Int,
+    val poolCount: Int,
+    val playRate: Double,
+    val winRate: Double,
+    val openingHandGameCount: Int,
+    val openingHandWinRate: Double,
+    val drawnGameCount: Int,
+    val drawnWinRate: Double,
+    val everDrawnGameCount: Int,
+    val everDrawnWinRate: Double,
+    val neverDrawnGameCount: Int,
+    val neverDrawnWinRate: Double,
+    val drawnImprovementWinRate: Double,
+) {
+    companion object {
+        fun from(stats: CardLimitedStats) = CardLimitedStatsResponse(
+            mtgaId = stats.mtgaId,
+            name = stats.name,
+            setCode = stats.setCode,
+            matchType = stats.matchType,
+            color = stats.color,
+            rarity = stats.rarity,
+            types = stats.types,
+            url = stats.url,
+            urlBack = stats.urlBack,
+            seenCount = stats.seenCount,
+            avgSeen = stats.avgSeen,
+            pickCount = stats.pickCount,
+            avgPick = stats.avgPick,
+            gameCount = stats.gameCount,
+            poolCount = stats.poolCount,
+            playRate = stats.playRate,
+            winRate = stats.winRate,
+            openingHandGameCount = stats.openingHandGameCount,
+            openingHandWinRate = stats.openingHandWinRate,
+            drawnGameCount = stats.drawnGameCount,
+            drawnWinRate = stats.drawnWinRate,
+            everDrawnGameCount = stats.everDrawnGameCount,
+            everDrawnWinRate = stats.everDrawnWinRate,
+            neverDrawnGameCount = stats.neverDrawnGameCount,
+            neverDrawnWinRate = stats.neverDrawnWinRate,
+            drawnImprovementWinRate = stats.drawnImprovementWinRate,
+        )
+    }
+}

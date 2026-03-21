@@ -7,4 +7,5 @@ interface CardLimitedStatsRepository {
     fun findById(id: Long): CardLimitedStats
     fun findByMatchType(matchType: String): List<CardLimitedStats>
     fun findByMtgaIdAndMatchType(mtgaId: Int, setCode: String, matchType: String): CardLimitedStats?
+    fun findByNameAndSetCodeAndMatchType(name: String, setCode: String, matchType: String): CardLimitedStats?
 }

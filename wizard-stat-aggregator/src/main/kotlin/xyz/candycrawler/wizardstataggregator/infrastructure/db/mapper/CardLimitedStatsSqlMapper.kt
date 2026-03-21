@@ -69,6 +69,16 @@ class CardLimitedStatsSqlMapper {
             .map { it.toRecord() }
             .singleOrNull()
 
+    internal fun selectByNameAndSetCodeAndMatchType(name: String, setCode: String, matchType: String): CardLimitedStatsRecord? =
+        CardLimitedStatsTable.selectAll()
+            .where {
+                (CardLimitedStatsTable.name eq name) and
+                (CardLimitedStatsTable.setCode eq setCode) and
+                (CardLimitedStatsTable.matchType eq matchType)
+            }
+            .map { it.toRecord() }
+            .singleOrNull()
+
     private fun ResultRow.toRecord(): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = this[CardLimitedStatsTable.id].value,
         name = this[CardLimitedStatsTable.name],

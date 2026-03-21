@@ -26,7 +26,9 @@ class ExposedCardLimitedStatsRepository(
 
     override fun findByMtgaIdAndMatchType(mtgaId: Int, setCode: String, matchType: String): CardLimitedStats? =
         sqlMapper.selectByMtgaIdAndMatchType(mtgaId, setCode, matchType)?.toDomain()
-            ?: throw CardLimitedStatsNotFoundException("with mtgaId=$mtgaId, setCode=$setCode and matchType=$matchType not found")
+
+    override fun findByNameAndSetCodeAndMatchType(name: String, setCode: String, matchType: String): CardLimitedStats? =
+        sqlMapper.selectByNameAndSetCodeAndMatchType(name, setCode, matchType)?.toDomain()
 
     private fun CardLimitedStats.toRecord(): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = id,

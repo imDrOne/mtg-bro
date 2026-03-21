@@ -32,6 +32,19 @@ services:
     ports:
       - "8080:8080"
 
+  wizard-stat-aggregator:
+    image: mtg-bro/wizard-stat-aggregator:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/wizard_stat_db
+      SPRING_DATASOURCE_USERNAME: wizard_user
+      SPRING_DATASOURCE_PASSWORD: wizard_pass
+      SCHEDULER_CARD_LIMITED_STATS_ENABLED: "false"
+    ports:
+      - "8081:8080"
+
   mcp-server:
     image: mtg-bro/mcp-server:latest
     depends_on:

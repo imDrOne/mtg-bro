@@ -17,7 +17,7 @@ tasks.register("jibDockerBuild") {
 tasks.register<Exec>("runLocal") {
     group = "application"
     description = "Builds Docker images, starts postgres + collection-manager + mcp-server + ngrok in Docker. Blocks until Ctrl+C."
-    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild")
+    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":wizard-stat-aggregator:jibDockerBuild")
 
     doFirst {
         val composeFile = file("docker/docker-compose.local.yml")
