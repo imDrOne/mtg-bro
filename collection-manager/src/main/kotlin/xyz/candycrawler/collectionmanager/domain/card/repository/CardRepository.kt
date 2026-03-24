@@ -10,4 +10,5 @@ interface CardRepository {
     fun findByIds(ids: List<Long>): List<Card>
     fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card?
     fun search(criteria: CardSearchCriteria): CardPage
+    fun findByTribe(tribe: String): List<Card>
 }

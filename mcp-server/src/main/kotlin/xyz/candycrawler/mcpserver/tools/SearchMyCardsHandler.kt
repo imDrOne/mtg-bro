@@ -17,27 +17,29 @@ fun searchMyCardsSchema() = ToolSchema(
     properties = buildJsonObject {
         put("q", buildJsonObject {
             put("type", "string")
-            put("description", "Search query (name, type line, oracle text)")
+            put(
+                "description", """Free-text search. Matches against card name, type line (e.g. "merfolk", "instant", "legendary"), and oracle text (e.g. "draw a card", "flying"). Case-insensitive substring match. Examples: "merfolk" → all cards with Merfolk in type line or text; "draw a card" → all cards mentioning draw in oracle text; "legendary creature" → all legendary creatures. Note: q also matches type_line; combine with type= for type-only filtering."""
+            )
         })
         put("set", buildJsonObject {
             put("type", "string")
-            put("description", "Filter by set code (e.g. neo, dmu)")
+            put("description", """Set code, e.g. "neo", "dmu", "fdn".""")
         })
         put("colors", buildJsonObject {
             put("type", "string")
-            put("description", "Filter by mana colors: w,u,b,r,g. E.g. 'wu' or 'w,u' for white-blue")
+            put("description", """Filter by mana colors in card cost: w,u,b,r,g. Cards must contain ALL these colors. Example: "wu" → cards with white AND blue in their colors.""")
         })
         put("color_identity", buildJsonObject {
             put("type", "string")
-            put("description", "Filter by color identity (same format as colors)")
+            put("description", """Filter by color identity (includes all mana symbols on the card, not just cost). Example: "wu" → cards playable in a WU commander deck.""")
         })
         put("type", buildJsonObject {
             put("type", "string")
-            put("description", "Filter by card type: creature, instant, sorcery, land, enchantment, artifact, planeswalker")
+            put("description", """Filter by card type (case-insensitive substring match on type line). Example: "creature", "instant", "enchantment". Use this for type-only filtering; q= also matches type_line but additionally searches name and oracle text.""")
         })
         put("rarity", buildJsonObject {
             put("type", "string")
-            put("description", "Filter by rarity: common, uncommon, rare, mythic")
+            put("description", "Exact match: common, uncommon, rare, mythic")
         })
         put("page", buildJsonObject {
             put("type", "integer")
@@ -81,7 +83,13 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
         val lines = data.mapIndexed { i, el ->
             val card = el.jsonObject
             val name = card["name"]?.jsonPrimitive?.content ?: "?"
+            val manaCost = card["manaCost"]?.jsonPrimitive?.content ?: ""
+            val typeLine = card["typeLine"]?.jsonPrimitive?.content ?: ""
+            val oracleText = card["oracleText"]?.jsonPrimitive?.content ?: ""
+            val power = card["power"]?.jsonPrimitive?.content
+            val toughness = card["toughness"]?.jsonPrimitive?.content
             val setCode = card["setCode"]?.jsonPrimitive?.content ?: ""
+            val collectorNumber = card["collectorNumber"]?.jsonPrimitive?.content ?: ""
             val rarityVal = card["rarity"]?.jsonPrimitive?.content ?: ""
             val coll = card["collection"]?.jsonObject
             val nonFoil = coll?.get("quantityNonFoil")?.jsonPrimitive?.content?.toIntOrNull() ?: 0
@@ -92,7 +100,19 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
                 nonFoil > 0 -> "$nonFoil copies"
                 else -> "not in collection"
             }
-            "${i + 1}. $name ($setCode) $rarityVal — $copies"
+            val imageUrl = card["imageUris"]?.jsonObject?.get("normal")?.jsonPrimitive?.content ?: ""
+            val priceUsd = card["prices"]?.jsonObject?.get("usd")?.jsonPrimitive?.content ?: ""
+            val ptStr = if (power != null && toughness != null) "$power/$toughness" else "-"
+            buildString {
+                append("${i + 1}. $name ($setCode #$collectorNumber) [$rarityVal]")
+                if (manaCost.isNotEmpty()) append(" | Cost: $manaCost")
+                appendLine()
+                appendLine("   $typeLine | P/T: $ptStr")
+                if (oracleText.isNotEmpty()) appendLine("   Oracle: $oracleText")
+                append("   Collection: $copies")
+                if (priceUsd.isNotEmpty()) append(" | Price: \$$priceUsd")
+                if (imageUrl.isNotEmpty()) append(" | Image: $imageUrl")
+            }
         }
 
         val summary = buildString {

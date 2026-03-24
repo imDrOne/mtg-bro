@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
+import xyz.candycrawler.collectionmanager.infrastructure.db.table.CollectionEntriesTable
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.table.CardsTable
@@ -116,6 +117,18 @@ class CardSqlMapper {
             .limit(limit)
             .offset(offset)
             .map { it.toRecord() }
+    }
+
+    internal fun findByTribe(tribe: String): List<CardRecord> {
+        val pattern = "%${tribe.lowercase()}%"
+        return (CardsTable innerJoin CollectionEntriesTable)
+            .selectAll()
+            .where {
+                (CardsTable.typeLine.lowerCase() like pattern) or
+                (CardsTable.oracleText.lowerCase() like pattern)
+            }
+            .map { it.toRecord() }
+            .distinctBy { it.id }
     }
 
     internal fun countSearch(

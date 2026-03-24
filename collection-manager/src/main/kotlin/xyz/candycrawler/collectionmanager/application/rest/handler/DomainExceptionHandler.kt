@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundException
 import xyz.candycrawler.collectionmanager.domain.card.exception.InvalidCardException
 import xyz.candycrawler.collectionmanager.domain.collection.exception.InvalidCollectionEntryException
+import xyz.candycrawler.collectionmanager.domain.tribal.exception.InvalidTribalQueryException
 
 @RestControllerAdvice
 class DomainExceptionHandler {
@@ -25,5 +26,13 @@ class DomainExceptionHandler {
         status = HttpStatus.UNPROCESSABLE_ENTITY.value(),
         error = HttpStatus.UNPROCESSABLE_ENTITY.reasonPhrase,
         message = ex.message ?: "Domain validation failed",
+    )
+
+    @ExceptionHandler(InvalidTribalQueryException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalidTribalQuery(ex: InvalidTribalQueryException): ErrorResponse = ErrorResponse(
+        status = HttpStatus.BAD_REQUEST.value(),
+        error = HttpStatus.BAD_REQUEST.reasonPhrase,
+        message = ex.message ?: "Invalid tribal query",
     )
 }

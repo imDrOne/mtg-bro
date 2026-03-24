@@ -9,7 +9,9 @@ import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.serialization.json.Json
+import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
 import xyz.candycrawler.mcpserver.tools.getCardSchema
+import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
 import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
@@ -58,6 +60,12 @@ fun createServer(baseUrl: String): Server {
         description = "Returns format and color codes for search_scryfall and search_my_cards. Use filters to avoid loading large datasets.",
         inputSchema = listScryfallFormatCodesSchema(),
     ) { handleListScryfallFormatCodes() }
+
+    server.addTool(
+        name = "analyze_tribal_depth",
+        description = "Analyze tribal depth for a given MTG creature type in your collection. Returns total card count, CMC distribution, role breakdown (creatures / kindred spells / tribal support cards), color spread, whether a lord or commander exists, and deck viability. Use this when the user asks about a specific tribe like Merfolk, Elf, Goblin, etc.",
+        inputSchema = analyzeTribalDepthSchema(),
+    ) { request -> handleAnalyzeTribalDepth(context, request) }
 
     return server
 }

@@ -36,6 +36,10 @@ Scryfall's `/cards/collection` endpoint accepts at most **75 identifiers** per r
 
 `CardSearchController` calls `cardRepository.search(criteria)` which delegates to `CardSqlMapper.search()`. After fetching the page it joins quantity data from `CollectionEntryRepository.findByCardIds()` in the application layer (not in SQL).
 
+## Collection Invariants
+
+- `collection_entries.quantity` is always > 0. A card's presence in `collection_entries` implies ownership. There are no zero-quantity placeholder rows.
+
 ## Adding a new collection file format
 
 1. Implement `CollectionFileParser` — parse lines into `ParsedCollectionEntry`

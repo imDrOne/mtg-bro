@@ -3,6 +3,11 @@ spring:
     name: collection-manager
   profiles:
     default: local
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterWrite=86400s
+    cache-names: creature-types
   exposed:
     generate-ddl: false
   datasource:
