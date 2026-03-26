@@ -119,6 +119,12 @@ class CardSqlMapper {
             .map { it.toRecord() }
     }
 
+    internal fun findAllInCollection(): List<CardRecord> =
+        (CardsTable innerJoin CollectionEntriesTable)
+            .selectAll()
+            .map { it.toRecord() }
+            .distinctBy { it.id }
+
     internal fun findByTribe(tribe: String): List<CardRecord> {
         val pattern = "%${tribe.lowercase()}%"
         return (CardsTable innerJoin CollectionEntriesTable)

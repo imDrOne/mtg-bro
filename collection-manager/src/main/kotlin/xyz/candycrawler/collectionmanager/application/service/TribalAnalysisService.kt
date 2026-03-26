@@ -1,12 +1,11 @@
 package xyz.candycrawler.collectionmanager.application.service
 
 import org.springframework.stereotype.Service
+import xyz.candycrawler.collectionmanager.domain.card.model.MtgColor
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
 import xyz.candycrawler.collectionmanager.domain.tribal.exception.InvalidTribalQueryException
 import xyz.candycrawler.collectionmanager.domain.tribal.model.TribalStats
 import xyz.candycrawler.collectionmanager.infrastructure.cache.CreatureTypeCacheService
-
-private val WUBRG = listOf("W", "U", "B", "R", "G")
 
 @Service
 class TribalAnalysisService(
@@ -48,7 +47,7 @@ class TribalAnalysisService(
         val colorSpread = cards
             .map { card ->
                 card.colors
-                    .sortedBy { color -> WUBRG.indexOf(color.uppercase()).takeIf { it >= 0 } ?: Int.MAX_VALUE }
+                    .sortedBy { color -> MtgColor.sortIndex(color).takeIf { it >= 0 } ?: Int.MAX_VALUE }
                     .joinToString("")
             }
             .groupBy { it }

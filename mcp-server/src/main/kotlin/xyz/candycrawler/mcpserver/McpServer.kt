@@ -10,6 +10,8 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.serialization.json.Json
 import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
+import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
+import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
 import xyz.candycrawler.mcpserver.tools.getCardSchema
 import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
@@ -66,6 +68,12 @@ fun createServer(baseUrl: String): Server {
         description = "Analyze tribal depth for a given MTG creature type in your collection. Returns total card count, CMC distribution, role breakdown (creatures / kindred spells / tribal support cards), color spread, whether a lord or commander exists, and deck viability. Use this when the user asks about a specific tribe like Merfolk, Elf, Goblin, etc.",
         inputSchema = analyzeTribalDepthSchema(),
     ) { request -> handleAnalyzeTribalDepth(context, request) }
+
+    server.addTool(
+        name = "get_collection_overview",
+        description = "Get a high-level summary of your entire card collection: total unique cards, breakdown by color (W/U/B/R/G/C), type (creature/instant/etc), rarity, and top 10 tribes with their colors. Use this when the user asks what their collection looks like or wants an overview before planning a deck.",
+        inputSchema = getCollectionOverviewSchema(),
+    ) { request -> handleGetCollectionOverview(context, request) }
 
     return server
 }
