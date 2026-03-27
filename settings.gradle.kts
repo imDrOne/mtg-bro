@@ -7,3 +7,4 @@ rootProject.name = "mtg-bro"
 include("wizard-stat-aggregator")
 include("collection-manager")
 include("mcp-server")
+include("draftsim-parser")

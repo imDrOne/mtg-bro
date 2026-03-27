@@ -16,21 +16,23 @@ import xyz.candycrawler.mcpserver.tools.getCardSchema
 import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
 import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
+import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
 import xyz.candycrawler.mcpserver.tools.handleSearchScryfall
 import xyz.candycrawler.mcpserver.tools.listScryfallFormatCodesSchema
+import xyz.candycrawler.mcpserver.tools.searchDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
 import xyz.candycrawler.mcpserver.tools.ToolContext
 
-fun createServer(baseUrl: String): Server {
+fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    val context = ToolContext(baseUrl = baseUrl, httpClient = httpClient)
+    val context = ToolContext(baseUrl = baseUrl, draftsimParserBaseUrl = draftsimParserBaseUrl, httpClient = httpClient)
 
     val server = Server(
         serverInfo = Implementation(name = "mtg-bro", version = "1.0.0"),
@@ -74,6 +76,12 @@ fun createServer(baseUrl: String): Server {
         description = "Get a high-level summary of your entire card collection: total unique cards, breakdown by color (W/U/B/R/G/C), type (creature/instant/etc), rarity, and top 10 tribes with their colors. Use this when the user asks what their collection looks like or wants an overview before planning a deck.",
         inputSchema = getCollectionOverviewSchema(),
     ) { request -> handleGetCollectionOverview(context, request) }
+
+    server.addTool(
+        name = "search_draftsim_articles",
+        description = "Search Draftsim.com articles about MTG draft strategy, set reviews, and limited format guides. Returns article titles and full text content. Use this when the user asks about draft picks, limited strategy, card evaluations for draft, or wants to know what Draftsim says about a card or set.",
+        inputSchema = searchDraftsimArticlesSchema(),
+    ) { request -> handleSearchDraftsimArticles(context, request) }
 
     return server
 }

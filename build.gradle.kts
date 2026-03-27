@@ -11,13 +11,13 @@ val dockerExecutable: String by lazy {
 tasks.register("jibDockerBuild") {
     group = "build"
     description = "Builds Docker images for all services (collection-manager, mcp-server, wizard-stat-aggregator)"
-    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":wizard-stat-aggregator:jibDockerBuild")
+    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":wizard-stat-aggregator:jibDockerBuild", ":draftsim-parser:jibDockerBuild")
 }
 
 tasks.register<Exec>("runLocal") {
     group = "application"
     description = "Builds Docker images, starts postgres + collection-manager + mcp-server + ngrok in Docker. Blocks until Ctrl+C."
-    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild")
+    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":draftsim-parser:jibDockerBuild")
 
     doFirst {
         val composeFile = file("docker/docker-compose.local.yml")

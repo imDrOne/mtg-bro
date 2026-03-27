@@ -16,10 +16,11 @@ import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val baseUrl = System.getenv("COLLECTION_MANAGER_BASE_URL") ?: "http://localhost:8080"
+    val draftsimParserBaseUrl = System.getenv("DRAFTSIM_PARSER_BASE_URL") ?: "http://localhost:8081"
     val transport = args.getOption("--transport") ?: System.getenv("MCP_TRANSPORT") ?: "stdio"
     val port = args.getOption("--port")?.toIntOrNull() ?: System.getenv("MCP_HTTP_PORT")?.toIntOrNull() ?: 3000
 
-    val server = createServer(baseUrl)
+    val server = createServer(baseUrl, draftsimParserBaseUrl)
 
     when (transport) {
         "stdio" -> runBlocking {
