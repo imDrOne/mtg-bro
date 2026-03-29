@@ -16,6 +16,7 @@ class ArticleRecordToArticleMapper : Function<ArticleRecord, Article> {
         url = record.url,
         htmlContent = record.htmlContent,
         textContent = record.textContent,
+        analyzedText = record.analyzedText,
         publishedAt = record.publishedAt,
         fetchedAt = record.fetchedAt,
     )

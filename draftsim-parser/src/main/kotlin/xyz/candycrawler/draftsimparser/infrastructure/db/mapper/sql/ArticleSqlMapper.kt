@@ -1,7 +1,6 @@
 package xyz.candycrawler.draftsimparser.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.lowerCase
@@ -9,11 +8,11 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Component
 import xyz.candycrawler.draftsimparser.infrastructure.db.entity.ArticleRecord
 import xyz.candycrawler.draftsimparser.infrastructure.db.table.ArticlesTable
 import xyz.candycrawler.draftsimparser.infrastructure.db.table.ParseTaskArticlesTable
-import xyz.candycrawler.draftsimparser.infrastructure.db.table.ParseTasksTable
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -81,6 +80,12 @@ class ArticleSqlMapper {
             .where { ParseTaskArticlesTable.parseTaskId eq Uuid.parse(taskId.toString()) }
             .map { it.toRecord() }
 
+    internal fun updateAnalyzedText(id: Long, value: String) {
+        ArticlesTable.update({ ArticlesTable.id eq id }) {
+            it[analyzedText] = value
+        }
+    }
+
     internal fun insertTaskArticleLink(taskId: UUID, articleId: Long) {
         ParseTaskArticlesTable.insertIgnore {
             it[parseTaskId] = Uuid.parse(taskId.toString())
@@ -96,6 +101,7 @@ class ArticleSqlMapper {
         url = this[ArticlesTable.url],
         htmlContent = this[ArticlesTable.htmlContent],
         textContent = this[ArticlesTable.textContent],
+        analyzedText = this[ArticlesTable.analyzedText],
         publishedAt = this[ArticlesTable.publishedAt],
         fetchedAt = this[ArticlesTable.fetchedAt],
     )

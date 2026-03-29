@@ -4,6 +4,7 @@ enum class ParseTaskStatus {
     PENDING,
     SEARCHING,
     FETCHING_ARTICLES,
+    ANALYZING,
     COMPLETED,
     FAILED,
 }

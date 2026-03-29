@@ -2,6 +2,7 @@ package xyz.candycrawler.draftsimparser.infrastructure.db.repository
 
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
+import xyz.candycrawler.draftsimparser.domain.article.exception.ArticleNotFoundException
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.infrastructure.db.mapper.ArticleRecordToArticleMapper
@@ -19,6 +20,14 @@ class ExposedArticleRepository(
 
     override fun save(article: Article): Article =
         sqlMapper.upsert(toRecord.apply(article)).let(toDomain::apply)
+
+    override fun update(id: Long, block: (Article) -> Article): Article {
+        val existing = sqlMapper.selectById(id)?.let(toDomain::apply)
+            ?: throw ArticleNotFoundException(id)
+        val updated = block(existing)
+        sqlMapper.updateAnalyzedText(id, updated.analyzedText ?: "")
+        return updated
+    }
 
     override fun saveTaskArticleLink(taskId: UUID, articleId: Long) =
         sqlMapper.insertTaskArticleLink(taskId, articleId)

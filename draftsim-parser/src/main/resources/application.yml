@@ -22,3 +22,7 @@ infrastructure:
     client:
       draftsim:
         base-url: ${DRAFTSIM_BASE_URL:https://draftsim.com}
+  llm:
+    client: ${LLM_CLIENT:CLAUDE}
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}

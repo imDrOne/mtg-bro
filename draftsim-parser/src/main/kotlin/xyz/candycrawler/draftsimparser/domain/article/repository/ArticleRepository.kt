@@ -5,5 +5,6 @@ import java.util.UUID
 
 interface ArticleRepository {
     fun save(article: Article): Article
+    fun update(id: Long, block: (Article) -> Article): Article
     fun saveTaskArticleLink(taskId: UUID, articleId: Long)
 }

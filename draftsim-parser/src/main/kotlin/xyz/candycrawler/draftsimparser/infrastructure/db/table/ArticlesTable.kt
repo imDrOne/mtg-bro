@@ -10,6 +10,7 @@ object ArticlesTable : LongIdTable("articles") {
     val url = text("url")
     val htmlContent = text("html_content").nullable()
     val textContent = text("text_content").nullable()
+    val analyzedText = text("analyzed_text").nullable()
     val publishedAt = datetime("published_at").nullable()
     val fetchedAt = datetime("fetched_at").nullable()
 

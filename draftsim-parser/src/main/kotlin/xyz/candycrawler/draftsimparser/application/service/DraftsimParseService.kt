@@ -14,6 +14,8 @@ import kotlinx.coroutines.sync.withPermit
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.context.ApplicationEventPublisher
+import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisMessage
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.parsetask.model.ParseTask
@@ -29,6 +31,7 @@ class DraftsimParseService(
     private val parseTaskRepository: ParseTaskRepository,
     private val articleRepository: ArticleRepository,
     private val wpApiClient: DraftsimWpApiClient,
+    private val eventPublisher: ApplicationEventPublisher,
 ) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -93,27 +96,56 @@ class DraftsimParseService(
         }
 
         val semaphore = Semaphore(MAX_PARALLEL_ARTICLES)
+        val savedArticles = mutableListOf<Article>()
         coroutineScope {
             allPosts.chunked(CHUNK_SIZE).forEach { chunk ->
-                chunk.map { post ->
+                val chunkResults = chunk.map { post ->
                     async {
                         semaphore.withPermit {
                             processPost(taskId, post)
                         }
                     }
                 }.awaitAll()
+                savedArticles.addAll(chunkResults)
                 parseTaskRepository.incrementProcessedArticles(taskId, chunk.size)
             }
+        }
+
+        log.info("Task {}: fetched {} articles, starting analysis", taskId, savedArticles.size)
+        parseTaskRepository.update(taskId) {
+            it.copy(status = ParseTaskStatus.ANALYZING, updatedAt = LocalDateTime.now())
+        }
+
+        savedArticles.forEach { article ->
+            val paragraphs = article.textContent
+                ?.split("\n\n")
+                ?.filter { it.isNotBlank() }
+                ?: emptyList()
+            if (paragraphs.isNotEmpty()) {
+                eventPublisher.publishEvent(
+                    ArticleAnalysisMessage(
+                        articleId = article.id!!,
+                        paragraphs = paragraphs,
+                        slug = article.slug,
+                        url = article.url,
+                    )
+                )
+            }
+            log.info("Task {}: analyzed article id={} slug={}", taskId, article.id, article.slug)
         }
 
         parseTaskRepository.update(taskId) {
             it.copy(status = ParseTaskStatus.COMPLETED, updatedAt = LocalDateTime.now())
         }
-        log.info("Task {}: completed, processed {} articles", taskId, allPosts.size)
+        log.info("Task {}: completed, processed {} articles", taskId, savedArticles.size)
     }
 
-    private fun processPost(taskId: UUID, post: WpPostResponse) {
-        val textContent = Jsoup.parse(post.content.rendered).text()
+    private fun processPost(taskId: UUID, post: WpPostResponse): Article {
+        val doc = Jsoup.parse(post.content.rendered)
+        val textContent = doc.select("p")
+            .map { it.text() }
+            .filter { it.isNotBlank() }
+            .joinToString("\n\n")
         val article = Article(
             id = null,
             externalId = post.id,
@@ -122,11 +154,13 @@ class DraftsimParseService(
             url = post.link,
             htmlContent = post.content.rendered,
             textContent = textContent,
+            analyzedText = null,
             publishedAt = post.date,
             fetchedAt = LocalDateTime.now(),
         )
         val saved = articleRepository.save(article)
         articleRepository.saveTaskArticleLink(taskId, saved.id!!)
+        return saved
     }
 
     override fun destroy() {

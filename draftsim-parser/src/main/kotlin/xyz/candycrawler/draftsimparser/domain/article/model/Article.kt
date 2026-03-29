@@ -11,6 +11,7 @@ data class Article(
     val url: String,
     val htmlContent: String?,
     val textContent: String?,
+    val analyzedText: String?,
     val publishedAt: LocalDateTime?,
     val fetchedAt: LocalDateTime?,
 ) {
