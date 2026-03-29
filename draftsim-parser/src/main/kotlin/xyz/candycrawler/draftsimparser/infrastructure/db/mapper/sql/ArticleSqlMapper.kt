@@ -1,6 +1,8 @@
 package xyz.candycrawler.draftsimparser.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.lowerCase
@@ -35,6 +37,8 @@ class ArticleSqlMapper {
             this[ArticlesTable.textContent] = r.textContent
             this[ArticlesTable.publishedAt] = r.publishedAt
             this[ArticlesTable.fetchedAt] = r.fetchedAt
+            // favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
+            // are NOT updated on conflict — preserved from existing row
         }.single().toRecord()
 
     internal fun selectById(id: Long): ArticleRecord? =
@@ -43,35 +47,39 @@ class ArticleSqlMapper {
             .map { it.toRecord() }
             .singleOrNull()
 
-    internal fun search(query: String?, limit: Int, offset: Long): List<ArticleRecord> {
+    internal fun search(query: String?, limit: Int, offset: Long, favoriteOnly: Boolean? = null): List<ArticleRecord> {
+        val condition = buildSearchCondition(query, favoriteOnly)
         val q = ArticlesTable.selectAll()
-
-        if (!query.isNullOrBlank()) {
-            val pattern = "%${query.lowercase()}%"
-            q.where {
-                (ArticlesTable.title.lowerCase() like pattern) or
-                (ArticlesTable.textContent.lowerCase() like pattern)
-            }
-        }
-
+        condition?.let { q.where { it } }
         return q.orderBy(ArticlesTable.publishedAt to org.jetbrains.exposed.v1.core.SortOrder.DESC)
             .limit(limit)
             .offset(offset)
             .map { it.toRecord() }
     }
 
-    internal fun countSearch(query: String?): Long {
+    internal fun countSearch(query: String?, favoriteOnly: Boolean? = null): Long {
+        val condition = buildSearchCondition(query, favoriteOnly)
         val q = ArticlesTable.selectAll()
+        condition?.let { q.where { it } }
+        return q.count()
+    }
+
+    private fun buildSearchCondition(query: String?, favoriteOnly: Boolean?): Op<Boolean>? {
+        var condition: Op<Boolean>? = null
 
         if (!query.isNullOrBlank()) {
             val pattern = "%${query.lowercase()}%"
-            q.where {
-                (ArticlesTable.title.lowerCase() like pattern) or
+            val textCondition = (ArticlesTable.title.lowerCase() like pattern) or
                 (ArticlesTable.textContent.lowerCase() like pattern)
-            }
+            condition = textCondition
         }
 
-        return q.count()
+        if (favoriteOnly == true) {
+            val favCondition = ArticlesTable.favorite eq true
+            condition = condition?.let { it and favCondition } ?: favCondition
+        }
+
+        return condition
     }
 
     internal fun findByTaskId(taskId: UUID): List<ArticleRecord> =
@@ -80,9 +88,12 @@ class ArticleSqlMapper {
             .where { ParseTaskArticlesTable.parseTaskId eq Uuid.parse(taskId.toString()) }
             .map { it.toRecord() }
 
-    internal fun updateAnalyzedText(id: Long, value: String) {
+    internal fun updateAnalysis(id: Long, record: ArticleRecord) {
         ArticlesTable.update({ ArticlesTable.id eq id }) {
-            it[analyzedText] = value
+            it[analyzedText] = record.analyzedText
+            it[errorMsg] = record.errorMsg
+            it[analyzStartedAt] = record.analyzStartedAt
+            it[analyzEndedAt] = record.analyzEndedAt
         }
     }
 
@@ -102,6 +113,10 @@ class ArticleSqlMapper {
         htmlContent = this[ArticlesTable.htmlContent],
         textContent = this[ArticlesTable.textContent],
         analyzedText = this[ArticlesTable.analyzedText],
+        favorite = this[ArticlesTable.favorite],
+        errorMsg = this[ArticlesTable.errorMsg],
+        analyzStartedAt = this[ArticlesTable.analyzStartedAt],
+        analyzEndedAt = this[ArticlesTable.analyzEndedAt],
         publishedAt = this[ArticlesTable.publishedAt],
         fetchedAt = this[ArticlesTable.fetchedAt],
     )

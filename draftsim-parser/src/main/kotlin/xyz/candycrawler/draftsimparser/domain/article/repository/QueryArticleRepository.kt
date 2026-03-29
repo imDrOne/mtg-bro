@@ -6,6 +6,6 @@ import java.util.UUID
 
 interface QueryArticleRepository {
     fun findById(id: Long): Article
-    fun search(query: String?, page: Int, pageSize: Int): ArticlePage
+    fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean? = null): ArticlePage
     fun findByTaskId(taskId: UUID): List<Article>
 }

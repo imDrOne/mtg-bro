@@ -17,6 +17,10 @@ class ArticleRecordToArticleMapper : Function<ArticleRecord, Article> {
         htmlContent = record.htmlContent,
         textContent = record.textContent,
         analyzedText = record.analyzedText,
+        favorite = record.favorite,
+        errorMsg = record.errorMsg,
+        analyzStartedAt = record.analyzStartedAt,
+        analyzEndedAt = record.analyzEndedAt,
         publishedAt = record.publishedAt,
         fetchedAt = record.fetchedAt,
     )

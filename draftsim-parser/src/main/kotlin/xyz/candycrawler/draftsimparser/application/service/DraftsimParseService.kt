@@ -111,27 +111,10 @@ class DraftsimParseService(
             }
         }
 
-        log.info("Task {}: fetched {} articles, starting analysis", taskId, savedArticles.size)
-        parseTaskRepository.update(taskId) {
-            it.copy(status = ParseTaskStatus.ANALYZING, updatedAt = LocalDateTime.now())
-        }
+        log.info("Task {}: fetched {} articles, queuing analysis", taskId, savedArticles.size)
 
         savedArticles.forEach { article ->
-            val paragraphs = article.textContent
-                ?.split("\n\n")
-                ?.filter { it.isNotBlank() }
-                ?: emptyList()
-            if (paragraphs.isNotEmpty()) {
-                eventPublisher.publishEvent(
-                    ArticleAnalysisMessage(
-                        articleId = article.id!!,
-                        paragraphs = paragraphs,
-                        slug = article.slug,
-                        url = article.url,
-                    )
-                )
-            }
-            log.info("Task {}: analyzed article id={} slug={}", taskId, article.id, article.slug)
+            eventPublisher.publishEvent(ArticleAnalysisMessage(article.id!!))
         }
 
         parseTaskRepository.update(taskId) {
@@ -155,6 +138,10 @@ class DraftsimParseService(
             htmlContent = post.content.rendered,
             textContent = textContent,
             analyzedText = null,
+            favorite = false,
+            errorMsg = null,
+            analyzStartedAt = null,
+            analyzEndedAt = null,
             publishedAt = post.date,
             fetchedAt = LocalDateTime.now(),
         )

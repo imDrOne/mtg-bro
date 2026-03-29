@@ -21,10 +21,10 @@ class ExposedQueryArticleRepository(
         sqlMapper.selectById(id)?.let(toDomain::apply)
             ?: throw ArticleNotFoundException(id)
 
-    override fun search(query: String?, page: Int, pageSize: Int): ArticlePage {
+    override fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean?): ArticlePage {
         val offset = ((page - 1) * pageSize).toLong()
-        val records = sqlMapper.search(query, pageSize, offset)
-        val total = sqlMapper.countSearch(query)
+        val records = sqlMapper.search(query, pageSize, offset, favoriteOnly)
+        val total = sqlMapper.countSearch(query, favoriteOnly)
         return ArticlePage(
             articles = records.map(toDomain::apply),
             totalArticles = total,

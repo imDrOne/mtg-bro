@@ -12,6 +12,10 @@ data class Article(
     val htmlContent: String?,
     val textContent: String?,
     val analyzedText: String?,
+    val favorite: Boolean,
+    val errorMsg: String?,
+    val analyzStartedAt: LocalDateTime?,
+    val analyzEndedAt: LocalDateTime?,
     val publishedAt: LocalDateTime?,
     val fetchedAt: LocalDateTime?,
 ) {

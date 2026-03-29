@@ -4,3 +4,9 @@ spring:
     username: wizard_user
     password: wizard_pass
     driver-class-name: org.postgresql.Driver
+
+infrastructure:
+  llm:
+    client: ${LLM_CLIENT:MOCK}
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}

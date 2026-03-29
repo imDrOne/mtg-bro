@@ -3,7 +3,7 @@ package xyz.candycrawler.draftsimparser.application.rest.dto.response
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticlePage
 
 data class ArticlePageResponse(
-    val articles: List<ArticleResponse>,
+    val articles: List<ArticleSummaryResponse>,
     val totalArticles: Long,
     val page: Int,
     val pageSize: Int,
@@ -11,7 +11,7 @@ data class ArticlePageResponse(
 )
 
 fun ArticlePage.toResponse() = ArticlePageResponse(
-    articles = articles.map { it.toResponse() },
+    articles = articles.map { it.toSummaryResponse() },
     totalArticles = totalArticles,
     page = page,
     pageSize = pageSize,

@@ -25,7 +25,7 @@ class ExposedArticleRepository(
         val existing = sqlMapper.selectById(id)?.let(toDomain::apply)
             ?: throw ArticleNotFoundException(id)
         val updated = block(existing)
-        sqlMapper.updateAnalyzedText(id, updated.analyzedText ?: "")
+        sqlMapper.updateAnalysis(id, toRecord.apply(updated))
         return updated
     }
 

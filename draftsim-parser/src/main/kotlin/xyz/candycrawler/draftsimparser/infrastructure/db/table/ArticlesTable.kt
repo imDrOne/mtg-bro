@@ -11,6 +11,10 @@ object ArticlesTable : LongIdTable("articles") {
     val htmlContent = text("html_content").nullable()
     val textContent = text("text_content").nullable()
     val analyzedText = text("analyzed_text").nullable()
+    val favorite = bool("favorite").default(false)
+    val errorMsg = text("error_msg").nullable()
+    val analyzStartedAt = datetime("analyz_started_at").nullable()
+    val analyzEndedAt = datetime("analyz_end_at").nullable()
     val publishedAt = datetime("published_at").nullable()
     val fetchedAt = datetime("fetched_at").nullable()
 

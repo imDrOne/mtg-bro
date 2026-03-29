@@ -3,14 +3,12 @@ package xyz.candycrawler.draftsimparser.application.rest.dto.response
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import java.time.LocalDateTime
 
-data class ArticleResponse(
+data class ArticleSummaryResponse(
     val id: Long,
     val externalId: Long,
     val title: String,
     val slug: String,
     val url: String,
-    val htmlContent: String?,
-    val textContent: String?,
     val analyzedText: String?,
     val favorite: Boolean,
     val errorMsg: String?,
@@ -20,14 +18,12 @@ data class ArticleResponse(
     val fetchedAt: LocalDateTime?,
 )
 
-fun Article.toResponse() = ArticleResponse(
+fun Article.toSummaryResponse() = ArticleSummaryResponse(
     id = id!!,
     externalId = externalId,
     title = title,
     slug = slug,
     url = url,
-    htmlContent = htmlContent,
-    textContent = textContent,
     analyzedText = analyzedText,
     favorite = favorite,
     errorMsg = errorMsg,
