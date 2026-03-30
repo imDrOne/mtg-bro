@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisMessage
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.AnalyzeArticlesRequest
+import xyz.candycrawler.draftsimparser.application.rest.dto.request.GetArticlesByIdsRequest
+import xyz.candycrawler.draftsimparser.application.rest.dto.response.ArticleAnalysisResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.ArticlePageResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.ArticleResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.ArticleSummaryResponse
+import xyz.candycrawler.draftsimparser.application.rest.dto.response.toAnalysisResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSummaryResponse
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
@@ -48,4 +51,8 @@ class ArticleController(
             article.toSummaryResponse()
         }
     }
+
+    @PostMapping("/by-ids")
+    fun getByIds(@RequestBody request: GetArticlesByIdsRequest): List<ArticleAnalysisResponse> =
+        request.ids.map { id -> queryArticleRepository.findById(id).toAnalysisResponse() }
 }

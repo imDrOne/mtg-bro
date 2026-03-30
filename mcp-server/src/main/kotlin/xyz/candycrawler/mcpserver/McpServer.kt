@@ -16,6 +16,8 @@ import xyz.candycrawler.mcpserver.tools.getCardSchema
 import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
 import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
+import xyz.candycrawler.mcpserver.tools.getDraftsimArticlesByIdSchema
+import xyz.candycrawler.mcpserver.tools.handleGetDraftsimArticlesById
 import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
 import xyz.candycrawler.mcpserver.tools.handleSearchScryfall
@@ -79,9 +81,15 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
 
     server.addTool(
         name = "search_draftsim_articles",
-        description = "Search Draftsim.com articles about MTG draft strategy, set reviews, and limited format guides. Returns article titles and full text content. Use this when the user asks about draft picks, limited strategy, card evaluations for draft, or wants to know what Draftsim says about a card or set.",
+        description = "Search favorited Draftsim.com articles about MTG draft strategy, set reviews, and limited format guides. Returns a lightweight list with id, title, slug and published date for browsing. Use get_draftsim_articles to fetch analyzed content for specific articles of interest.",
         inputSchema = searchDraftsimArticlesSchema(),
     ) { request -> handleSearchDraftsimArticles(context, request) }
+
+    server.addTool(
+        name = "get_draftsim_articles",
+        description = "Fetch analyzed MTG card knowledge from specific Draftsim articles by ID. Returns structured card evaluations (tiers, synergies, archetypes). Use after search_draftsim_articles to get content for articles of interest.",
+        inputSchema = getDraftsimArticlesByIdSchema(),
+    ) { request -> handleGetDraftsimArticlesById(context, request) }
 
     return server
 }

@@ -70,7 +70,7 @@ class ArticleSqlMapper {
         if (!query.isNullOrBlank()) {
             val pattern = "%${query.lowercase()}%"
             val textCondition = (ArticlesTable.title.lowerCase() like pattern) or
-                (ArticlesTable.textContent.lowerCase() like pattern)
+                    (ArticlesTable.slug.lowerCase() like pattern)
             condition = textCondition
         }
 

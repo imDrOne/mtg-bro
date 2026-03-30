@@ -10,3 +10,5 @@ infrastructure:
     client: ${LLM_CLIENT:MOCK}
     anthropic:
       api-key: ${ANTHROPIC_API_KEY}
+  analysis:
+    auto-publish: false

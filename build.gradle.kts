@@ -52,6 +52,7 @@ tasks.register<Exec>("runLocal") {
         logger.lifecycle("")
         logger.lifecycle("========================================")
         logger.lifecycle("  collection-manager : http://localhost:8080")
+        logger.lifecycle("  draftsim-parser    : http://localhost:8081")
         logger.lifecycle("  mcp-server         : http://localhost:3000/mcp")
         logger.lifecycle("  tunnel (public)    : ${tunnelUrl?.plus("/mcp") ?: "http://127.0.0.1:4040"}")
         logger.lifecycle("  Press Ctrl+C to stop")

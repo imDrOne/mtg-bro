@@ -43,6 +43,7 @@ suspend fun handleSearchDraftsimArticles(context: ToolContext, request: io.model
             parameter("q", query)
             parameter("page", page)
             parameter("pageSize", pageSize.coerceIn(1, 20))
+            parameter("favorite", true)
         }.body<String>()
 
         val json = Json.parseToJsonElement(response).jsonObject
@@ -54,16 +55,13 @@ suspend fun handleSearchDraftsimArticles(context: ToolContext, request: io.model
             return CallToolResult(content = listOf(TextContent("No articles found for query: $query")))
         }
 
-        val lines = articles.mapIndexed { i, el ->
+        val lines = articles.map { el ->
             val article = el.jsonObject
+            val id = article["id"]?.jsonPrimitive?.content ?: "?"
             val title = article["title"]?.jsonPrimitive?.content ?: "Untitled"
-            val url2 = article["url"]?.jsonPrimitive?.content ?: ""
-            val textContent = article["textContent"]?.jsonPrimitive?.content ?: ""
-            buildString {
-                appendLine("--- Article ${i + 1}: $title ---")
-                if (url2.isNotEmpty()) appendLine("URL: $url2")
-                if (textContent.isNotEmpty()) append(textContent.take(3000))
-            }
+            val slug = article["slug"]?.jsonPrimitive?.content ?: ""
+            val publishedAt = article["publishedAt"]?.jsonPrimitive?.content?.take(10) ?: ""
+            "[id=$id] $title — $slug ($publishedAt)"
         }
 
         val summary = buildString {

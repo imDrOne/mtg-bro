@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.context.ApplicationEventPublisher
 import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisMessage
@@ -32,6 +33,7 @@ class DraftsimParseService(
     private val articleRepository: ArticleRepository,
     private val wpApiClient: DraftsimWpApiClient,
     private val eventPublisher: ApplicationEventPublisher,
+    @Value("\${infrastructure.analysis.auto-publish}") private val autoPublish: Boolean,
 ) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -113,8 +115,10 @@ class DraftsimParseService(
 
         log.info("Task {}: fetched {} articles, queuing analysis", taskId, savedArticles.size)
 
-        savedArticles.forEach { article ->
-            eventPublisher.publishEvent(ArticleAnalysisMessage(article.id!!))
+        if (autoPublish) {
+            savedArticles.forEach { article ->
+                eventPublisher.publishEvent(ArticleAnalysisMessage(article.id!!))
+            }
         }
 
         parseTaskRepository.update(taskId) {
