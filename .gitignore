@@ -40,7 +40,10 @@ out/
 ### Kotlin ###
 .kotlin
 
-**/db.properties
-
 ### Docker ###
 docker/.env
+
+## Configs & Props ##
+
+**/resources/application-local.yml
+**/db.properties
