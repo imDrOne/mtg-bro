@@ -38,6 +38,7 @@ object CardsTable : LongIdTable("cards") {
     val priceEurFoil = varchar("price_eur_foil", 20).nullable()
     val flavorText = text("flavor_text").nullable()
     val artist = varchar("artist", 255).nullable()
+    val mtgaId = text("mtga_id").nullable()
 
     init {
         uniqueIndex("uq_cards_scryfall_id", scryfallId)

@@ -42,5 +42,6 @@ class ScryfallCardResponseToCardMapper : Function<ScryfallCardResponse, Card> {
         priceEurFoil = response.prices?.eurFoil,
         flavorText = response.flavorText,
         artist = response.artist,
+        mtgaId = response.arenaId?.toString(),
     )
 }

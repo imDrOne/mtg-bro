@@ -9,6 +9,8 @@ import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.serialization.json.Json
+import xyz.candycrawler.mcpserver.tools.handleSaveDeck
+import xyz.candycrawler.mcpserver.tools.saveDeckSchema
 import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
 import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
 import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
@@ -90,6 +92,17 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
         description = "Fetch analyzed MTG card knowledge from specific Draftsim articles by ID. Returns structured card evaluations (tiers, synergies, archetypes). Use after search_draftsim_articles to get content for articles of interest.",
         inputSchema = getDraftsimArticlesByIdSchema(),
     ) { request -> handleGetDraftsimArticlesById(context, request) }
+
+    server.addTool(
+        name = "save_deck",
+        description = """Save a finalized deck to your collection.
+            IMPORTANT: Use search_my_cards first to find card IDs (the numeric 'id' field in results).
+            Format rules: STANDARD requires mainboard >= 60 cards; SEALED and DRAFT require >= 40 cards.
+            Max 4 copies of any single card.
+            On success returns the saved deck ID.
+            On validation failure (error response) the message explains what to fix — correct and retry.""",
+        inputSchema = saveDeckSchema(),
+    ) { request -> handleSaveDeck(context, request) }
 
     return server
 }

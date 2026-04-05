@@ -8,6 +8,8 @@ interface CardRepository {
     fun saveAll(cards: List<Card>): List<Card>
     fun findById(id: Long): Card
     fun findByIds(ids: List<Long>): List<Card>
+    fun findByNames(names: List<String>): List<Card>
+    fun findBySetAndCollectorPairs(pairs: List<Pair<String, String>>): List<Card>
     fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card?
     fun search(criteria: CardSearchCriteria): CardPage
     fun findByTribe(tribe: String): List<Card>

@@ -153,6 +153,7 @@ class CardSearchController(
         ),
         flavorText = flavorText,
         artist = artist,
+        mtgaId = mtgaId,
         collection = collection,
     )
 }

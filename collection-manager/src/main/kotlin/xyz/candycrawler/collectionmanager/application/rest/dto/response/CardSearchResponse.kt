@@ -37,6 +37,7 @@ data class CardResponse(
     val prices: CardPrices?,
     val flavorText: String?,
     val artist: String?,
+    val mtgaId: String?,
     val collection: CardCollectionInfo?,
 )
 

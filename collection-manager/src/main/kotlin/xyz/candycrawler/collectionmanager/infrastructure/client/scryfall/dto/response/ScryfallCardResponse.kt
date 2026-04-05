@@ -39,6 +39,8 @@ data class ScryfallCardResponse(
     @JsonProperty("flavor_text")
     val flavorText: String?,
     val artist: String?,
+    @JsonProperty("arena_id")
+    val arenaId: Int? = null,
 )
 
 data class ImageUris(

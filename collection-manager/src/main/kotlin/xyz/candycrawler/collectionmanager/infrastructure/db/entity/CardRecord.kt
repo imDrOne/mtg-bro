@@ -37,4 +37,5 @@ data class CardRecord(
     val priceEurFoil: String?,
     val flavorText: String?,
     val artist: String?,
+    val mtgaId: String? = null,
 )

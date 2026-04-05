@@ -38,6 +38,7 @@ data class Card(
     val priceEurFoil: String?,
     val flavorText: String?,
     val artist: String?,
+    val mtgaId: String? = null,
 ) {
     init {
         fun invalid(reason: String): Nothing = throw InvalidCardException(reason)

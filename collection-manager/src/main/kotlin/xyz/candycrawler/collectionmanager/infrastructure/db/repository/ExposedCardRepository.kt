@@ -29,6 +29,12 @@ class ExposedCardRepository(
     override fun findByIds(ids: List<Long>): List<Card> =
         sqlMapper.selectByIds(ids).map(toDomain::apply)
 
+    override fun findByNames(names: List<String>): List<Card> =
+        sqlMapper.selectByNames(names).map(toDomain::apply)
+
+    override fun findBySetAndCollectorPairs(pairs: List<Pair<String, String>>): List<Card> =
+        sqlMapper.selectBySetAndCollectorPairs(pairs).map(toDomain::apply)
+
     override fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card? =
         sqlMapper.selectBySetCodeAndCollectorNumber(setCode, collectorNumber)?.let(toDomain::apply)
 

@@ -66,6 +66,7 @@ class CardSqlMapper {
             this[CardsTable.priceEurFoil] = record.priceEurFoil
             this[CardsTable.flavorText] = record.flavorText
             this[CardsTable.artist] = record.artist
+            this[CardsTable.mtgaId] = record.mtgaId
         }.map { it.toRecord() }
     }
 
@@ -80,6 +81,24 @@ class CardSqlMapper {
         else CardsTable.selectAll()
             .where { CardsTable.id inList ids }
             .map { it.toRecord() }
+
+    internal fun selectByNames(names: List<String>): List<CardRecord> {
+        if (names.isEmpty()) return emptyList()
+        val lowerNames = names.map { it.lowercase() }
+        return CardsTable.selectAll()
+            .where { CardsTable.name.lowerCase() inList lowerNames }
+            .orderBy(CardsTable.id to SortOrder.DESC)
+            .map { it.toRecord() }
+            .distinctBy { it.name.lowercase() }
+    }
+
+    internal fun selectBySetAndCollectorPairs(pairs: List<Pair<String, String>>): List<CardRecord> {
+        if (pairs.isEmpty()) return emptyList()
+        val condition = pairs
+            .map { (set, num) -> (CardsTable.setCode eq set) and (CardsTable.collectorNumber eq num) }
+            .reduce { acc, op -> acc or op }
+        return CardsTable.selectAll().where { condition }.map { it.toRecord() }
+    }
 
     internal fun selectBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): CardRecord? =
         CardsTable.selectAll()
@@ -260,5 +279,6 @@ class CardSqlMapper {
         priceEurFoil = this[CardsTable.priceEurFoil],
         flavorText = this[CardsTable.flavorText],
         artist = this[CardsTable.artist],
+        mtgaId = this[CardsTable.mtgaId],
     )
 }

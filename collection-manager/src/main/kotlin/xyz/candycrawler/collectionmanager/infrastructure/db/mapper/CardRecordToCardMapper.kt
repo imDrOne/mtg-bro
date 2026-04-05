@@ -42,5 +42,6 @@ class CardRecordToCardMapper : Function<CardRecord, Card> {
         priceEurFoil = record.priceEurFoil,
         flavorText = record.flavorText,
         artist = record.artist,
+        mtgaId = record.mtgaId,
     )
 }
