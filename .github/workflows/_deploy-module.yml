@@ -142,7 +142,7 @@ jobs:
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
-            cd /opt/mtg-bro
+            cd /opt/mtg-bro/docker
             docker compose -f docker-compose.prod.yml pull $MODULE
             docker compose -f docker-compose.prod.yml up -d --no-deps $MODULE
         env:
