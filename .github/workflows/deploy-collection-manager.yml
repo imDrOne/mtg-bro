@@ -1,0 +1,13 @@
+on:
+  push:
+    tags:
+      - 'collection-manager/v*'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-module.yml
+    with:
+      module: collection-manager
+      db_name: collection_manager_db
+      environment: production-collection-manager
+    secrets: inherit

@@ -1,0 +1,97 @@
+# Production compose. Env vars are injected from GitHub Secrets via the CI deploy job.
+# Postgres is expected to be already running and connected to mtg-bro-net.
+
+services:
+  collection-manager:
+    image: ghcr.io/${GHCR_OWNER}/mtg-bro/collection-manager:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: collection_manager_db
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8080:8080"
+    networks:
+      - mtg-bro-net
+
+  draftsim-parser:
+    image: ghcr.io/${GHCR_OWNER}/mtg-bro/draftsim-parser:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: draftsim_parser_db
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    ports:
+      - "8081:8080"
+    networks:
+      - mtg-bro-net
+
+  wizard-stat-aggregator:
+    image: ghcr.io/${GHCR_OWNER}/mtg-bro/wizard-stat-aggregator:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: wizard_stat_db
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8082:8080"
+    networks:
+      - mtg-bro-net
+
+  mcp-server:
+    image: ghcr.io/${GHCR_OWNER}/mtg-bro/mcp-server:latest
+    restart: unless-stopped
+    environment:
+      COLLECTION_MANAGER_BASE_URL: http://collection-manager:8080
+      DRAFTSIM_PARSER_BASE_URL: http://draftsim-parser:8080
+      MCP_TRANSPORT: http
+      MCP_HTTP_PORT: "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - collection-manager
+      - draftsim-parser
+    networks:
+      - mtg-bro-net
+
+  caddy:
+    build: ./caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      MCP_DOMAIN: ${MCP_DOMAIN}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+      CADDY_EMAIL: ${CADDY_EMAIL}
+    depends_on:
+      - mcp-server
+    networks:
+      - mtg-bro-net
+
+  # Optional: keeps DuckDNS record pointing to this server's IP
+  duckdns:
+    image: linuxserver/duckdns:latest
+    restart: unless-stopped
+    environment:
+      SUBDOMAINS: ${DUCKDNS_SUBDOMAINS}
+      TOKEN: ${DUCKDNS_TOKEN}
+
+networks:
+  mtg-bro-net:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:

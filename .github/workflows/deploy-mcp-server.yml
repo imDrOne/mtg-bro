@@ -1,0 +1,12 @@
+on:
+  push:
+    tags:
+      - 'mcp-server/v*'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-module.yml
+    with:
+      module: mcp-server
+      environment: production-mcp-server
+    secrets: inherit

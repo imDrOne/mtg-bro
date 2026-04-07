@@ -1,0 +1,13 @@
+on:
+  push:
+    tags:
+      - 'draftsim-parser/v*'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-module.yml
+    with:
+      module: draftsim-parser
+      db_name: draftsim_parser_db
+      environment: production-draftsim-parser
+    secrets: inherit

@@ -1,0 +1,13 @@
+on:
+  push:
+    tags:
+      - 'wizard-stat-aggregator/v*'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-module.yml
+    with:
+      module: wizard-stat-aggregator
+      db_name: wizard_stat_db
+      environment: production-wizard-stat-aggregator
+    secrets: inherit

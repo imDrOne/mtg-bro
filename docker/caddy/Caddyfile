@@ -1,0 +1,10 @@
+{
+    email {$CADDY_EMAIL}
+}
+
+{$MCP_DOMAIN} {
+    tls {
+        dns duckdns {$DUCKDNS_TOKEN}
+    }
+    reverse_proxy mcp-server:3000
+}
