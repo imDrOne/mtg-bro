@@ -10,7 +10,6 @@ import xyz.candycrawler.collectionmanager.domain.collection.exception.InvalidCol
 import xyz.candycrawler.collectionmanager.domain.deck.exception.DeckNotFoundException
 import xyz.candycrawler.collectionmanager.domain.deck.exception.InvalidDeckException
 import xyz.candycrawler.collectionmanager.domain.tribal.exception.InvalidTribalQueryException
-import xyz.candycrawler.collectionmanager.infrastructure.client.ngrok.NgrokUnavailableException
 
 @RestControllerAdvice
 class DomainExceptionHandler {
@@ -53,13 +52,5 @@ class DomainExceptionHandler {
         status = HttpStatus.BAD_REQUEST.value(),
         error = HttpStatus.BAD_REQUEST.reasonPhrase,
         message = ex.message ?: "Invalid tribal query",
-    )
-
-    @ExceptionHandler(NgrokUnavailableException::class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    fun handleNgrokUnavailable(ex: NgrokUnavailableException): ErrorResponse = ErrorResponse(
-        status = HttpStatus.SERVICE_UNAVAILABLE.value(),
-        error = HttpStatus.SERVICE_UNAVAILABLE.reasonPhrase,
-        message = ex.message ?: "ngrok is unavailable",
     )
 }
