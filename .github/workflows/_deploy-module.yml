@@ -104,7 +104,7 @@ jobs:
               -e LIQUIBASE_COMMAND_URL="jdbc:postgresql://$DB_HOST:${DB_PORT:-5432}/$DB_NAME" \
               -e LIQUIBASE_COMMAND_USERNAME="$DB_USERNAME" \
               -e LIQUIBASE_COMMAND_PASSWORD="$DB_PASSWORD" \
-              -e LIQUIBASE_COMMAND_CHANGELOG_FILE="changelog/db.changelog-master.yaml" \
+              -e LIQUIBASE_COMMAND_CHANGELOG_FILE="/liquibase/changelog/db.changelog-master.yaml" \
               ghcr.io/$GHCR_OWNER/mtg-bro/$MODULE-migrations:latest \
               update
         env:
