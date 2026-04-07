@@ -5,6 +5,9 @@ on:
 
 jobs:
   deploy:
+    permissions:
+      packages: write
+      contents: read
     uses: ./.github/workflows/_deploy-module.yml
     with:
       module: draftsim-parser
