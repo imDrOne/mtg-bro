@@ -88,6 +88,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_NAME,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD
           script: |
+            GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
             docker pull ghcr.io/$GHCR_OWNER/mtg-bro/$MODULE-migrations:latest
             docker run --rm \
@@ -124,6 +125,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD,ANTHROPIC_API_KEY,DUCKDNS_TOKEN,MCP_DOMAIN,DUCKDNS_SUBDOMAINS,CADDY_EMAIL
           script: |
+            GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
             cd /opt/mtg-bro
             docker compose -f docker-compose.prod.yml pull $MODULE
