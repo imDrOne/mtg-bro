@@ -65,11 +65,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: docker/setup-buildx-action@v3
+
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/migrations/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           build-args: |
             CHANGELOG_DIR=${{ inputs.module }}/src/main/resources/db/changelog
           tags: ghcr.io/${{ steps.vars.outputs.owner }}/mtg-bro/${{ inputs.module }}-migrations:latest
