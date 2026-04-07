@@ -85,7 +85,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ fromBase64(secrets.SSH_PRIVATE_KEY) }}
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_NAME,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
@@ -122,7 +122,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ fromBase64(secrets.SSH_PRIVATE_KEY) }}
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD,ANTHROPIC_API_KEY,DUCKDNS_TOKEN,MCP_DOMAIN,DUCKDNS_SUBDOMAINS,CADDY_EMAIL
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
