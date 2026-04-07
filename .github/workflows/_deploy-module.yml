@@ -80,12 +80,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      - name: Decode SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+
       - name: Run migrations on server
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ fromBase64(secrets.SSH_PRIVATE_KEY) }}
+          key_path: /tmp/ssh_key
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_NAME,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
@@ -117,12 +122,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      - name: Decode SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ fromBase64(secrets.SSH_PRIVATE_KEY) }}
+          key_path: /tmp/ssh_key
           envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD,ANTHROPIC_API_KEY,DUCKDNS_TOKEN,MCP_DOMAIN,DUCKDNS_SUBDOMAINS,CADDY_EMAIL
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
