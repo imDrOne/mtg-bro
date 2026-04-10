@@ -83,10 +83,21 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Decode SSH key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
+
+      - name: Write env file to server
+        env:
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+        run: |
+          python3 .github/scripts/write-env.py
+          scp -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+            /tmp/module.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/docker/.${{ inputs.module }}.env
 
       - name: Run migrations on server
         uses: appleboy/ssh-action@v1
@@ -94,10 +105,11 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key_path: /tmp/ssh_key
-          envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_NAME,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD
+          envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_NAME
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
+            set -a; source /opt/mtg-bro/docker/.$MODULE.env; set +a
             docker pull ghcr.io/$GHCR_OWNER/mtg-bro/$MODULE-migrations:latest
             docker run --rm \
               --network mtg-bro-net \
@@ -113,10 +125,6 @@ jobs:
           GHCR_OWNER: ${{ github.repository_owner }}
           MODULE: ${{ inputs.module }}
           DB_NAME: ${{ inputs.db_name }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
   deploy:
     needs: [build-and-push, run-migrations]
@@ -127,10 +135,21 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Decode SSH key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
+
+      - name: Write env file to server
+        env:
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+        run: |
+          python3 .github/scripts/write-env.py
+          scp -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+            /tmp/module.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/docker/.${{ inputs.module }}.env
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
@@ -138,10 +157,11 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key_path: /tmp/ssh_key
-          envs: GHCR_TOKEN,GHCR_OWNER,MODULE,DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD,ANTHROPIC_API_KEY,DUCKDNS_TOKEN,MCP_DOMAIN,DUCKDNS_SUBDOMAINS,CADDY_EMAIL
+          envs: GHCR_TOKEN,GHCR_OWNER,MODULE
           script: |
             GHCR_OWNER=$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_OWNER" --password-stdin
+            set -a; source /opt/mtg-bro/docker/.$MODULE.env; set +a
             cd /opt/mtg-bro/docker
             docker compose -f docker-compose.prod.yml pull $MODULE
             docker compose -f docker-compose.prod.yml up -d --no-deps $MODULE
@@ -149,12 +169,3 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           GHCR_OWNER: ${{ github.repository_owner }}
           MODULE: ${{ inputs.module }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          DUCKDNS_TOKEN: ${{ secrets.DUCKDNS_TOKEN }}
-          MCP_DOMAIN: ${{ secrets.MCP_DOMAIN }}
-          DUCKDNS_SUBDOMAINS: ${{ secrets.DUCKDNS_SUBDOMAINS }}
-          CADDY_EMAIL: ${{ secrets.CADDY_EMAIL }}
