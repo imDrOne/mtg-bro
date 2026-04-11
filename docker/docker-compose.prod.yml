@@ -7,6 +7,8 @@ services:
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/collection-manager:latest
     restart: unless-stopped
     env_file: [.collection-manager.env]
+    ports:
+      - "127.0.0.1:8080:8080"
     networks:
       - mtg-bro-net
 
@@ -15,6 +17,8 @@ services:
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/draftsim-parser:latest
     restart: unless-stopped
     env_file: [.draftsim-parser.env]
+    ports:
+      - "127.0.0.1:8081:8080"
     networks:
       - mtg-bro-net
 
@@ -23,6 +27,8 @@ services:
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/wizard-stat-aggregator:latest
     restart: unless-stopped
     env_file: [.wizard-stat-aggregator.env]
+    ports:
+      - "127.0.0.1:8082:8080"
     networks:
       - mtg-bro-net
 
@@ -31,6 +37,8 @@ services:
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/mcp-server:latest
     restart: unless-stopped
     env_file: [.mcp-server.env]
+    ports:
+      - "127.0.0.1:3000:3000"
     depends_on:
       - collection-manager
       - draftsim-parser
