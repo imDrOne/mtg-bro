@@ -4,11 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-mtg-bro is a Magic: The Gathering deck-building assistant consisting of three Kotlin modules:
+mtg-bro is a Magic: The Gathering deck-building assistant consisting of four Kotlin modules:
 
-- **collection-manager**: Spring Boot service for managing card collections, integrates with Scryfall API
-- **wizard-stat-aggregator**: Spring Boot service for aggregating limited format statistics from 17lands
-- **mcp-server**: MCP (Model Context Protocol) server exposing tools for Claude to search cards and assist with deck building
+- **collection-manager** (`collection-manager/`) — Spring Boot service for managing card collections; imports from TCGPlayer/Moxfield, searches with rich filters, proxies Scryfall API. DB: `collection_manager_db`.
+- **draftsim-parser** (`draftsim-parser/`) — Spring Boot service that parses Draftsim articles using Claude (Anthropic) LLM for analysis. DB: `draftsim_parser_db`.
+- **wizard-stat-aggregator** (`wizard-stat-aggregator/`) — Spring Boot service aggregating limited format stats from 17lands.com. DB: `wizard_stat_db`.
+- **mcp-server** (`mcp-server/`) — Non-Spring MCP server (Ktor + MCP SDK) exposing tools for Claude to search cards and assist with deck building. No DB.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `docs/deploy.md` | Full deployment guide: server setup, GitHub Secrets, per-module env vars |
+| `scripts/deploy.py` | Interactive CLI deploy tool (multiselect, auto version bump, git tag + push) |
+| `scripts/setup-server.sh` | One-time server setup script (dirs, docker network, SSH key) |
+| `docker/docker-compose.prod.yml` | Production compose (all services) |
+| `docker/docker-compose.local.yml` | Local dev compose (postgres + services + ngrok) |
+| `docker/postgres/docker-compose.yml` | Standalone PostgreSQL with auto-init script |
+| `.github/workflows/_deploy-module.yml` | Reusable deploy pipeline (build → migrate → deploy) |
+| `.github/scripts/write-env.py` | Dumps GitHub Environment secrets → `.env` file on server |
 
 ## Build Commands
 
@@ -35,6 +49,7 @@ mtg-bro is a Magic: The Gathering deck-building assistant consisting of three Ko
 # Run tests for a specific module
 ./gradlew :collection-manager:test
 ./gradlew :wizard-stat-aggregator:test
+./gradlew :draftsim-parser:test
 
 # Run a single test class
 ./gradlew :collection-manager:test --tests "xyz.candycrawler.collectionmanager.application.parser.MoxfieldFileParserTest"
@@ -50,10 +65,12 @@ Uses Liquibase with SQL-based migrations. Each Spring module has its own databas
 # Create a new migration
 ./gradlew :collection-manager:createMigration -PsqlName=add_new_table
 ./gradlew :wizard-stat-aggregator:createMigration -PsqlName=add_new_table
+./gradlew :draftsim-parser:createMigration -PsqlName=add_new_table
 
 # Run migrations (requires local postgres or db.properties configured)
 ./gradlew :collection-manager:update
 ./gradlew :wizard-stat-aggregator:update
+./gradlew :draftsim-parser:update
 ```
 
 Migration files are in `<module>/src/main/resources/db/changelog/migrations/`.
@@ -64,7 +81,7 @@ Migration files are in `<module>/src/main/resources/db/changelog/migrations/`.
 
 - `spring-module`: Kotlin + Spring Boot + Exposed (database) + test dependencies
 - `liquibase-module`: Liquibase config + `createMigration` task
-- `jib-module`: Docker image building via JIB
+- `jib-module`: Docker image building via JIB (multi-platform: amd64 + arm64)
 
 ### Module Structure
 
@@ -73,13 +90,15 @@ Each Spring module follows hexagonal architecture:
 - `application/service`: Application services
 - `domain`: Domain models, repositories (interfaces), exceptions
 - `infrastructure/db`: Exposed tables, entity records, repository implementations
-- `infrastructure/client`: External API clients (Scryfall, 17lands)
+- `infrastructure/client`: External API clients (Scryfall, 17lands, Anthropic)
 
 ### MCP Server
 
 Non-Spring module using Ktor + MCP SDK. Tool handlers are in `mcp-server/src/main/kotlin/.../tools/`. Add new tools by:
 1. Creating schema function and handler in a new `*Handler.kt` file
 2. Registering with `server.addTool()` in `McpServer.kt`
+
+See `mcp-server/CLAUDE.md` for details.
 
 ## Local Development
 
@@ -92,11 +111,24 @@ Run Spring services with profile `local`:
 ```bash
 ./gradlew :collection-manager:bootRun
 ./gradlew :wizard-stat-aggregator:bootRun
+./gradlew :draftsim-parser:bootRun
 ```
 
 Database credentials for local dev are in `<module>/db.properties`.
 
-# Architecture rules
+## Deployment
+
+Deployment is tag-driven: push a git tag `<module>/v<semver>` to trigger GitHub Actions.
+
+```bash
+python3 scripts/deploy.py   # interactive tool: select modules, auto-bumps patch version
+```
+
+See `docs/deploy.md` for full instructions.
+
+---
+
+# Architecture Rules
 
 ## Domain layer
 

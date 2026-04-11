@@ -59,6 +59,7 @@ Shared context passed to all handlers containing:
 
 | Variable                      | Default                 | Description                           |
 |-------------------------------|-------------------------|---------------------------------------|
-| `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | Backend API URL                       |
+| `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | collection-manager API URL            |
+| `DRAFTSIM_PARSER_BASE_URL`    | `http://localhost:8081` | draftsim-parser API URL               |
 | `MCP_TRANSPORT`               | `stdio`                 | Transport mode                        |
 | `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport) |

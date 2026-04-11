@@ -84,6 +84,7 @@ COLLECTION_MANAGER_BASE_URL=http://localhost:8080 \
 | Env var | Default | Description |
 |--------|---------|-------------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | Base URL of collection-manager |
+| `DRAFTSIM_PARSER_BASE_URL` | `http://localhost:8081` | Base URL of draftsim-parser |
 | `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `MCP_HTTP_PORT` | `3000` | Port for HTTP transport |
 

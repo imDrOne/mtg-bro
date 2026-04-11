@@ -82,7 +82,13 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 
 #### `production-draftsim-parser`
 
-Те же секреты что и для `production-collection-manager`.
+| Секрет | Значение |
+|--------|----------|
+| `DB_HOST` | `postgres` |
+| `DB_PORT` | `5432` (опционально) |
+| `DB_USERNAME` | Пользователь PostgreSQL |
+| `DB_PASSWORD` | Пароль PostgreSQL |
+| `ANTHROPIC_API_KEY` | API ключ Anthropic (Claude Haiku для анализа статей) |
 
 #### `production-wizard-stat-aggregator`
 
@@ -92,7 +98,8 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 
 | Секрет | Значение |
 |--------|----------|
-| `ANTHROPIC_API_KEY` | API ключ Anthropic |
+| `COLLECTION_MANAGER_BASE_URL` | `http://collection-manager:8080` |
+| `DRAFTSIM_PARSER_BASE_URL` | `http://draftsim-parser:8081` |
 | `DUCKDNS_TOKEN` | Токен с duckdns.org |
 | `DUCKDNS_SUBDOMAINS` | Субдомены через запятую, например `mtg-bro` |
 | `MCP_DOMAIN` | Полный домен, например `mtg-bro.duckdns.org` |
