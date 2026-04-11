@@ -2,12 +2,28 @@
 """
 deploy.py — interactive deploy tool for mtg-bro.
 Usage: python3 scripts/deploy.py
+
+Requires: pip install rich questionary
 """
 
-import curses
 import subprocess
 import sys
 from pathlib import Path
+
+try:
+    import questionary
+    from questionary import Style
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+    from rich import box
+    from rich.live import Live
+    from rich.spinner import Spinner
+    from rich.columns import Columns
+except ImportError:
+    print("Missing dependencies. Run: pip install rich questionary")
+    sys.exit(1)
 
 REPO_ROOT = Path(__file__).parent.parent
 
@@ -18,18 +34,36 @@ MODULES = [
     "wizard-stat-aggregator",
 ]
 
+BUMP_TYPES = ["PATCH", "MINOR", "MAJOR"]
+
+console = Console()
+
+STYLE = Style([
+    ("qmark",        "fg:#a78bfa bold"),
+    ("question",     "bold"),
+    ("answer",       "fg:#34d399 bold"),
+    ("pointer",      "fg:#a78bfa bold"),
+    ("highlighted",  "fg:#a78bfa bold"),
+    ("selected",     "fg:#34d399"),
+    ("separator",    "fg:#6b7280"),
+    ("instruction",  "fg:#6b7280 italic"),
+    ("text",         ""),
+])
+
 
 # ── Banner ─────────────────────────────────────────────────────────────────────
 
 def print_banner() -> None:
-    print("""
-  _ __ ___ | |_ __ _       | |__ _ __ ___
- | '_ ` _ \\| __/ _` |      | '_ \\| '__/ _ \\
- | | | | | | || (_| |  _   | |_) | | | (_) |
- |_| |_| |_|\\__\\__, | (_)  |_.__/|_|  \\___/
-                |___/
-        deploy tool
-""")
+    art = Text(justify="center")
+    art.append("  ███╗   ███╗████████╗ ██████╗      ██████╗ ██████╗  ██████╗ \n", style="bold #7c3aed")
+    art.append("  ████╗ ████║╚══██╔══╝██╔════╝      ██╔══██╗██╔══██╗██╔═══██╗\n", style="bold #8b5cf6")
+    art.append("  ██╔████╔██║   ██║   ██║  ███╗     ██████╔╝██████╔╝██║   ██║\n", style="bold #a78bfa")
+    art.append("  ██║╚██╔╝██║   ██║   ██║   ██║     ██╔══██╗██╔══██╗██║   ██║\n", style="bold #c4b5fd")
+    art.append("  ██║ ╚═╝ ██║   ██║   ╚██████╔╝     ██████╔╝██║  ██║╚██████╔╝\n", style="bold #ddd6fe")
+    art.append("  ╚═╝     ╚═╝   ╚═╝    ╚═════╝      ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ \n", style="#ede9fe")
+    art.append("\n                    deploy tool  🚀", style="bold #a78bfa")
+    console.print(Panel(art, border_style="#7c3aed", padding=(0, 2)))
+    console.print()
 
 
 # ── Git helpers ────────────────────────────────────────────────────────────────
@@ -52,12 +86,18 @@ def get_latest_tag(module: str) -> tuple[int, int, int] | None:
         return None
 
 
-def next_version(module: str) -> str:
-    tag = get_latest_tag(module)
+def bump_version(tag: tuple[int, int, int] | None, bump: str) -> str:
     if tag is None:
-        return "v0.0.1"
-    major, minor, patch = tag
-    return f"v{major}.{minor}.{patch + 1}"
+        base = (0, 0, 0)
+    else:
+        base = tag
+    major, minor, patch = base
+    if bump == "MAJOR":
+        return f"v{major + 1}.0.0"
+    elif bump == "MINOR":
+        return f"v{major}.{minor + 1}.0"
+    else:  # PATCH
+        return f"v{major}.{minor}.{patch + 1}"
 
 
 def current_version_str(module: str) -> str:
@@ -75,111 +115,47 @@ def preflight_check() -> None:
         capture_output=True, text=True, cwd=REPO_ROOT,
     )
     if result.stdout.strip():
-        print("WARNING: working tree has uncommitted changes.")
-        print("Tags will point to the current HEAD commit regardless.")
-        answer = input("Continue? [y/N]: ").strip().lower()
-        if answer != "y":
+        console.print(Panel(
+            "[bold yellow]⚠  Working tree has uncommitted changes.[/]\n"
+            "[dim]Tags point to HEAD commit — dirty tree won't affect the tag.[/]",
+            border_style="yellow", padding=(0, 2),
+        ))
+        confirmed = questionary.confirm(
+            "Continue anyway?", default=False, style=STYLE,
+        ).ask()
+        if not confirmed:
+            console.print("[dim]Aborted.[/]")
             sys.exit(0)
-        print()
+        console.print()
 
 
-# ── Curses multiselect ─────────────────────────────────────────────────────────
-
-class CheckboxMenu:
-    HEADER = "Select modules to deploy   [SPACE=toggle  ENTER=confirm  q=quit]"
-
-    def __init__(self, items: list[str]) -> None:
-        self.items = items
-        self.cursor = 0
-        self.selected: set[int] = set()
-        self._warn = False
-
-    def run(self) -> list[str]:
-        try:
-            return curses.wrapper(self._main)
-        except curses.error:
-            return self._fallback()
-
-    def _main(self, stdscr) -> list[str]:
-        curses.curs_set(0)
-        curses.start_color()
-        curses.use_default_colors()
-        while True:
-            self._draw(stdscr)
-            key = stdscr.getch()
-            if key in (curses.KEY_UP, ord("k")):
-                self.cursor = max(0, self.cursor - 1)
-                self._warn = False
-            elif key in (curses.KEY_DOWN, ord("j")):
-                self.cursor = min(len(self.items) - 1, self.cursor + 1)
-                self._warn = False
-            elif key == ord(" "):
-                if self.cursor in self.selected:
-                    self.selected.discard(self.cursor)
-                else:
-                    self.selected.add(self.cursor)
-                self._warn = False
-            elif key in (curses.KEY_ENTER, 10, 13):
-                if not self.selected:
-                    self._warn = True
-                    continue
-                return [self.items[i] for i in sorted(self.selected)]
-            elif key in (ord("q"), ord("Q"), 27):  # ESC
-                sys.exit(0)
-
-    def _draw(self, stdscr) -> None:
-        stdscr.clear()
-        h, w = stdscr.getmaxyx()
-        header = self.HEADER[:w - 1]
-        stdscr.addstr(0, 0, header, curses.A_BOLD)
-        stdscr.addstr(1, 0, "─" * min(len(self.HEADER), w - 1))
-        for idx, item in enumerate(self.items):
-            row = idx + 2
-            if row >= h - 1:
-                break
-            mark = "x" if idx in self.selected else " "
-            line = f"  [{mark}] {item}"[:w - 1]
-            attr = curses.A_REVERSE if idx == self.cursor else curses.A_NORMAL
-            stdscr.addstr(row, 0, line, attr)
-        if self._warn:
-            warn = "  Nothing selected — use SPACE to toggle"[:w - 1]
-            stdscr.addstr(len(self.items) + 3, 0, warn, curses.A_BOLD)
-        stdscr.refresh()
-
-    def _fallback(self) -> list[str]:
-        """Plain text fallback when curses is unavailable."""
-        print("Select modules (space-separated numbers, e.g. 1 3):")
-        for i, m in enumerate(self.items, 1):
-            print(f"  {i}. {m}")
-        raw = input("> ").strip()
-        indices = []
-        for part in raw.split():
-            try:
-                n = int(part) - 1
-                if 0 <= n < len(self.items):
-                    indices.append(n)
-            except ValueError:
-                pass
-        return [self.items[i] for i in sorted(set(indices))]
-
-
-# ── Summary ────────────────────────────────────────────────────────────────────
+# ── Summary table ──────────────────────────────────────────────────────────────
 
 def print_summary_table(plan: list[dict]) -> None:
-    col1 = max(len(p["module"]) for p in plan)
-    col2 = max(len(p["current"]) for p in plan)
-    col3 = max(len(p["next"]) for p in plan)
-    col1 = max(col1, len("Module"))
-    col2 = max(col2, len("Current"))
-    col3 = max(col3, len("New tag"))
-    fmt = f"  {{:<{col1}}}  {{:<{col2}}}  {{:<{col3}}}"
-    sep = "  " + "─" * (col1 + col2 + col3 + 4)
-    print()
-    print(fmt.format("Module", "Current", "New tag"))
-    print(sep)
+    table = Table(
+        box=box.ROUNDED,
+        border_style="#4b5563",
+        header_style="bold #a78bfa",
+        show_lines=False,
+        padding=(0, 1),
+    )
+    table.add_column("Module", style="bold white")
+    table.add_column("Current", style="#6b7280")
+    table.add_column("Bump", style="#f59e0b bold", justify="center")
+    table.add_column("New tag", style="bold #34d399")
+
+    bump_colors = {"MAJOR": "#f87171", "MINOR": "#fb923c", "PATCH": "#34d399"}
     for p in plan:
-        print(fmt.format(p["module"], p["current"], p["next"]))
-    print()
+        color = bump_colors.get(p["bump"], "#34d399")
+        table.add_row(
+            p["module"],
+            p["current"],
+            f"[{color}]{p['bump']}[/]",
+            p["next"],
+        )
+
+    console.print(table)
+    console.print()
 
 
 # ── Deploy ─────────────────────────────────────────────────────────────────────
@@ -190,11 +166,12 @@ def run_deploy(module: str, version: str) -> bool:
         ["git", "tag", tag],
         ["git", "push", "origin", tag],
     ]:
-        result = subprocess.run(cmd, cwd=REPO_ROOT)
+        result = subprocess.run(cmd, cwd=REPO_ROOT, capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"  ERROR: {' '.join(cmd)}")
+            err = result.stderr.strip() or result.stdout.strip()
+            console.print(f"  [bold red]✗[/] [red]{' '.join(cmd)}[/]\n    [dim]{err}[/]")
             return False
-    print(f"  pushed {tag}")
+    console.print(f"  [bold #34d399]✓[/] pushed [bold]{tag}[/]")
     return True
 
 
@@ -204,25 +181,62 @@ def main() -> None:
     print_banner()
     preflight_check()
 
-    selected = CheckboxMenu(MODULES).run()
+    # Step 1: select modules
+    selected = questionary.checkbox(
+        "Select modules to deploy:",
+        choices=MODULES,
+        style=STYLE,
+        instruction="(↑↓ navigate, SPACE toggle, ENTER confirm)",
+    ).ask()
+
     if not selected:
-        print("Nothing selected.")
+        console.print("[dim]Nothing selected. Exiting.[/]")
         sys.exit(0)
 
-    plan = [
-        {"module": m, "current": current_version_str(m), "next": next_version(m)}
-        for m in selected
-    ]
+    console.print()
+
+    # Step 2: select bump type
+    bump = questionary.select(
+        "Version bump type:",
+        choices=[
+            questionary.Choice("PATCH  — bug fixes, e.g. 1.2.3 → 1.2.4", value="PATCH"),
+            questionary.Choice("MINOR  — new features, e.g. 1.2.3 → 1.3.0", value="MINOR"),
+            questionary.Choice("MAJOR  — breaking changes, e.g. 1.2.3 → 2.0.0", value="MAJOR"),
+        ],
+        style=STYLE,
+    ).ask()
+
+    if bump is None:
+        console.print("[dim]Aborted.[/]")
+        sys.exit(0)
+
+    console.print()
+
+    # Build plan
+    plan = []
+    for m in selected:
+        tag = get_latest_tag(m)
+        plan.append({
+            "module":  m,
+            "current": current_version_str(m),
+            "bump":    bump,
+            "next":    bump_version(tag, bump),
+        })
 
     print_summary_table(plan)
 
-    try:
-        input("Press ENTER to deploy, Ctrl-C to abort...")
-    except KeyboardInterrupt:
-        print("\nAborted.")
+    # Confirm
+    confirmed = questionary.confirm(
+        "Deploy now?", default=True, style=STYLE,
+    ).ask()
+
+    if not confirmed:
+        console.print("[dim]Aborted.[/]")
         sys.exit(0)
 
-    print()
+    console.print()
+
+    # Deploy
     ok, fail = 0, 0
     for p in plan:
         success = run_deploy(p["module"], p["next"])
@@ -231,9 +245,17 @@ def main() -> None:
         else:
             fail += 1
 
-    print()
-    print(f"Done: {ok} succeeded, {fail} failed.")
-    if fail:
+    console.print()
+    if fail == 0:
+        console.print(Panel(
+            f"[bold #34d399]✓ All {ok} module(s) deployed successfully![/]",
+            border_style="#34d399", padding=(0, 2),
+        ))
+    else:
+        console.print(Panel(
+            f"[bold #34d399]✓ {ok} succeeded[/]  [bold red]✗ {fail} failed[/]",
+            border_style="red", padding=(0, 2),
+        ))
         sys.exit(1)
 
 

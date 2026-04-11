@@ -3,38 +3,34 @@
 
 services:
   collection-manager:
+    container_name: collection-manager
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/collection-manager:latest
     restart: unless-stopped
     env_file: [.collection-manager.env]
-    ports:
-      - "8080:8080"
     networks:
       - mtg-bro-net
 
   draftsim-parser:
+    container_name: draftsim-parser
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/draftsim-parser:latest
     restart: unless-stopped
     env_file: [.draftsim-parser.env]
-    ports:
-      - "8081:8080"
     networks:
       - mtg-bro-net
 
   wizard-stat-aggregator:
+    container_name: wizard-stat-aggregator
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/wizard-stat-aggregator:latest
     restart: unless-stopped
     env_file: [.wizard-stat-aggregator.env]
-    ports:
-      - "8082:8080"
     networks:
       - mtg-bro-net
 
   mcp-server:
+    container_name: mcp-server
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/mcp-server:latest
     restart: unless-stopped
     env_file: [.mcp-server.env]
-    ports:
-      - "3000:3000"
     depends_on:
       - collection-manager
       - draftsim-parser
@@ -42,6 +38,7 @@ services:
       - mtg-bro-net
 
   caddy:
+    container_name: caddy
     build: ./caddy
     restart: unless-stopped
     ports:
@@ -60,6 +57,7 @@ services:
   # Optional: keeps DuckDNS record pointing to this server's IP.
   # SUBDOMAINS and TOKEN are mapped from DUCKDNS_* vars sourced from .mcp-server.env by the deploy script.
   duckdns:
+    container_name: duckdns
     image: linuxserver/duckdns:latest
     restart: unless-stopped
     environment:
