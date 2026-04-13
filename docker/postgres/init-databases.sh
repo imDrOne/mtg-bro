@@ -10,4 +10,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
 
     CREATE DATABASE wizard_stat_db;
     GRANT ALL PRIVILEGES ON DATABASE wizard_stat_db TO "$POSTGRES_USER";
+
+    CREATE DATABASE auth_service_db;
+    GRANT ALL PRIVILEGES ON DATABASE auth_service_db TO "$POSTGRES_USER";
 EOSQL

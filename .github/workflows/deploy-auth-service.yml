@@ -1,0 +1,16 @@
+on:
+  push:
+    tags:
+      - 'auth-service/v*'
+
+jobs:
+  deploy:
+    permissions:
+      packages: write
+      contents: read
+    uses: ./.github/workflows/_deploy-module.yml
+    with:
+      module: auth-service
+      db_name: auth_service_db
+      environment: production-auth-service
+    secrets: inherit

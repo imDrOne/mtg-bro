@@ -32,6 +32,16 @@ services:
     networks:
       - mtg-bro-net
 
+  auth-service:
+    container_name: auth-service
+    image: ghcr.io/${GHCR_OWNER}/mtg-bro/auth-service:latest
+    restart: unless-stopped
+    env_file: [.auth-service.env]
+    ports:
+      - "127.0.0.1:8083:8080"
+    networks:
+      - mtg-bro-net
+
   mcp-server:
     container_name: mcp-server
     image: ghcr.io/${GHCR_OWNER}/mtg-bro/mcp-server:latest

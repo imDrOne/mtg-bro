@@ -56,6 +56,20 @@ services:
       - "3000:3000"
     command: ["--transport", "http", "--port", "3000"]
 
+  auth-service:
+    image: mtg-bro/auth-service:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_service_db
+      SPRING_DATASOURCE_USERNAME: wizard_user
+      SPRING_DATASOURCE_PASSWORD: wizard_pass
+      AUTH_ISSUER_URI: http://localhost:8083
+      MCP_CLIENT_REDIRECT_URI: http://localhost:3000/oauth2/callback
+    ports:
+      - "8083:8080"
+
   ngrok:
     image: ngrok/ngrok:latest
     depends_on:

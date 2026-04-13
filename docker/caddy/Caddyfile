@@ -8,3 +8,10 @@
     }
     reverse_proxy mcp-server:3000
 }
+
+{$AUTH_DOMAIN} {
+    tls {
+        dns duckdns {$DUCKDNS_TOKEN}
+    }
+    reverse_proxy auth-service:8080
+}
