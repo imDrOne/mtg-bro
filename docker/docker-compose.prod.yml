@@ -66,14 +66,15 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
-    env_file: [.mcp-server.env]
+    env_file: [.infra.env]
     depends_on:
       - mcp-server
+      - auth-service
     networks:
       - mtg-bro-net
 
   # Optional: keeps DuckDNS record pointing to this server's IP.
-  # SUBDOMAINS and TOKEN are mapped from DUCKDNS_* vars sourced from .mcp-server.env by the deploy script.
+  # SUBDOMAINS and TOKEN are mapped from DUCKDNS_* vars sourced from .infra.env by the deploy script.
   duckdns:
     container_name: duckdns
     image: linuxserver/duckdns:latest

@@ -32,6 +32,8 @@ MODULES = [
     "draftsim-parser",
     "mcp-server",
     "wizard-stat-aggregator",
+    "auth-service",
+    "caddy",
 ]
 
 BUMP_TYPES = ["PATCH", "MINOR", "MAJOR"]

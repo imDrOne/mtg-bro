@@ -45,7 +45,7 @@ DB_USERNAME=<user> DB_PASSWORD=<password> docker compose up -d
 ```
 
 > При первом запуске с пустым volume автоматически создаются БД:
-> `collection_manager_db`, `draftsim_parser_db`, `wizard_stat_db`
+> `collection_manager_db`, `draftsim_parser_db`, `wizard_stat_db`, `auth_service_db`
 
 Проверить:
 ```bash
@@ -77,6 +77,7 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 |--------|----------|
 | `DB_HOST` | `postgres` |
 | `DB_PORT` | `5432` (опционально) |
+| `DB_NAME` | `collection_manager_db` |
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
 
@@ -86,13 +87,21 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 |--------|----------|
 | `DB_HOST` | `postgres` |
 | `DB_PORT` | `5432` (опционально) |
+| `DB_NAME` | `draftsim_parser_db` |
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
 | `ANTHROPIC_API_KEY` | API ключ Anthropic (Claude Haiku для анализа статей) |
 
 #### `production-wizard-stat-aggregator`
 
-Те же секреты что и для `production-collection-manager`.
+| Секрет | Значение |
+|--------|----------|
+| `DB_HOST` | `postgres` |
+| `DB_PORT` | `5432` (опционально) |
+| `DB_NAME` | `wizard_stat_db` |
+| `DB_USERNAME` | Пользователь PostgreSQL |
+| `DB_PASSWORD` | Пароль PostgreSQL |
+| `SCHEDULER_CARD_LIMITED_STATS_SET_CODE` | Код сета для агрегации, например `BLB` (дефолт `DMU`) |
 
 #### `production-mcp-server`
 
@@ -100,10 +109,30 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 |--------|----------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://collection-manager:8080` |
 | `DRAFTSIM_PARSER_BASE_URL` | `http://draftsim-parser:8081` |
-| `DUCKDNS_TOKEN` | Токен с duckdns.org |
-| `DUCKDNS_SUBDOMAINS` | Субдомены через запятую, например `mtg-bro` |
-| `MCP_DOMAIN` | Полный домен, например `mtg-bro.duckdns.org` |
+
+#### `production-infra`
+
+Секреты для reverse proxy (Caddy) и DuckDNS. Деплоится тегом `caddy/v*` независимо от приложений.
+
+| Секрет | Значение |
+|--------|----------|
+| `MCP_DOMAIN` | Домен для MCP-сервера, например `mtg-bro.duckdns.org` |
+| `AUTH_DOMAIN` | Домен для auth-service, например `auth.duckdns.org` |
+| `DUCKDNS_TOKEN` | Токен с duckdns.org (используется Caddy для DNS-01 TLS challenge) |
 | `CADDY_EMAIL` | Email для Let's Encrypt |
+
+#### `production-auth-service`
+
+| Секрет | Значение |
+|--------|----------|
+| `DB_HOST` | `postgres` |
+| `DB_PORT` | `5432` (опционально) |
+| `DB_NAME` | `auth_service_db` |
+| `DB_USERNAME` | Пользователь PostgreSQL |
+| `DB_PASSWORD` | Пароль PostgreSQL |
+| `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
+| `MCP_CLIENT_REDIRECT_URI` | Redirect URI MCP-клиента, например `https://claude.ai/api/mcp/auth_callback` |
+| `AUTH_TRUSTED_PROXY_CIDR` | CIDR доверенного прокси (дефолт `172.16.0.0/12`) |
 
 ---
 
@@ -121,6 +150,12 @@ git push origin wizard-stat-aggregator/v1.0.0
 
 git tag mcp-server/v1.0.0
 git push origin mcp-server/v1.0.0
+
+git tag auth-service/v1.0.0
+git push origin auth-service/v1.0.0
+
+git tag caddy/v1.0.0
+git push origin caddy/v1.0.0
 ```
 
 После пуша тега GitHub Actions запускает соответствующий workflow автоматически.
@@ -139,6 +174,8 @@ git push origin mcp-server/v1.0.0
   .draftsim-parser.env
   .wizard-stat-aggregator.env
   .mcp-server.env
+  .auth-service.env
+  .infra.env
 ```
 
 ---

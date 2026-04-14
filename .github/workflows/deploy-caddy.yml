@@ -1,0 +1,39 @@
+on:
+  push:
+    tags:
+      - 'caddy/v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production-infra
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+
+      - name: Write infra env file to server
+        env:
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+        run: |
+          python3 .github/scripts/write-env.py
+          scp -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+            /tmp/module.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/docker/.infra.env
+
+      - name: Rebuild and restart caddy + duckdns
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key_path: /tmp/ssh_key
+          script: |
+            set -a; source /opt/mtg-bro/docker/.infra.env; set +a
+            cd /opt/mtg-bro/docker
+            docker compose -f docker-compose.prod.yml build caddy
+            docker compose -f docker-compose.prod.yml up -d --no-deps caddy

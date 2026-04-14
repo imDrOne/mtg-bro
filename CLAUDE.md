@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-mtg-bro is a Magic: The Gathering deck-building assistant consisting of four Kotlin modules:
+mtg-bro is a Magic: The Gathering deck-building assistant consisting of five Kotlin modules:
 
 - **collection-manager** (`collection-manager/`) — Spring Boot service for managing card collections; imports from TCGPlayer/Moxfield, searches with rich filters, proxies Scryfall API. DB: `collection_manager_db`.
 - **draftsim-parser** (`draftsim-parser/`) — Spring Boot service that parses Draftsim articles using Claude (Anthropic) LLM for analysis. DB: `draftsim_parser_db`.
 - **wizard-stat-aggregator** (`wizard-stat-aggregator/`) — Spring Boot service aggregating limited format stats from 17lands.com. DB: `wizard_stat_db`.
+- **auth-service** (`auth-service/`) — Spring Boot OAuth 2.0 + OIDC authorization server (Spring Authorization Server); handles user registration, login, and token issuance for MCP clients. DB: `auth_service_db`.
 - **mcp-server** (`mcp-server/`) — Non-Spring MCP server (Ktor + MCP SDK) exposing tools for Claude to search cards and assist with deck building. No DB.
 
 ## Key Files

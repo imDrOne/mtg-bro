@@ -45,6 +45,21 @@ Scryfall's `/cards/collection` endpoint accepts at most **75 identifiers** per r
 1. Implement `CollectionFileParser` — parse lines into `ParsedCollectionEntry`
 2. Inject the new parser into `CollectionImportController` and add a `@PostMapping` endpoint similar to the existing ones
 
+## Environment Variables
+
+| Variable | Default | Required | Purpose |
+|----------|---------|----------|---------|
+| `DB_HOST` | — | Yes | PostgreSQL hostname |
+| `DB_PORT` | — | Yes | PostgreSQL port |
+| `DB_NAME` | — | Yes | Database name (`collection_manager_db`) |
+| `DB_USERNAME` | — | Yes | PostgreSQL user |
+| `DB_PASSWORD` | — | Yes | PostgreSQL password |
+| `SCRYFALL_BASE_URL` | `https://api.scryfall.com` | No | Scryfall API base URL |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS` | `3` | No | Retry attempts for Scryfall calls |
+| `HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS` | `100` | No | Initial retry delay (ms) |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER` | `2.0` | No | Backoff multiplier |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS` | `2000` | No | Max retry delay (ms) |
+
 ## Integration Tests
 
 Extend `AbstractIntegrationTest` (starts a `postgres:16-alpine` Testcontainer, sets `spring.datasource.*` via `@DynamicPropertySource`). Required for SQL Mappers and Repositories. Services and controllers use unit tests with mocked dependencies.
