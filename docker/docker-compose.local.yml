@@ -52,6 +52,8 @@ services:
     environment:
       COLLECTION_MANAGER_BASE_URL: http://collection-manager:8080
       DRAFTSIM_PARSER_BASE_URL: http://draftsim-parser:8080
+      # AUTH_ISSUER_URI / MCP_BASE_URL not set → OAuth disabled for local dev.
+      # To enable, expose auth-service via a second ngrok tunnel and set both vars.
     ports:
       - "3000:3000"
     command: ["--transport", "http", "--port", "3000"]

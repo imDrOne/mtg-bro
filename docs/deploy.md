@@ -109,6 +109,8 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 |--------|----------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://collection-manager:8080` |
 | `DRAFTSIM_PARSER_BASE_URL` | `http://draftsim-parser:8081` |
+| `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
+| `MCP_BASE_URL` | Публичный URL MCP-сервера, например `https://mtg-bro.duckdns.org` |
 
 #### `production-infra`
 

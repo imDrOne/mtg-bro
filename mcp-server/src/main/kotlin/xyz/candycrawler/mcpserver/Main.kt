@@ -5,6 +5,7 @@ import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.routing.routing
 import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
 import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.McpJson
@@ -12,6 +13,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
+import xyz.candycrawler.mcpserver.auth.McpAuthPlugin
+import xyz.candycrawler.mcpserver.auth.oauthMetadataRoutes
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -31,10 +34,27 @@ fun main(args: Array<String>) {
                 )
             )
         }
-        "http" -> embeddedServer(CIO, port = port) {
-            install(ContentNegotiation) { json(McpJson) }
-            mcpStreamableHttp { server }
-        }.start(wait = true)
+        "http" -> {
+            val authIssuerUri = System.getenv("AUTH_ISSUER_URI")
+            val mcpBaseUrl = System.getenv("MCP_BASE_URL")
+
+            embeddedServer(CIO, port = port) {
+                install(ContentNegotiation) { json(McpJson) }
+
+                if (authIssuerUri != null && mcpBaseUrl != null) {
+                    install(McpAuthPlugin) {
+                        issuerUri = authIssuerUri
+                        jwksUri = "$authIssuerUri/oauth2/jwks"
+                        resourceMetadataUrl = "$mcpBaseUrl/.well-known/oauth-protected-resource"
+                    }
+                    routing {
+                        oauthMetadataRoutes(mcpBaseUrl, authIssuerUri)
+                    }
+                }
+
+                mcpStreamableHttp { server }
+            }.start(wait = true)
+        }
         else -> {
             System.err.println("Unknown transport: $transport. Use stdio or http.")
             exitProcess(1)

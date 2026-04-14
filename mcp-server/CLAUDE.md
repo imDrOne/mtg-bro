@@ -52,14 +52,40 @@ Shared context passed to all handlers containing:
 
 ### Transport Modes
 
-- **stdio**: For Cursor integration (default)
-- **http**: Streamable HTTP for Claude web (requires ngrok for public access)
+- **stdio**: For Cursor integration (default, no auth)
+- **http**: Streamable HTTP for Claude web (OAuth 2.1 when `AUTH_ISSUER_URI` is set)
+
+### OAuth 2.1 Authorization (HTTP transport)
+
+When `AUTH_ISSUER_URI` and `MCP_BASE_URL` are set, the MCP server acts as an OAuth 2.1 Resource Server (RFC 9728):
+
+1. Unauthenticated requests get `HTTP 401` with `WWW-Authenticate` header
+2. Claude discovers auth via `GET /.well-known/oauth-protected-resource` on the MCP server
+3. Claude performs Authorization Code + PKCE flow against auth-service
+4. Subsequent requests include `Authorization: Bearer <token>`
+5. MCP server validates JWT using auth-service's JWKS
+
+Key files:
+- `auth/McpAuthPlugin.kt` — Ktor plugin for JWT validation
+- `auth/OAuthMetadataRoute.kt` — Protected Resource Metadata endpoint (RFC 9728)
+
+Auth is **disabled** when env vars are not set (local dev, stdio transport).
+
+### Claude Web Connector Setup
+
+In Claude Web: Settings → Connectors → Add custom connector:
+- **Name**: mtg-bro
+- **Remote MCP server URL**: `https://{MCP_DOMAIN}/mcp`
+- **OAuth Client ID**: `mcp-client`
+- **OAuth Client Secret**: raw secret matching the BCrypt hash in auth-service DB
 
 ## Environment Variables
 
-| Variable                      | Default                 | Description                           |
-|-------------------------------|-------------------------|---------------------------------------|
-| `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | collection-manager API URL            |
-| `DRAFTSIM_PARSER_BASE_URL`    | `http://localhost:8081` | draftsim-parser API URL               |
-| `MCP_TRANSPORT`               | `stdio`                 | Transport mode                        |
-| `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport) |
+| Variable                      | Default                 | Description                            |
+|-------------------------------|-------------------------|----------------------------------------|
+| `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | collection-manager API URL             |
+| `DRAFTSIM_PARSER_BASE_URL`    | `http://localhost:8081` | draftsim-parser API URL                |
+| `MCP_TRANSPORT`               | `stdio`                 | Transport mode                         |
+| `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport)  |
+| `AUTH_ISSUER_URI`             | _(none)_                | Auth-service public URL; enables OAuth |
+| `MCP_BASE_URL`                | _(none)_                | MCP server public URL; enables OAuth   |
