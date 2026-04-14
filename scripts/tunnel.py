@@ -47,6 +47,7 @@ SERVICES = [
     ("collection-manager",     8080, "127.0.0.1", 8080),
     ("draftsim-parser",        8081, "127.0.0.1", 8081),
     ("wizard-stat-aggregator", 8082, "127.0.0.1", 8082),
+    ("auth-service",           8083, "127.0.0.1", 8083),
     ("mcp-server",             3000, "127.0.0.1", 3000),
 ]
 
