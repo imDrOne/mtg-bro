@@ -245,8 +245,8 @@ python3 -c "import bcrypt; print(bcrypt.hashpw(b'your-secret', bcrypt.gensalt(10
 kotlin -e "import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; println(BCryptPasswordEncoder().encode(\"your-secret\"))"
 ```
 
-Вставить результат в миграцию `20260412000002_create_oauth2_tables.sql` вместо `REPLACE_WITH_BCRYPT_HASH`.
-Хеш вставляется **без** `{bcrypt}` префикса — `JdbcRegisteredClientRepository` добавляет его при маппинге:
+Вставить результат в миграцию **без** `{bcrypt}` префикса — `PasswordEncoder` bean = `BCryptPasswordEncoder`,
+который принимает чистый bcrypt-хеш напрямую:
 ```sql
 client_secret = '$2a$10$...'
 ```
