@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import xyz.candycrawler.authservice.domain.user.model.User
 import xyz.candycrawler.authservice.domain.user.repository.UserRepository
+import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,8 +19,9 @@ import kotlin.test.assertTrue
 class UserRegistrationServiceTest {
 
     private val userRepository: UserRepository = mock()
+    private val userRoleRepository: UserRoleRepository = mock()
     private val passwordEncoder = BCryptPasswordEncoder()
-    private val service = UserRegistrationService(userRepository, passwordEncoder)
+    private val service = UserRegistrationService(userRepository, userRoleRepository, passwordEncoder)
 
     private fun savedUser(email: String, username: String, hash: String) = User(
         id = 1L, email = email, username = username, passwordHash = hash,

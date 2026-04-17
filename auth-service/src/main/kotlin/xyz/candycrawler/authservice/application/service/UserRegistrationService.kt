@@ -5,12 +5,15 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import xyz.candycrawler.authservice.domain.user.model.User
+import xyz.candycrawler.authservice.domain.user.model.UserRole
 import xyz.candycrawler.authservice.domain.user.repository.UserRepository
+import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import java.time.Instant
 
 @Service
 class UserRegistrationService(
     private val userRepository: UserRepository,
+    private val userRoleRepository: UserRoleRepository,
     private val passwordEncoder: PasswordEncoder,
 ) {
 
@@ -34,6 +37,8 @@ class UserRegistrationService(
             createdAt = Instant.now(),
         )
 
-        return userRepository.save(user)
+        val saved = userRepository.save(user)
+        userRoleRepository.assignRole(saved.id!!, UserRole.FREE)
+        return saved
     }
 }
