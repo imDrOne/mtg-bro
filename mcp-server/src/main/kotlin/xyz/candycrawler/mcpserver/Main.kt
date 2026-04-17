@@ -53,8 +53,12 @@ fun main(args: Array<String>) {
                         resourceMetadataUrl = "$mcpBaseUrl/.well-known/oauth-protected-resource"
                     }
                     intercept(ApplicationCallPipeline.Plugins) {
-                        val roles = call.attributes.getOrNull(UserRolesKey) ?: emptyList()
-                        withContext(UserRolesElement(roles)) {
+                        val roles = call.attributes.getOrNull(UserRolesKey)
+                        if (roles != null) {
+                            withContext(UserRolesElement(roles)) {
+                                proceed()
+                            }
+                        } else {
                             proceed()
                         }
                     }
