@@ -21,6 +21,8 @@ val mcpVersion = "0.9.0"
 val ktorVersion = "3.2.4"
 
 dependencies {
+    testImplementation(kotlin("test"))
+
     implementation("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
     implementation("io.ktor:ktor-server-cio:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
@@ -44,4 +46,8 @@ jib {
 
 tasks.named<JavaExec>("run") {
     standardInput = System.`in`
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
