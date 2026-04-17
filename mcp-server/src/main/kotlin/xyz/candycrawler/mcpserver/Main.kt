@@ -1,6 +1,8 @@
 package xyz.candycrawler.mcpserver
 
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
@@ -10,10 +12,13 @@ import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
 import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.McpJson
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
 import xyz.candycrawler.mcpserver.auth.McpAuthPlugin
+import xyz.candycrawler.mcpserver.auth.UserRolesElement
+import xyz.candycrawler.mcpserver.auth.UserRolesKey
 import xyz.candycrawler.mcpserver.auth.oauthMetadataRoutes
 import kotlin.system.exitProcess
 
@@ -46,6 +51,12 @@ fun main(args: Array<String>) {
                         issuerUri = authIssuerUri
                         jwksUri = "$authIssuerUri/oauth2/jwks"
                         resourceMetadataUrl = "$mcpBaseUrl/.well-known/oauth-protected-resource"
+                    }
+                    intercept(ApplicationCallPipeline.Plugins) {
+                        val roles = call.attributes.getOrNull(UserRolesKey) ?: emptyList()
+                        withContext(UserRolesElement(roles)) {
+                            proceed()
+                        }
                     }
                     routing {
                         oauthMetadataRoutes(mcpBaseUrl, authIssuerUri)
