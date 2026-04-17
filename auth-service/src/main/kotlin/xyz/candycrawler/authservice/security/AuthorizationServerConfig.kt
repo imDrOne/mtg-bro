@@ -14,20 +14,28 @@ import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer
+import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher
+import xyz.candycrawler.authservice.domain.user.repository.UserRepository
+import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import xyz.candycrawler.authservice.infrastructure.db.mapper.sql.RsaKeySqlMapper
 
 @Configuration
 class AuthorizationServerConfig(
     private val rsaKeySqlMapper: RsaKeySqlMapper,
+    private val userRepository: UserRepository,
+    private val userRoleRepository: UserRoleRepository,
 ) {
 
     @Value("\${auth.issuer-uri}")
@@ -82,4 +90,15 @@ class AuthorizationServerConfig(
     @Bean
     fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder =
         OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
+
+    @Bean
+    fun jwtCustomizer(): OAuth2TokenCustomizer<JwtEncodingContext> =
+        OAuth2TokenCustomizer { context ->
+            if (context.tokenType == OAuth2TokenType.ACCESS_TOKEN) {
+                val email = context.getPrincipal<Authentication>().name
+                val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
+                val roles = userRoleRepository.findByUserId(user.id!!)
+                context.claims.claim("roles", roles.map { it.name })
+            }
+        }
 }
