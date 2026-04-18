@@ -31,6 +31,7 @@ fun main(args: Array<String>) {
 
     when (transport) {
         "stdio" -> runBlocking {
+            // stdio has no auth — createSession (unfiltered) is correct; isAuthEnabled() returns false
             server.createSession(
                 StdioServerTransport(
                     inputStream = System.`in`.asSource().buffered(),

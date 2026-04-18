@@ -50,7 +50,6 @@ fun Application.mcpFilteredStreamableHttp(path: String = "/mcp", server: Filtere
                     )
                     transport.setOnSessionInitialized { id -> transports[id] = transport }
                     transport.setOnSessionClosed { id -> transports.remove(id) }
-                    server.onClose { transport.sessionId?.let { transports.remove(it) } }
                     server.createFilteredSession(transport)
                     transport.handleRequest(null, call)
                 }
