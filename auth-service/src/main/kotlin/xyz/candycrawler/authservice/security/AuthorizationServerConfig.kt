@@ -48,6 +48,11 @@ class AuthorizationServerConfig(
         http
             .securityMatcher(configurer.endpointsMatcher)
             .with(configurer) { authServer ->
+                authServer.authorizationServerMetadataEndpoint { metadata ->
+                    metadata.authorizationServerMetadataCustomizer { builder ->
+                        builder.tokenEndpointAuthenticationMethod("none")
+                    }
+                }
                 authServer.oidc { oidc ->
                     oidc.logoutEndpoint(Customizer.withDefaults())
                     oidc.providerConfigurationEndpoint { endpoint ->
