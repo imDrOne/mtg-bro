@@ -51,6 +51,7 @@ class AuthorizationServerConfig(
                 authServer.authorizationServerMetadataEndpoint { metadata ->
                     metadata.authorizationServerMetadataCustomizer { builder ->
                         builder.tokenEndpointAuthenticationMethod("none")
+                        builder.claim("scopes_supported", listOf("openid", "profile", "decks:read"))
                     }
                 }
                 authServer.oidc { oidc ->
@@ -58,6 +59,7 @@ class AuthorizationServerConfig(
                     oidc.providerConfigurationEndpoint { endpoint ->
                         endpoint.providerConfigurationCustomizer { builder ->
                             builder.tokenEndpointAuthenticationMethod("none")
+                            builder.claim("scopes_supported", listOf("openid", "profile", "decks:read"))
                         }
                     }
                 }
