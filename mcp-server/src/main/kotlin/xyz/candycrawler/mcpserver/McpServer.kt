@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
@@ -34,7 +33,7 @@ import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
 import xyz.candycrawler.mcpserver.tools.ToolContext
 
-fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
+fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
@@ -43,7 +42,7 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
 
     val context = ToolContext(baseUrl = baseUrl, draftsimParserBaseUrl = draftsimParserBaseUrl, httpClient = httpClient)
 
-    val server = Server(
+    val server = FilteredMcpServer(
         serverInfo = Implementation(name = "mtg-bro", version = "1.0.0"),
         options = ServerOptions(
             capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true)),
