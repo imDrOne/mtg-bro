@@ -127,7 +127,7 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
     return server
 }
 
-private suspend fun checkAccess(toolName: String): CallToolResult? {
+internal suspend fun checkAccess(toolName: String): CallToolResult? {
     if (!isAuthEnabled()) return null
     val roles = currentUserRoles()
     if (ToolAccessConfig.hasAccess(toolName, roles)) return null
