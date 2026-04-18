@@ -10,7 +10,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 fun Route.oauthMetadataRoutes(mcpBaseUrl: String, authIssuerUri: String) {
-    get("/.well-known/oauth-protected-resource") {
+    get("/.well-known/oauth-protected-resource/mcp") {
         val metadata = buildJsonObject {
             put("resource", "$mcpBaseUrl/mcp")
             putJsonArray("authorization_servers") { add(authIssuerUri) }
