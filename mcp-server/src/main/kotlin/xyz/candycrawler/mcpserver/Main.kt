@@ -9,7 +9,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
-import io.modelcontextprotocol.kotlin.sdk.server.mcpStreamableHttp
 import io.modelcontextprotocol.kotlin.sdk.types.McpJson
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -67,7 +66,7 @@ fun main(args: Array<String>) {
                     }
                 }
 
-                mcpStreamableHttp { server }
+                mcpFilteredStreamableHttp(server = server)
             }.start(wait = true)
         }
         else -> {
