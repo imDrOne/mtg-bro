@@ -63,7 +63,7 @@ fun main(args: Array<String>) {
                     install(McpAuthPlugin) {
                         issuerUri = authIssuerUri
                         jwksUri = "$authIssuerUri/oauth2/jwks"
-                        resourceMetadataUrl = "$mcpBaseUrl/.well-known/oauth-protected-resource"
+                        resourceMetadataUrl = "$mcpBaseUrl/.well-known/oauth-protected-resource/mcp"
                     }
                     intercept(ApplicationCallPipeline.Plugins) {
                         val roles = call.attributes.getOrNull(UserRolesKey)
