@@ -6,7 +6,10 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.routing.routing
 import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
 import io.modelcontextprotocol.kotlin.sdk.types.McpJson
@@ -45,6 +48,16 @@ fun main(args: Array<String>) {
 
             embeddedServer(CIO, port = port) {
                 install(ContentNegotiation) { json(McpJson) }
+                install(CORS) {
+                    anyHost()
+                    allowMethod(HttpMethod.Post)
+                    allowMethod(HttpMethod.Delete)
+                    allowMethod(HttpMethod.Get)
+                    allowHeader(HttpHeaders.Authorization)
+                    allowHeader(HttpHeaders.ContentType)
+                    allowHeader("mcp-session-id")
+                    exposeHeader("mcp-session-id")
+                }
 
                 if (authIssuerUri != null && mcpBaseUrl != null) {
                     install(McpAuthPlugin) {

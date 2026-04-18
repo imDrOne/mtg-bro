@@ -3,8 +3,10 @@ package xyz.candycrawler.mcpserver.auth
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -30,6 +32,7 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
         .build()
 
     onCall { call ->
+        if (call.request.httpMethod == HttpMethod.Options) return@onCall
         val path = call.request.path()
         if (path.startsWith("/.well-known")) return@onCall
 

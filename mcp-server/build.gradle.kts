@@ -24,6 +24,7 @@ dependencies {
     testImplementation(kotlin("test"))
 
     implementation("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-cio:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
