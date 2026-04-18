@@ -47,23 +47,7 @@ class AuthorizationServerConfig(
         val configurer = OAuth2AuthorizationServerConfigurer()
         http
             .securityMatcher(configurer.endpointsMatcher)
-            .with(configurer) { authServer ->
-                authServer.authorizationServerMetadataEndpoint { metadata ->
-                    metadata.authorizationServerMetadataCustomizer { builder ->
-                        builder.tokenEndpointAuthenticationMethod("none")
-                        builder.claim("scopes_supported", listOf("openid", "profile", "decks:read"))
-                    }
-                }
-                authServer.oidc { oidc ->
-                    oidc.logoutEndpoint(Customizer.withDefaults())
-                    oidc.providerConfigurationEndpoint { endpoint ->
-                        endpoint.providerConfigurationCustomizer { builder ->
-                            builder.tokenEndpointAuthenticationMethod("none")
-                            builder.claim("scopes_supported", listOf("openid", "profile", "decks:read"))
-                        }
-                    }
-                }
-            }
+            .with(configurer) { it.oidc { oidc -> oidc.logoutEndpoint(Customizer.withDefaults()) } }
             .authorizeHttpRequests { it.anyRequest().authenticated() }
             .exceptionHandling { exceptions ->
                 // Redirect browser requests (HTML) to the login page; JSON API clients get 401.
