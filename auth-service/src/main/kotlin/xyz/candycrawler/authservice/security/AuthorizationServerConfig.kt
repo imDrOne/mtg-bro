@@ -40,14 +40,20 @@ class AuthorizationServerConfig(
         http
             .securityMatcher(configurer.endpointsMatcher)
             .with(configurer) { authServer ->
-                authServer.oidc { oidc ->
-                    oidc.logoutEndpoint(Customizer.withDefaults())
-                    oidc.providerConfigurationEndpoint { providerConfig ->
-                        providerConfig.providerConfigurationCustomizer { builder ->
+                authServer
+                    .authorizationServerMetadataEndpoint { metadataEndpoint ->
+                        metadataEndpoint.authorizationServerMetadataCustomizer { builder ->
                             builder.clientRegistrationEndpoint("$issuerUri/connect/register")
                         }
                     }
-                }
+                    .oidc { oidc ->
+                        oidc.logoutEndpoint(Customizer.withDefaults())
+                        oidc.providerConfigurationEndpoint { providerConfig ->
+                            providerConfig.providerConfigurationCustomizer { builder ->
+                                builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                            }
+                        }
+                    }
             }
             .authorizeHttpRequests { it.anyRequest().authenticated() }
             .exceptionHandling { exceptions ->
