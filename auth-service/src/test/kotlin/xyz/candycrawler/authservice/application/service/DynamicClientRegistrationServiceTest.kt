@@ -23,15 +23,17 @@ class DynamicClientRegistrationServiceTest {
     private val service = DynamicClientRegistrationService(registeredClientRepository, passwordEncoder)
 
     @Test
-    fun `register with default auth method creates public client`() {
+    fun `register with default auth method creates confidential client`() {
+        whenever(passwordEncoder.encode(any())).thenReturn("\$2a\$10\$encoded")
+
         val request = DynamicClientRegistrationRequest(
             redirectUris = listOf("https://claude.ai/api/mcp/auth_callback"),
         )
 
         val response = service.register(request)
 
-        assertEquals("none", response.tokenEndpointAuthMethod)
-        assertNull(response.clientSecret)
+        assertEquals("client_secret_basic", response.tokenEndpointAuthMethod)
+        assertNotNull(response.clientSecret)
         assertNotNull(response.clientId)
     }
 
@@ -81,6 +83,8 @@ class DynamicClientRegistrationServiceTest {
 
     @Test
     fun `register always assigns fixed scopes`() {
+        whenever(passwordEncoder.encode(any())).thenReturn("\$2a\$10\$encoded")
+
         val request = DynamicClientRegistrationRequest(
             redirectUris = listOf("https://example.com/callback"),
             scope = "admin everything",
@@ -130,6 +134,7 @@ class DynamicClientRegistrationServiceTest {
 
     @Test
     fun `register saves client with PKCE required`() {
+        whenever(passwordEncoder.encode(any())).thenReturn("\$2a\$10\$encoded")
         val captor = argumentCaptor<RegisteredClient>()
 
         val request = DynamicClientRegistrationRequest(
@@ -144,6 +149,8 @@ class DynamicClientRegistrationServiceTest {
 
     @Test
     fun `register returns grant_types authorization_code and refresh_token`() {
+        whenever(passwordEncoder.encode(any())).thenReturn("\$2a\$10\$encoded")
+
         val request = DynamicClientRegistrationRequest(
             redirectUris = listOf("https://example.com/callback"),
         )

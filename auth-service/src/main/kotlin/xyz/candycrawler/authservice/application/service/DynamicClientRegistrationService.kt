@@ -83,7 +83,8 @@ class DynamicClientRegistrationService(
         when (requested) {
             "client_secret_basic" -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
             "client_secret_post" -> ClientAuthenticationMethod.CLIENT_SECRET_POST
-            "none", null -> ClientAuthenticationMethod.NONE
+            "none" -> ClientAuthenticationMethod.NONE
+            null -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
             else -> throw IllegalArgumentException(
                 "Unsupported token_endpoint_auth_method: $requested"
             )
