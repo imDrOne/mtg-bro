@@ -40,4 +40,14 @@ class DomainExceptionHandler {
             message = "Something went wrong, please try again",
         )
     }
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleInvalidClientMetadata(ex: IllegalArgumentException): Map<String, String> {
+        log.warn("IllegalArgumentException: {}", ex.message)
+        return mapOf(
+            "error" to "invalid_client_metadata",
+            "error_description" to (ex.message ?: "Invalid client metadata"),
+        )
+    }
 }

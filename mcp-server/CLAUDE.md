@@ -76,6 +76,12 @@ Auth is **disabled** when env vars are not set (local dev, stdio transport).
 In Claude Web: Settings → Connectors → Add custom connector:
 - **Name**: mtg-bro
 - **Remote MCP server URL**: `https://{MCP_DOMAIN}/mcp`
+
+No OAuth Client ID or Client Secret needed — auth-service supports Dynamic Client
+Registration (RFC 7591). Claude.ai automatically registers an OAuth client on first
+connection.
+
+If DCR doesn't work (fallback, manual configuration):
 - **OAuth Client ID**: `mcp-client`
 - **OAuth Client Secret**: raw secret matching the BCrypt hash in auth-service DB
 

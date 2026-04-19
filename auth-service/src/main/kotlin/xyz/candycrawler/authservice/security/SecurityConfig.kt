@@ -29,6 +29,7 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/v1/users/register").permitAll()
+                    .requestMatchers("/connect/register").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/connect/logout").permitAll()
                     .anyRequest().authenticated()
@@ -40,7 +41,7 @@ class SecurityConfig(
                     .permitAll()
             }
             .csrf { csrf ->
-                csrf.ignoringRequestMatchers("/api/v1/users/register", "/login")
+                csrf.ignoringRequestMatchers("/api/v1/users/register", "/login", "/connect/register")
             }
 
         return http.build()

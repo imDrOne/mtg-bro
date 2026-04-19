@@ -32,6 +32,12 @@ class RateLimitingInterceptor(
                 .maximumSize(100_000)
         ).build()
 
+    private val dcrProxyManager: CaffeineProxyManager<String> =
+        Bucket4jCaffeine.builderFor<String>(
+            Caffeine.newBuilder()
+                .maximumSize(100_000)
+        ).build()
+
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         val ip = resolveClientIp(request)
         val path = request.requestURI
@@ -42,6 +48,9 @@ class RateLimitingInterceptor(
 
             path == "/login" ->
                 loginProxyManager.builder().build(ip) { loginConfig() }
+
+            path == "/connect/register" ->
+                dcrProxyManager.builder().build(ip) { dcrConfig() }
 
             else -> return true
         }
@@ -72,6 +81,16 @@ class RateLimitingInterceptor(
                 Bandwidth.builder()
                     .capacity(10)
                     .refillIntervally(10, Duration.ofMinutes(5))
+                    .build()
+            )
+            .build()
+
+    private fun dcrConfig(): BucketConfiguration =
+        BucketConfiguration.builder()
+            .addLimit(
+                Bandwidth.builder()
+                    .capacity(10)
+                    .refillIntervally(10, Duration.ofMinutes(10))
                     .build()
             )
             .build()

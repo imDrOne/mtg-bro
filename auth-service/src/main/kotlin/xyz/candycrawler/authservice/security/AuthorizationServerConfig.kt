@@ -39,7 +39,16 @@ class AuthorizationServerConfig(
         val configurer = OAuth2AuthorizationServerConfigurer()
         http
             .securityMatcher(configurer.endpointsMatcher)
-            .with(configurer) { it.oidc { oidc -> oidc.logoutEndpoint(Customizer.withDefaults()) } }
+            .with(configurer) { authServer ->
+                authServer.oidc { oidc ->
+                    oidc.logoutEndpoint(Customizer.withDefaults())
+                    oidc.providerConfigurationEndpoint { providerConfig ->
+                        providerConfig.providerConfigurationCustomizer { builder ->
+                            builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                        }
+                    }
+                }
+            }
             .authorizeHttpRequests { it.anyRequest().authenticated() }
             .exceptionHandling { exceptions ->
                 // Redirect browser requests (HTML) to the login page; JSON API clients get 401.

@@ -11,6 +11,6 @@ class WebMvcConfig(
 
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(rateLimitingInterceptor)
-            .addPathPatterns("/api/v1/users/register", "/login")
+            .addPathPatterns("/api/v1/users/register", "/login", "/connect/register")
     }
 }
