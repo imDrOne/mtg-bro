@@ -1,5 +1,5 @@
 -- liquibase formatted sql
--- changeset a.tikholoz:20260417000005
+-- changeset a.tikholoz:20260420000005
 
 CREATE TABLE user_roles (
     user_id    BIGINT      NOT NULL REFERENCES users(id),
