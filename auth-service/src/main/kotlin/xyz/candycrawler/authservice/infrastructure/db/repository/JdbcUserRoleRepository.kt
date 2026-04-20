@@ -1,11 +1,11 @@
 package xyz.candycrawler.authservice.infrastructure.db.repository
 
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Repository
 import xyz.candycrawler.authservice.domain.user.model.UserRole
 import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import xyz.candycrawler.authservice.infrastructure.db.mapper.sql.UserRoleSqlMapper
 
-@Service
+@Repository
 class JdbcUserRoleRepository(
     private val userRoleSqlMapper: UserRoleSqlMapper,
 ) : UserRoleRepository {
@@ -15,5 +15,7 @@ class JdbcUserRoleRepository(
     }
 
     override fun findByUserId(userId: Long): List<UserRole> =
-        userRoleSqlMapper.selectByUserId(userId).map { UserRole.valueOf(it) }
+        userRoleSqlMapper.selectByUserId(userId).mapNotNull { roleName ->
+            runCatching { UserRole.valueOf(roleName) }.getOrNull()
+        }
 }

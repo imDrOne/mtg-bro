@@ -240,7 +240,7 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
         assertTrue(returnedState == state, "state parameter must be echoed back unchanged")
 
         // Step 4: Exchange authorization code for tokens (POST uses param map, not query string — works with MockMvc)
-        mockMvc.post("/oauth2/token") {
+        val tokenResponse = mockMvc.post("/oauth2/token") {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
             headers { setBasicAuth(testClientId, testClientSecret) }
             param("grant_type", "authorization_code")
@@ -254,7 +254,16 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
             jsonPath("$.id_token") { exists() }
             jsonPath("$.token_type") { value("Bearer") }
             jsonPath("$.expires_in") { exists() }
-        }
+        }.andReturn()
+
+        // Verify the access token contains the roles claim with FREE role
+        val tokenBody = tokenResponse.response.contentAsString
+        val accessToken = Regex("\"access_token\"\\s*:\\s*\"([^\"]+)\"").find(tokenBody)?.groupValues?.get(1)
+        assertNotNull(accessToken, "access_token must be present in token response")
+
+        val payloadJson = String(Base64.getUrlDecoder().decode(accessToken.split(".")[1]))
+        assertTrue(payloadJson.contains("\"roles\""), "JWT payload must contain roles claim, got: $payloadJson")
+        assertTrue(payloadJson.contains("\"FREE\""), "JWT payload must contain FREE role, got: $payloadJson")
     }
 
     // --- Helpers ---
