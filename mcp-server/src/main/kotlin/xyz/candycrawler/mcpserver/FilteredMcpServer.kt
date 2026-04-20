@@ -7,8 +7,9 @@ import io.modelcontextprotocol.kotlin.sdk.types.ListToolsRequest
 import io.modelcontextprotocol.kotlin.sdk.types.ListToolsResult
 import io.modelcontextprotocol.kotlin.sdk.types.Method
 import io.modelcontextprotocol.kotlin.sdk.shared.Transport
-import xyz.candycrawler.mcpserver.auth.ToolAccessConfig
+import xyz.candycrawler.mcpserver.auth.ToolAccessConfigData
 import xyz.candycrawler.mcpserver.auth.currentUserRoles
+import xyz.candycrawler.mcpserver.auth.hasAccess
 import xyz.candycrawler.mcpserver.auth.isAuthEnabled
 
 /**
@@ -25,6 +26,7 @@ import xyz.candycrawler.mcpserver.auth.isAuthEnabled
 class FilteredMcpServer(
     serverInfo: Implementation,
     options: ServerOptions,
+    private val toolAccessConfig: ToolAccessConfigData,
 ) : Server(serverInfo, options) {
 
     /**
@@ -36,7 +38,7 @@ class FilteredMcpServer(
     suspend fun visibleToolNames(): List<String> {
         if (!isAuthEnabled()) return tools.keys.toList()
         val roles = currentUserRoles()
-        return tools.keys.filter { toolName -> ToolAccessConfig.hasAccess(toolName, roles) }
+        return tools.keys.filter { toolName -> toolAccessConfig.hasAccess(toolName, roles) }
     }
 
     /**

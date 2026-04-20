@@ -1,28 +1,84 @@
 package xyz.candycrawler.mcpserver.auth
 
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
+import com.charleskorn.kaml.YamlContentPolymorphicSerializer
+import com.charleskorn.kaml.YamlList
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlScalar
+import com.charleskorn.kaml.decodeFromStream
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import java.io.InputStream
+
+/**
+ * Represents which tools a single role can access.
+ * Either a wildcard "*" (all tools) or a specific list of tool names.
+ */
+@Serializable(with = RoleToolsSerializer::class)
+sealed class RoleTools {
+    /** All tools are accessible (ADMIN wildcard). */
+    object All : RoleTools()
+
+    /** A specific set of named tools. */
+    data class Named(val tools: List<String>) : RoleTools()
+
+    fun contains(toolName: String): Boolean = when (this) {
+        is All -> true
+        is Named -> tools.contains(toolName)
+    }
+}
+
+object RoleToolsSerializer : YamlContentPolymorphicSerializer<RoleTools>(RoleTools::class) {
+    override fun selectDeserializer(node: YamlNode): DeserializationStrategy<RoleTools> =
+        when {
+            node is YamlScalar && node.content == "*" -> WildcardDeserializer
+            else -> NamedDeserializer
+        }
+
+    private object WildcardDeserializer : DeserializationStrategy<RoleTools> {
+        override val descriptor = String.serializer().descriptor
+        override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): RoleTools {
+            decoder.decodeString() // consume the "*" scalar
+            return RoleTools.All
+        }
+    }
+
+    private object NamedDeserializer : DeserializationStrategy<RoleTools> {
+        private val delegate = ListSerializer(String.serializer())
+        override val descriptor = delegate.descriptor
+        override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): RoleTools =
+            RoleTools.Named(delegate.deserialize(decoder))
+    }
+}
+
+@Serializable
+data class ToolAccessConfigData(
+    val roles: Map<String, RoleTools> = emptyMap(),
+    @SerialName("default_roles") val defaultRoles: List<String> = emptyList(),
+)
+
+fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): Boolean {
+    return userRoles.any { role ->
+        val allowed = roles[role]
+        if (allowed != null) {
+            allowed.contains(toolName)
+        } else {
+            defaultRoles.contains(toolName)
+        }
+    }
+}
+
 object ToolAccessConfig {
+    fun load(stream: InputStream): ToolAccessConfigData {
+        val yaml = Yaml(configuration = YamlConfiguration(strictMode = false))
+        return yaml.decodeFromStream(ToolAccessConfigData.serializer(), stream)
+    }
 
-    private val FREE_TOOLS = setOf(
-        "search_my_cards",
-        "search_scryfall",
-        "get_card",
-        "list_scryfall_format_codes",
-    )
-
-    private val PRO_TOOLS = FREE_TOOLS + setOf(
-        "analyze_tribal_depth",
-        "get_collection_overview",
-        "search_draftsim_articles",
-        "get_draftsim_articles",
-        "save_deck",
-    )
-
-    private val ACCESS: Map<String, Set<String>> = mapOf(
-        "FREE" to FREE_TOOLS,
-        "PRO" to PRO_TOOLS,
-        "ADMIN" to PRO_TOOLS,
-    )
-
-    fun hasAccess(toolName: String, roles: List<String>): Boolean =
-        roles.any { role -> ACCESS[role]?.contains(toolName) == true }
+    fun loadFromResources(): ToolAccessConfigData =
+        ToolAccessConfig::class.java.getResourceAsStream("/tool-access.yml")!!
+            .use { load(it) }
 }

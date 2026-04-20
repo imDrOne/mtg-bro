@@ -5,16 +5,20 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import xyz.candycrawler.mcpserver.auth.ToolAccessConfig
 import xyz.candycrawler.mcpserver.auth.UserRolesElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class FilteredMcpServerTest {
 
+    private val config = ToolAccessConfig.loadFromResources()
+
     private fun makeServer(): FilteredMcpServer {
         val server = FilteredMcpServer(
             serverInfo = Implementation(name = "test", version = "0.0.1"),
             options = ServerOptions(capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true))),
+            toolAccessConfig = config,
         )
         listOf(
             "search_my_cards", "search_scryfall", "get_card", "list_scryfall_format_codes",

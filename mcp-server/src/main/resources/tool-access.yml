@@ -1,0 +1,18 @@
+roles:
+  FREE:
+    - search_my_cards
+    - search_scryfall
+    - get_card
+    - list_scryfall_format_codes
+  PRO:
+    - search_my_cards
+    - search_scryfall
+    - get_card
+    - list_scryfall_format_codes
+    - analyze_tribal_depth
+    - get_collection_overview
+    - search_draftsim_articles
+    - get_draftsim_articles
+    - save_deck
+  ADMIN: "*"
+default_roles: []
