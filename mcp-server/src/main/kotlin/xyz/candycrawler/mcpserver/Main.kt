@@ -2,6 +2,7 @@ package xyz.candycrawler.mcpserver
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -86,16 +87,7 @@ fun main(args: Array<String>) {
                     route("/mcp") {
                         // SSE GET: resume an existing session
                         sse {
-                            val sessionId = call.request.header(MCP_SESSION_ID_HEADER)
-                            if (sessionId.isNullOrEmpty()) {
-                                call.respond(HttpStatusCode.BadRequest, "Mcp-Session-Id header is required")
-                                return@sse
-                            }
-                            val mcpTransport = sessionTransports[sessionId]
-                            if (mcpTransport == null) {
-                                call.respond(HttpStatusCode.NotFound, "Session not found")
-                                return@sse
-                            }
+                            val mcpTransport = call.requireSession(sessionTransports) ?: return@sse
                             mcpTransport.handleRequest(this, call)
                         }
 
@@ -103,11 +95,7 @@ fun main(args: Array<String>) {
                         post {
                             val sessionId = call.request.header(MCP_SESSION_ID_HEADER)
                             if (sessionId != null) {
-                                val mcpTransport = sessionTransports[sessionId]
-                                if (mcpTransport == null) {
-                                    call.respond(HttpStatusCode.NotFound, "Session not found")
-                                    return@post
-                                }
+                                val mcpTransport = call.requireSession(sessionTransports) ?: return@post
                                 mcpTransport.handleRequest(null, call)
                                 return@post
                             }
@@ -125,16 +113,7 @@ fun main(args: Array<String>) {
 
                         // DELETE: close an existing session
                         delete {
-                            val sessionId = call.request.header(MCP_SESSION_ID_HEADER)
-                            if (sessionId.isNullOrEmpty()) {
-                                call.respond(HttpStatusCode.BadRequest, "Mcp-Session-Id header is required")
-                                return@delete
-                            }
-                            val mcpTransport = sessionTransports[sessionId]
-                            if (mcpTransport == null) {
-                                call.respond(HttpStatusCode.NotFound, "Session not found")
-                                return@delete
-                            }
+                            val mcpTransport = call.requireSession(sessionTransports) ?: return@delete
                             mcpTransport.handleRequest(null, call)
                         }
                     }
@@ -146,6 +125,21 @@ fun main(args: Array<String>) {
             exitProcess(1)
         }
     }
+}
+
+private suspend fun ApplicationCall.requireSession(
+    sessions: ConcurrentHashMap<String, StreamableHttpServerTransport>,
+): StreamableHttpServerTransport? {
+    val sessionId = request.header(MCP_SESSION_ID_HEADER)
+    if (sessionId.isNullOrEmpty()) {
+        respond(HttpStatusCode.BadRequest, "Mcp-Session-Id header is required")
+        return null
+    }
+    val transport = sessions[sessionId]
+    if (transport == null) {
+        respond(HttpStatusCode.NotFound, "Session not found")
+    }
+    return transport
 }
 
 private fun Array<String>.getOption(flag: String): String? {

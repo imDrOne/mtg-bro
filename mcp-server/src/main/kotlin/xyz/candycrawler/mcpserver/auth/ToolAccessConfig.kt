@@ -64,11 +64,7 @@ data class ToolAccessConfigData(
 fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): Boolean {
     return userRoles.any { role ->
         val allowed = roles[role]
-        if (allowed != null) {
-            allowed.contains(toolName)
-        } else {
-            defaultAllowedTools.contains(toolName)
-        }
+        allowed?.contains(toolName) ?: defaultAllowedTools.contains(toolName)
     }
 }
 
