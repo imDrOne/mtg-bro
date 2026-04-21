@@ -52,6 +52,8 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
                 .withIssuer(issuerUri)
                 .build()
                 .verify(decodedJwt)
+            val roles = decodedJwt.getClaim("roles").asList(String::class.java) ?: emptyList()
+            call.attributes.put(UserRolesKey, roles)
         } catch (e: Exception) {
             call.response.header(
                 "WWW-Authenticate",

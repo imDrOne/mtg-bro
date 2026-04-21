@@ -4,45 +4,57 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
-import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.serialization.json.Json
-import xyz.candycrawler.mcpserver.tools.handleSaveDeck
-import xyz.candycrawler.mcpserver.tools.saveDeckSchema
+import xyz.candycrawler.mcpserver.auth.ToolAccessConfig
+import xyz.candycrawler.mcpserver.auth.ToolAccessConfigData
+import xyz.candycrawler.mcpserver.auth.currentUserRoles
+import xyz.candycrawler.mcpserver.auth.hasAccess
+import xyz.candycrawler.mcpserver.auth.isAuthEnabled
+import xyz.candycrawler.mcpserver.tools.ToolContext
 import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
-import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
-import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
 import xyz.candycrawler.mcpserver.tools.getCardSchema
+import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
+import xyz.candycrawler.mcpserver.tools.getDraftsimArticlesByIdSchema
 import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
-import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
-import xyz.candycrawler.mcpserver.tools.getDraftsimArticlesByIdSchema
+import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
 import xyz.candycrawler.mcpserver.tools.handleGetDraftsimArticlesById
+import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
+import xyz.candycrawler.mcpserver.tools.handleSaveDeck
 import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
 import xyz.candycrawler.mcpserver.tools.handleSearchScryfall
 import xyz.candycrawler.mcpserver.tools.listScryfallFormatCodesSchema
+import xyz.candycrawler.mcpserver.tools.saveDeckSchema
 import xyz.candycrawler.mcpserver.tools.searchDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
-import xyz.candycrawler.mcpserver.tools.ToolContext
 
-fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
+fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    val context = ToolContext(baseUrl = baseUrl, draftsimParserBaseUrl = draftsimParserBaseUrl, httpClient = httpClient)
+    val toolAccessConfig = ToolAccessConfig.loadFromResources()
+    val context = ToolContext(
+        baseUrl = baseUrl,
+        draftsimParserBaseUrl = draftsimParserBaseUrl,
+        httpClient = httpClient,
+    )
 
-    val server = Server(
+    val server = FilteredMcpServer(
         serverInfo = Implementation(name = "mtg-bro", version = "1.0.0"),
         options = ServerOptions(
             capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true)),
         ),
+        toolAccessConfig = toolAccessConfig,
     )
 
     server.addTool(
@@ -73,25 +85,37 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
         name = "analyze_tribal_depth",
         description = "Analyze tribal depth for a given MTG creature type in your collection. Returns total card count, CMC distribution, role breakdown (creatures / kindred spells / tribal support cards), color spread, whether a lord or commander exists, and deck viability. Use this when the user asks about a specific tribe like Merfolk, Elf, Goblin, etc.",
         inputSchema = analyzeTribalDepthSchema(),
-    ) { request -> handleAnalyzeTribalDepth(context, request) }
+    ) { request ->
+        checkAccess("analyze_tribal_depth", toolAccessConfig)?.let { return@addTool it }
+        handleAnalyzeTribalDepth(context, request)
+    }
 
     server.addTool(
         name = "get_collection_overview",
         description = "Get a high-level summary of your entire card collection: total unique cards, breakdown by color (W/U/B/R/G/C), type (creature/instant/etc), rarity, and top 10 tribes with their colors. Use this when the user asks what their collection looks like or wants an overview before planning a deck.",
         inputSchema = getCollectionOverviewSchema(),
-    ) { request -> handleGetCollectionOverview(context, request) }
+    ) { request ->
+        checkAccess("get_collection_overview", toolAccessConfig)?.let { return@addTool it }
+        handleGetCollectionOverview(context, request)
+    }
 
     server.addTool(
         name = "search_draftsim_articles",
         description = "Search favorited Draftsim.com articles about MTG draft strategy, set reviews, and limited format guides. Returns a lightweight list with id, title, slug and published date for browsing. Use get_draftsim_articles to fetch analyzed content for specific articles of interest.",
         inputSchema = searchDraftsimArticlesSchema(),
-    ) { request -> handleSearchDraftsimArticles(context, request) }
+    ) { request ->
+        checkAccess("search_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
+        handleSearchDraftsimArticles(context, request)
+    }
 
     server.addTool(
         name = "get_draftsim_articles",
         description = "Fetch analyzed MTG card knowledge from specific Draftsim articles by ID. Returns structured card evaluations (tiers, synergies, archetypes). Use after search_draftsim_articles to get content for articles of interest.",
         inputSchema = getDraftsimArticlesByIdSchema(),
-    ) { request -> handleGetDraftsimArticlesById(context, request) }
+    ) { request ->
+        checkAccess("get_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
+        handleGetDraftsimArticlesById(context, request)
+    }
 
     server.addTool(
         name = "save_deck",
@@ -102,7 +126,20 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): Server {
             On success returns the saved deck ID.
             On validation failure (error response) the message explains what to fix — correct and retry.""",
         inputSchema = saveDeckSchema(),
-    ) { request -> handleSaveDeck(context, request) }
+    ) { request ->
+        checkAccess("save_deck", toolAccessConfig)?.let { return@addTool it }
+        handleSaveDeck(context, request)
+    }
 
     return server
+}
+
+internal suspend fun checkAccess(toolName: String, config: ToolAccessConfigData): CallToolResult? {
+    if (!isAuthEnabled()) return null
+    val roles = currentUserRoles()
+    if (config.hasAccess(toolName, roles)) return null
+    return CallToolResult(
+        content = listOf(TextContent("Access denied: tool '$toolName' requires PRO subscription")),
+        isError = true,
+    )
 }

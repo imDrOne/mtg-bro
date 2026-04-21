@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization") version "2.1.21"
     application
     id("jib-module")
 }
@@ -21,6 +22,8 @@ val mcpVersion = "0.9.0"
 val ktorVersion = "3.2.4"
 
 dependencies {
+    testImplementation(kotlin("test"))
+
     implementation("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
     implementation("io.ktor:ktor-server-cio:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
@@ -30,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("com.charleskorn.kaml:kaml:0.104.0")
 }
 
 application {
@@ -44,4 +48,8 @@ jib {
 
 tasks.named<JavaExec>("run") {
     standardInput = System.`in`
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }

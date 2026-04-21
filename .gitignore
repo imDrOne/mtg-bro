@@ -47,3 +47,4 @@ docker/.env
 
 **/resources/application-local.yml
 **/db.properties
+commonMain/
