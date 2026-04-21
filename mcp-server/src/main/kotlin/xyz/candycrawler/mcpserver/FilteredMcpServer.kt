@@ -22,6 +22,14 @@ import xyz.candycrawler.mcpserver.auth.isAuthEnabled
  * tools/list response is applied by re-setting the ToolsList request handler immediately
  * after [createSession] returns. Call [createFilteredSession] instead of [createSession]
  * from transport setup code to enable this behaviour.
+ *
+ * Coroutine-context propagation: the MCP SDK's [StreamableHttpServerTransport.handlePostRequest]
+ * invokes its `_onMessage` callback (and hence Protocol.onRequest -> tool handlers) as a direct
+ * suspend call within the caller's coroutine — it does not switch to its own CoroutineScope.
+ * This means the Ktor-pipeline [UserRolesElement] installed via `intercept(Plugins)` IS visible
+ * inside both the `tools/list` handler here and the `tools/call` handlers registered via
+ * `addTool(...)`. (Stdio transport does use its own scope, but stdio runs without auth so it is
+ * not affected.)
  */
 class FilteredMcpServer(
     serverInfo: Implementation,

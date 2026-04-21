@@ -58,7 +58,7 @@ object RoleToolsSerializer : YamlContentPolymorphicSerializer<RoleTools>(RoleToo
 @Serializable
 data class ToolAccessConfigData(
     val roles: Map<String, RoleTools> = emptyMap(),
-    @SerialName("default_roles") val defaultRoles: List<String> = emptyList(),
+    @SerialName("default_allowed_tools") val defaultAllowedTools: List<String> = emptyList(),
 )
 
 fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): Boolean {
@@ -67,7 +67,7 @@ fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): B
         if (allowed != null) {
             allowed.contains(toolName)
         } else {
-            defaultRoles.contains(toolName)
+            defaultAllowedTools.contains(toolName)
         }
     }
 }
@@ -79,6 +79,7 @@ object ToolAccessConfig {
     }
 
     fun loadFromResources(): ToolAccessConfigData =
-        ToolAccessConfig::class.java.getResourceAsStream("/tool-access.yml")!!
-            .use { load(it) }
+        requireNotNull(ToolAccessConfig::class.java.getResourceAsStream("/tool-access.yml")) {
+            "Required resource /tool-access.yml not found in classpath"
+        }.use { load(it) }
 }

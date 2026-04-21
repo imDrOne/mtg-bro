@@ -15,4 +15,4 @@ roles:
     - get_draftsim_articles
     - save_deck
   ADMIN: "*"
-default_roles: []
+default_allowed_tools: []

@@ -65,7 +65,7 @@ class ToolAccessConfigTest {
               FREE:
                 - search_my_cards
               ADMIN: "*"
-            default_roles: []
+            default_allowed_tools: []
         """.trimIndent()
         val streamConfig = ToolAccessConfig.load(yamlContent.byteInputStream())
         assertTrue(streamConfig.hasAccess("search_my_cards", listOf("FREE")))

@@ -47,7 +47,6 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
         baseUrl = baseUrl,
         draftsimParserBaseUrl = draftsimParserBaseUrl,
         httpClient = httpClient,
-        toolAccessConfig = toolAccessConfig,
     )
 
     val server = FilteredMcpServer(
