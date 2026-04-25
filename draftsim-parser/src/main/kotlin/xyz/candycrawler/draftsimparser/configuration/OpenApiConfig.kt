@@ -1,4 +1,4 @@
-package xyz.candycrawler.collectionmanager.configuration
+package xyz.candycrawler.draftsimparser.configuration
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
@@ -15,8 +15,8 @@ class OpenApiConfig {
     fun openApi(): OpenAPI = OpenAPI()
         .info(
             Info()
-                .title("Collection Manager API")
-                .description("REST API for managing MTG card collections")
+                .title("Draftsim Parser API")
+                .description("REST API for Draftsim article parsing and analysis")
                 .version("1.0.0")
         )
         .components(

@@ -16,6 +16,8 @@ import org.springframework.security.config.annotation.web.configuration.OAuth2Au
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.core.Authentication
 import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.JwtEncoder
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType
@@ -108,6 +110,10 @@ class AuthorizationServerConfig(
     @Bean
     fun jwtDecoder(jwkSource: JWKSource<SecurityContext>): JwtDecoder =
         OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
+
+    @Bean
+    fun jwtEncoder(jwkSource: JWKSource<SecurityContext>): JwtEncoder =
+        NimbusJwtEncoder(jwkSource)
 
     @Bean
     fun jwtCustomizer(): OAuth2TokenCustomizer<JwtEncodingContext> =

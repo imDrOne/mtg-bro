@@ -1,4 +1,4 @@
-package xyz.candycrawler.collectionmanager.configuration
+package xyz.candycrawler.wizardstataggregator.configuration
 
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
@@ -15,8 +15,8 @@ class OpenApiConfig {
     fun openApi(): OpenAPI = OpenAPI()
         .info(
             Info()
-                .title("Collection Manager API")
-                .description("REST API for managing MTG card collections")
+                .title("Wizard Stat Aggregator API")
+                .description("REST API for MTG limited format statistics")
                 .version("1.0.0")
         )
         .components(

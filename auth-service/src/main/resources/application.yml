@@ -18,3 +18,5 @@ auth:
   mcp-client:
     redirect-uri: ${MCP_CLIENT_REDIRECT_URI}
   trusted-proxy-cidr: ${AUTH_TRUSTED_PROXY_CIDR:172.16.0.0/12}
+  refresh-cookie:
+    secure: ${AUTH_REFRESH_COOKIE_SECURE:true}

@@ -1,4 +1,4 @@
-package xyz.candycrawler.draftsimparser.config
+package xyz.candycrawler.collectionmanager.configuration
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,7 +18,7 @@ class SecurityConfig {
         .csrf { it.disable() }
         .authorizeHttpRequests { auth ->
             auth
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info", "/swagger-ui/**", "/api-docs/**").permitAll()
                 .anyRequest().authenticated()
         }
         .oauth2ResourceServer { it.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()) } }

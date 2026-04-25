@@ -75,6 +75,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: wizard_pass
       AUTH_ISSUER_URI: http://localhost:8083
       MCP_CLIENT_REDIRECT_URI: http://localhost:3000/oauth2/callback
+      AUTH_REFRESH_COOKIE_SECURE: "false"
     ports:
       - "8083:8080"
 
