@@ -37,10 +37,26 @@ Same hexagonal pattern as other Spring modules:
 | `DB_NAME` | — | Yes | Database name (`draftsim_parser_db`) |
 | `DB_USERNAME` | — | Yes | PostgreSQL user |
 | `DB_PASSWORD` | — | Yes | PostgreSQL password |
+| `AUTH_ISSUER_URI` | — | Yes | Public URL of auth-service for JWKS validation |
 | `DRAFTSIM_BASE_URL` | `https://draftsim.com` | No | Draftsim website base URL |
 | `LLM_CLIENT` | `CLAUDE` | No | `CLAUDE` or `MOCK` |
 | `ANTHROPIC_API_KEY` | — | Yes (if `CLAUDE`) | Anthropic API key |
 | `ANALYSIS_AUTO_PUBLISH` | `false` | No | Auto-publish analysis results |
+
+## Authentication
+
+All REST endpoints (except `/actuator/health`, `/swagger-ui/**`, `/v3/api-docs/**`) require a valid JWT:
+
+```
+Authorization: Bearer <access_token>
+```
+
+The token is validated against JWKS lazily fetched from `AUTH_ISSUER_URI` on first request.
+Obtain an access token from auth-service `POST /api/v1/auth/login` (see `auth-service/src/test/LOCAL_LOGIN.md`).
+
+**Swagger UI**: use the `Authorize` button (`/swagger-ui.html`) to paste the access token.
+
+**Security tests**: no `SecuritySmokeTest` exists yet — test infrastructure requires `ANTHROPIC_API_KEY` which is not available in CI without secrets.
 
 ## Database
 

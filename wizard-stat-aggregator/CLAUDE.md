@@ -42,6 +42,7 @@ Configurable retry with exponential backoff:
 | `DB_NAME` | — | Yes | Database name (`wizard_stat_db`) |
 | `DB_USERNAME` | — | Yes | PostgreSQL user |
 | `DB_PASSWORD` | — | Yes | PostgreSQL password |
+| `AUTH_ISSUER_URI` | — | Yes | Public URL of auth-service for JWKS validation |
 | `LANDS17_BASE_URL` | `https://www.17lands.com` | No | 17lands API base URL |
 | `HTTP_CLIENT_LANDS17_RETRY_MAX_ATTEMPTS` | `3` | No | Retry attempts |
 | `HTTP_CLIENT_LANDS17_RETRY_INITIAL_DELAY_MS` | `500` | No | Initial retry delay (ms) |
@@ -50,6 +51,21 @@ Configurable retry with exponential backoff:
 | `SCHEDULER_CARD_LIMITED_STATS_ENABLED` | `true` | No | Enable scheduled aggregation |
 | `SCHEDULER_CARD_LIMITED_STATS_CRON` | `@daily` | No | Cron expression |
 | `SCHEDULER_CARD_LIMITED_STATS_SET_CODE` | `DMU` | No | MTG set code to aggregate |
+
+## Authentication
+
+All REST endpoints (except `/actuator/health`, `/swagger-ui/**`, `/v3/api-docs/**`) require a valid JWT:
+
+```
+Authorization: Bearer <access_token>
+```
+
+The token is validated against JWKS lazily fetched from `AUTH_ISSUER_URI` on first request.
+Obtain an access token from auth-service `POST /api/v1/auth/login` (see `auth-service/src/test/LOCAL_LOGIN.md`).
+
+**Swagger UI**: use the `Authorize` button (`/swagger-ui.html`) to paste the access token.
+
+**Security tests**: `SecuritySmokeTest` uses `SecurityMockMvcRequestPostProcessors.jwt()` to verify protected endpoints return 401 without a token and pass with a mock JWT.
 
 ## Database
 

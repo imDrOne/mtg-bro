@@ -54,11 +54,27 @@ Scryfall's `/cards/collection` endpoint accepts at most **75 identifiers** per r
 | `DB_NAME` | — | Yes | Database name (`collection_manager_db`) |
 | `DB_USERNAME` | — | Yes | PostgreSQL user |
 | `DB_PASSWORD` | — | Yes | PostgreSQL password |
+| `AUTH_ISSUER_URI` | — | Yes | Public URL of auth-service for JWKS validation |
 | `SCRYFALL_BASE_URL` | `https://api.scryfall.com` | No | Scryfall API base URL |
 | `HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS` | `3` | No | Retry attempts for Scryfall calls |
 | `HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS` | `100` | No | Initial retry delay (ms) |
 | `HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER` | `2.0` | No | Backoff multiplier |
 | `HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS` | `2000` | No | Max retry delay (ms) |
+
+## Authentication
+
+All REST endpoints (except `/actuator/health`, `/swagger-ui/**`, `/v3/api-docs/**`) require a valid JWT:
+
+```
+Authorization: Bearer <access_token>
+```
+
+The token is validated against JWKS lazily fetched from `AUTH_ISSUER_URI` on first request.
+Obtain an access token from auth-service `POST /api/v1/auth/login` (see `auth-service/src/test/LOCAL_LOGIN.md`).
+
+**Swagger UI**: use the `Authorize` button (`/swagger-ui.html`) to paste the access token — all subsequent requests will include it.
+
+**Security tests**: `SecuritySmokeTest` uses `SecurityMockMvcRequestPostProcessors.jwt()` to verify protected endpoints return 401 without a token and pass with a mock JWT.
 
 ## Integration Tests
 

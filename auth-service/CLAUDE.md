@@ -117,6 +117,48 @@ Rate limit: 10 запросов / 5 минут на IP.
 
 ---
 
+### 3. Cookie-based login flow (для собственного UI)
+
+Параллельный флоу — не требует PKCE и browser-redirect. Используется напрямую фронтендом или при ручном тестировании.
+
+#### Endpoints
+
+```
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "user@example.com", "password": "secret123" }
+
+→ 200 OK
+{ "accessToken": "<jwt>" }
+Set-Cookie: refresh_token=<hash>; HttpOnly; Path=/api/v1/auth; SameSite=Strict; Secure
+```
+
+```
+POST /api/v1/auth/refresh      # Cookie: refresh_token=<hash> (из предыдущего ответа)
+
+→ 200 OK
+{ "accessToken": "<new-jwt>" }
+Set-Cookie: refresh_token=<new-hash>; HttpOnly; ...
+```
+
+```
+POST /api/v1/auth/logout       # Cookie: refresh_token=<hash>
+
+→ 204 No Content
+Set-Cookie: refresh_token=; Max-Age=0   # cookie очищен
+```
+
+**Refresh-token rotation:** каждый вызов `/refresh` выдаёт новый токен и ревокит старый.  
+**Reuse detection:** повторное использование уже ревокнутого токена → все токены пользователя ревокнутся, ответ 401.  
+**Logout идемпотентен:** вызов без cookie или с неизвестным токеном возвращает 204 без ошибки.
+
+Флаг `Secure` на cookie управляется env-переменной `AUTH_REFRESH_COOKIE_SECURE` (default `true`; для локальной разработки — `false`, см. ниже).
+
+Ручной тест через curl: [`src/test/LOCAL_LOGIN.md`](src/test/LOCAL_LOGIN.md)
+
+---
+
 ## Кастомизация UI (Thymeleaf) — Phase 2
 
 Login-страница **живёт внутри auth-service** — это стандартная модель Identity Provider (Keycloak, Auth0, Okta). Браузер всегда отправляет credentials на домен auth-service, что гарантирует корректную работу session cookie без cross-domain проблем.
@@ -219,6 +261,7 @@ post_logout_redirect_uris = 'https://claude.ai'
 | `AUTH_ISSUER_URI` | Публичный URL auth-service | `https://auth.yourdomain.com` |
 | `MCP_CLIENT_REDIRECT_URI` | Redirect URI MCP-клиента | `https://claude.ai/api/mcp/auth_callback` |
 | `AUTH_TRUSTED_PROXY_CIDR` | CIDR доверенного прокси | `172.16.0.0/12` (Docker default) |
+| `AUTH_REFRESH_COOKIE_SECURE` | Флаг `Secure` на refresh-cookie | `true` (prod); `false` для local-профиля / `docker-compose.local` |
 
 Локальная разработка — `application-local.yml`, база на `localhost:5432/auth_service_db`.
 
@@ -230,6 +273,8 @@ post_logout_redirect_uris = 'https://claude.ai'
 |---|---|
 | `POST /api/v1/users/register` | 5 запросов / 10 минут на IP |
 | `POST /login` | 10 запросов / 5 минут на IP |
+| `POST /api/v1/auth/login` | TODO — лимит пока не реализован |
+| `POST /api/v1/auth/refresh` | TODO — лимит пока не реализован |
 
 Реализован через `Bucket4jCaffeine` (per-instance, in-memory). `X-Forwarded-For` принимается только от доверенного прокси (`AUTH_TRUSTED_PROXY_CIDR`).
 
