@@ -1,6 +1,11 @@
 spring:
   application:
     name: collection-manager
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8083}
   profiles:
     default: local
   cache:

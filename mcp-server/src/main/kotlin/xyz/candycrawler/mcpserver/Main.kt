@@ -28,6 +28,8 @@ import kotlinx.io.buffered
 import xyz.candycrawler.mcpserver.auth.McpAuthPlugin
 import xyz.candycrawler.mcpserver.auth.UserRolesElement
 import xyz.candycrawler.mcpserver.auth.UserRolesKey
+import xyz.candycrawler.mcpserver.auth.UserTokenElement
+import xyz.candycrawler.mcpserver.auth.UserTokenKey
 import xyz.candycrawler.mcpserver.auth.oauthMetadataRoutes
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.exitProcess
@@ -67,8 +69,9 @@ fun main(args: Array<String>) {
                     }
                     intercept(ApplicationCallPipeline.Plugins) {
                         val roles = call.attributes.getOrNull(UserRolesKey)
-                        if (roles != null) {
-                            withContext(UserRolesElement(roles)) {
+                        val token = call.attributes.getOrNull(UserTokenKey)
+                        if (roles != null && token != null) {
+                            withContext(UserRolesElement(roles) + UserTokenElement(token)) {
                                 proceed()
                             }
                         } else {

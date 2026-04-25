@@ -27,6 +27,8 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher
+import xyz.candycrawler.authservice.domain.permission.repository.ApiPermissionRepository
+import xyz.candycrawler.authservice.domain.user.model.UserRole
 import xyz.candycrawler.authservice.domain.user.repository.UserRepository
 import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import xyz.candycrawler.authservice.infrastructure.db.mapper.sql.RsaKeySqlMapper
@@ -36,6 +38,7 @@ class AuthorizationServerConfig(
     private val rsaKeySqlMapper: RsaKeySqlMapper,
     private val userRepository: UserRepository,
     private val userRoleRepository: UserRoleRepository,
+    private val apiPermissionRepository: ApiPermissionRepository,
 ) {
 
     @Value("\${auth.issuer-uri}")
@@ -114,6 +117,8 @@ class AuthorizationServerConfig(
                 val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
                 val roles = userRoleRepository.findByUserId(user.id!!)
                 context.claims.claim("roles", roles.map { it.name })
+                val permissions = apiPermissionRepository.findByRoles(roles)
+                context.claims.claim("permissions", permissions.map { it.name })
             }
         }
 }

@@ -3,6 +3,8 @@ package xyz.candycrawler.mcpserver
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpSendPipeline
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -13,6 +15,7 @@ import kotlinx.serialization.json.Json
 import xyz.candycrawler.mcpserver.auth.ToolAccessConfig
 import xyz.candycrawler.mcpserver.auth.ToolAccessConfigData
 import xyz.candycrawler.mcpserver.auth.currentUserRoles
+import xyz.candycrawler.mcpserver.auth.currentUserToken
 import xyz.candycrawler.mcpserver.auth.hasAccess
 import xyz.candycrawler.mcpserver.auth.isAuthEnabled
 import xyz.candycrawler.mcpserver.tools.ToolContext
@@ -39,6 +42,12 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
+        }
+    }
+    httpClient.sendPipeline.intercept(HttpSendPipeline.State) {
+        val token = currentUserToken()
+        if (token != null) {
+            context.headers[HttpHeaders.Authorization] = "Bearer $token"
         }
     }
 

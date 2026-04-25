@@ -80,6 +80,7 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 | `DB_NAME` | `collection_manager_db` |
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
+| `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
 
 #### `production-draftsim-parser`
 
@@ -91,6 +92,7 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
 | `ANTHROPIC_API_KEY` | API ключ Anthropic (Claude Haiku для анализа статей) |
+| `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
 
 #### `production-wizard-stat-aggregator`
 
@@ -102,6 +104,7 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
 | `SCHEDULER_CARD_LIMITED_STATS_SET_CODE` | Код сета для агрегации, например `BLB` (дефолт `DMU`) |
+| `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
 
 #### `production-mcp-server`
 
