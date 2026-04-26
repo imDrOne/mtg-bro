@@ -17,6 +17,12 @@ spring:
     driver-class-name: org.postgresql.Driver
 
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
 infrastructure:
   http:
     client:

@@ -33,6 +33,10 @@ class SecurityConfig(
                     .requestMatchers("/connect/register").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/connect/logout").permitAll()
+                    .requestMatchers(
+                        "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
+                        "/api-docs", "/api-docs/**"
+                    ).permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { form ->

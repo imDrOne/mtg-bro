@@ -17,7 +17,7 @@ tasks.register("jibDockerBuild") {
 tasks.register<Exec>("runLocal") {
     group = "application"
     description = "Builds Docker images, starts postgres + all services + ngrok in Docker. Blocks until Ctrl+C."
-    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":draftsim-parser:jibDockerBuild", ":auth-service:jibDockerBuild")
+    dependsOn(":collection-manager:jibDockerBuild", ":mcp-server:jibDockerBuild", ":wizard-stat-aggregator:jibDockerBuild", ":draftsim-parser:jibDockerBuild", ":auth-service:jibDockerBuild")
 
     doFirst {
         val composeFile = file("docker/docker-compose.local.yml")
@@ -51,9 +51,10 @@ tasks.register<Exec>("runLocal") {
 
         logger.lifecycle("")
         logger.lifecycle("========================================")
-        logger.lifecycle("  collection-manager : http://localhost:8080")
-        logger.lifecycle("  draftsim-parser    : http://localhost:8081")
-        logger.lifecycle("  auth-service       : http://localhost:8083")
+        logger.lifecycle("  collection-manager      : http://localhost:8080")
+        logger.lifecycle("  draftsim-parser         : http://localhost:8081")
+        logger.lifecycle("  wizard-stat-aggregator  : http://localhost:8082")
+        logger.lifecycle("  auth-service            : http://localhost:8083")
         logger.lifecycle("  mcp-server         : http://localhost:3000/mcp")
         logger.lifecycle("  tunnel (public)    : ${tunnelUrl?.plus("/mcp") ?: "http://127.0.0.1:4040"}")
         logger.lifecycle("  Press Ctrl+C to stop")

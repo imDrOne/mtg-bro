@@ -18,7 +18,11 @@ class SecurityConfig {
         .csrf { it.disable() }
         .authorizeHttpRequests { auth ->
             auth
-                .requestMatchers("/actuator/health", "/actuator/info", "/swagger-ui/**", "/api-docs/**").permitAll()
+                .requestMatchers(
+                    "/actuator/health", "/actuator/info",
+                    "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
+                    "/api-docs", "/api-docs/**"
+                ).permitAll()
                 .anyRequest().authenticated()
         }
         .oauth2ResourceServer { it.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()) } }
