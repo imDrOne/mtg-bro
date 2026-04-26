@@ -2,6 +2,7 @@ package xyz.candycrawler.wizardstataggregator.application.rest
 
 import kotlinx.coroutines.launch
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -19,6 +20,7 @@ class CardLimitedStatsController(
     private val coroutineScope: ApplicationCoroutineScope,
 ) {
 
+    @PreAuthorize("hasAuthority('PERM_api:stats:collect')")
     @PostMapping("/collect")
     @ResponseStatus(HttpStatus.ACCEPTED)
     fun collect(@RequestBody request: CollectCardLimitedStatsRequest): CollectCardLimitedStatsResponse {

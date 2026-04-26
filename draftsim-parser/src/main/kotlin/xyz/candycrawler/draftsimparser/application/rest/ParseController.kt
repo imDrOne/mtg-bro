@@ -1,6 +1,7 @@
 package xyz.candycrawler.draftsimparser.application.rest
 
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -22,6 +23,7 @@ class ParseController(
     private val parseTaskRepository: ParseTaskRepository,
 ) {
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     fun startParse(@RequestBody request: StartParseRequest): Map<String, UUID> {
@@ -29,6 +31,7 @@ class ParseController(
         return mapOf("taskId" to taskId)
     }
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @GetMapping("/{taskId}")
     fun getTask(@PathVariable taskId: UUID): ParseTaskResponse =
         parseTaskRepository.findById(taskId).toResponse()

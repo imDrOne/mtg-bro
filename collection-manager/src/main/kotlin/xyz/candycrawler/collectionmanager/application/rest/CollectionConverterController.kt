@@ -9,6 +9,7 @@ import org.springframework.http.ContentDisposition
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
@@ -49,6 +50,7 @@ class CollectionConverterController(
             ),
         ],
     )
+    @PreAuthorize("hasAuthority('PERM_api:collection:convert')")
     @PostMapping("/tcgplayer-to-moxfield", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun convertTcgPlayerToMoxfield(
         @RequestPart("file") file: MultipartFile,

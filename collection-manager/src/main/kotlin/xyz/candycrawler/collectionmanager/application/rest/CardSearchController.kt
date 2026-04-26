@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -56,6 +57,7 @@ class CardSearchController(
             ),
         ],
     )
+    @PreAuthorize("hasAuthority('PERM_api:cards:search')")
     @GetMapping("/search")
     fun searchCards(
         @Parameter(description = "Fulltext search query (searches name, type line, oracle text)")

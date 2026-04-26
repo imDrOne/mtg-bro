@@ -2,6 +2,7 @@ package xyz.candycrawler.draftsimparser.application.rest
 
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,6 +30,7 @@ class ArticleController(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping
     fun search(
         @RequestParam(required = false) q: String?,
@@ -38,10 +40,12 @@ class ArticleController(
     ): ArticlePageResponse =
         queryArticleRepository.search(q, page, pageSize, favorite).toResponse()
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ArticleResponse =
         queryArticleRepository.findById(id).toResponse()
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @PostMapping("/analyze")
     @ResponseStatus(HttpStatus.ACCEPTED)
     fun analyze(@RequestBody request: AnalyzeArticlesRequest): List<ArticleSummaryResponse> {
@@ -52,6 +56,7 @@ class ArticleController(
         }
     }
 
+    @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/by-ids")
     fun getByIds(@RequestBody request: GetArticlesByIdsRequest): List<ArticleAnalysisResponse> =
         request.ids.map { id -> queryArticleRepository.findById(id).toAnalysisResponse() }

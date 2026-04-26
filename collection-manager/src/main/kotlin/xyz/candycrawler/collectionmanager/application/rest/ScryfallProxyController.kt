@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -39,6 +40,7 @@ class ScryfallProxyController(
             ),
         ],
     )
+    @PreAuthorize("hasAuthority('PERM_api:scryfall:search')")
     @GetMapping("/cards/search")
     fun searchCards(
         @Parameter(description = "Scryfall fulltext search query", required = true)

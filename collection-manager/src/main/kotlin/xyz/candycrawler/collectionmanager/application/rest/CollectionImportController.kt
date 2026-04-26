@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
@@ -54,6 +55,7 @@ class CollectionImportController(
             ),
         ],
     )
+    @PreAuthorize("hasAuthority('PERM_api:collection:import')")
     @PostMapping("/import/tcgplayer", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun importFromTcgPlayer(
         @RequestPart("file") file: MultipartFile,
@@ -87,6 +89,7 @@ class CollectionImportController(
             ),
         ],
     )
+    @PreAuthorize("hasAuthority('PERM_api:collection:import')")
     @PostMapping("/import/moxfield", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun importFromMoxfield(
         @RequestPart("file") file: MultipartFile,
