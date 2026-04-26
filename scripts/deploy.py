@@ -27,6 +27,29 @@ except ImportError:
 
 REPO_ROOT = Path(__file__).parent.parent
 
+
+def get_github_repo() -> str | None:
+    """Return 'owner/repo' parsed from git remote origin, or None."""
+    result = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        capture_output=True, text=True, cwd=REPO_ROOT,
+    )
+    url = result.stdout.strip()
+    if not url:
+        return None
+    # SSH: git@github.com:owner/repo.git
+    if url.startswith("git@github.com:"):
+        path = url.removeprefix("git@github.com:")
+    # HTTPS: https://github.com/owner/repo.git
+    elif "github.com/" in url:
+        path = url.split("github.com/", 1)[1]
+    else:
+        return None
+    return path.removesuffix(".git")
+
+
+GITHUB_REPO: str | None = get_github_repo()
+
 MODULES = [
     "collection-manager",
     "draftsim-parser",
@@ -162,6 +185,12 @@ def print_summary_table(plan: list[dict]) -> None:
 
 # ── Deploy ─────────────────────────────────────────────────────────────────────
 
+def pipeline_url(module: str) -> str | None:
+    if GITHUB_REPO:
+        return f"https://github.com/{GITHUB_REPO}/actions/workflows/deploy-{module}.yml"
+    return None
+
+
 def run_deploy(module: str, version: str) -> bool:
     tag = f"{module}/{version}"
     for cmd in [
@@ -173,7 +202,9 @@ def run_deploy(module: str, version: str) -> bool:
             err = result.stderr.strip() or result.stdout.strip()
             console.print(f"  [bold red]✗[/] [red]{' '.join(cmd)}[/]\n    [dim]{err}[/]")
             return False
-    console.print(f"  [bold #34d399]✓[/] pushed [bold]{tag}[/]")
+    url = pipeline_url(module)
+    link = f"  [dim]→ {url}[/]" if url else ""
+    console.print(f"  [bold #34d399]✓[/] pushed [bold]{tag}[/]{link}")
     return True
 
 
@@ -249,15 +280,19 @@ def main() -> None:
 
     console.print()
     if fail == 0:
-        console.print(Panel(
-            f"[bold #34d399]✓ All {ok} module(s) deployed successfully![/]",
-            border_style="#34d399", padding=(0, 2),
-        ))
+        lines = [f"[bold #34d399]✓ All {ok} module(s) deployed — pipelines running:[/]"]
+        for p in plan:
+            url = pipeline_url(p["module"])
+            if url:
+                lines.append(f"  [dim]{p['module']}[/]  [link={url}]{url}[/link]")
+        console.print(Panel("\n".join(lines), border_style="#34d399", padding=(0, 2)))
     else:
-        console.print(Panel(
-            f"[bold #34d399]✓ {ok} succeeded[/]  [bold red]✗ {fail} failed[/]",
-            border_style="red", padding=(0, 2),
-        ))
+        lines = [f"[bold #34d399]✓ {ok} succeeded[/]  [bold red]✗ {fail} failed[/]"]
+        for p in plan:
+            url = pipeline_url(p["module"])
+            if url:
+                lines.append(f"  [dim]{p['module']}[/]  [link={url}]{url}[/link]")
+        console.print(Panel("\n".join(lines), border_style="red", padding=(0, 2)))
         sys.exit(1)
 
 
