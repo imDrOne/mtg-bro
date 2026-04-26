@@ -189,6 +189,73 @@ Under the hood, `find()` is always called first to verify the record exists.
 
 ---
 
+## API Permissions
+
+All protected Spring services (collection-manager, wizard-stat-aggregator, draftsim-parser) use **permission-based access control** via JWT claims.
+
+### How it works
+
+1. auth-service issues JWTs with two claims:
+   - `roles` — list of user roles (e.g. `["FREE"]`)
+   - `permissions` — list of granted permissions (e.g. `["api:cards:search", "api:decks:read"]`)
+2. Each resource server's `SecurityConfig` maps these into Spring authorities:
+   - `permissions` → `PERM_api:cards:search`, `PERM_api:decks:read`, etc.
+   - `roles` → `ROLE_FREE`, `ROLE_ADMIN`, etc.
+3. `@EnableMethodSecurity` is active on every `SecurityConfig` — `@PreAuthorize` works on all controllers.
+
+### How to protect an endpoint
+
+```kotlin
+// controller method
+@PreAuthorize("hasAuthority('PERM_api:decks:read')")
+@GetMapping
+fun getDecks(): List<DeckResponse> { ... }
+
+@PreAuthorize("hasAuthority('PERM_api:decks:write')")
+@PostMapping
+fun createDeck(@RequestBody dto: CreateDeckRequest): DeckResponse { ... }
+```
+
+Authority name = `PERM_` + permission name from `api_permissions.name` column.
+
+### How to add a new permission
+
+1. **Migration** in `auth-service` — insert into `api_permissions` and grant to roles via `role_api_permissions`:
+```sql
+-- auth-service migration
+INSERT INTO api_permissions (name, description)
+VALUES ('api:decks:delete', 'Delete decks');
+
+-- grant to roles that should have it
+INSERT INTO role_api_permissions (role, permission_id)
+SELECT r.role, p.id
+FROM (VALUES ('ADMIN')) AS r(role)
+JOIN api_permissions p ON p.name = 'api:decks:delete';
+```
+
+2. **Annotate the endpoint** in the relevant service with `@PreAuthorize("hasAuthority('PERM_api:decks:delete')")`.
+
+3. No code changes needed in auth-service — the JWT customizer picks up all permissions linked to the user's role automatically via `ApiPermissionSqlMapper.selectByRoles()`.
+
+### Permission naming convention
+
+`api:<resource>:<action>` — all lowercase, colon-separated.
+
+| Existing permissions | Resource |
+|---|---|
+| `api:cards:search`, `api:cards:tribal` | collection-manager |
+| `api:collection:view`, `api:collection:import`, `api:collection:convert` | collection-manager |
+| `api:decks:read`, `api:decks:write` | collection-manager |
+| `api:scryfall:search` | collection-manager |
+| `api:articles:read`, `api:articles:parse` | draftsim-parser |
+| `api:stats:collect` | wizard-stat-aggregator |
+
+### Current state
+
+Endpoints are not yet annotated — all authenticated users reach all endpoints. Add `@PreAuthorize` progressively as access control becomes a requirement.
+
+---
+
 ## Testing strategy
 
 | Component                  | Test type                                     |
