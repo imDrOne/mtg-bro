@@ -89,7 +89,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_service_db
       SPRING_DATASOURCE_USERNAME: wizard_user
       SPRING_DATASOURCE_PASSWORD: wizard_pass
-      AUTH_ISSUER_URI: http://localhost:8083
+      AUTH_ISSUER_URI: http://auth-service:8080
       MCP_CLIENT_REDIRECT_URI: http://localhost:3000/oauth2/callback
       AUTH_REFRESH_COOKIE_SECURE: "false"
     ports:
