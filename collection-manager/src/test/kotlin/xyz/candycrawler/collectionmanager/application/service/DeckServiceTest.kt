@@ -26,6 +26,8 @@ class DeckServiceTest {
     private val queryDeckRepository: QueryDeckRepository = mock()
     private val service = DeckService(cardRepository, deckRepository, queryDeckRepository)
 
+    private val userId = 1L
+
     @Test
     fun `save delegates to cardRepository and deckRepository`() {
         val cards = (1..60).map { buildCard(id = it.toLong(), colorIdentity = listOf("G")) }
@@ -35,7 +37,7 @@ class DeckServiceTest {
         val savedDeck = buildDeck(id = 1L)
         whenever(deckRepository.save(any())).thenReturn(savedDeck)
 
-        val result = service.save("My Deck", DeckFormat.STANDARD, null, mainboard, emptyList())
+        val result = service.save(userId, "My Deck", DeckFormat.STANDARD, null, mainboard, emptyList())
 
         assertEquals(1L, result.id)
     }
@@ -47,7 +49,7 @@ class DeckServiceTest {
         val mainboard = (1..60).map { Triple("tst", it.toString(), 1) }
 
         assertFailsWith<CardNotFoundException> {
-            service.save("Deck", DeckFormat.STANDARD, null, mainboard, emptyList())
+            service.save(userId, "Deck", DeckFormat.STANDARD, null, mainboard, emptyList())
         }
     }
 
@@ -69,7 +71,7 @@ class DeckServiceTest {
         }
 
         service.save(
-            "Deck", DeckFormat.STANDARD, null,
+            userId, "Deck", DeckFormat.STANDARD, null,
             mainboard.map { Triple(it.setCode, it.collectorNumber, 1) },
             listOf(Triple(sideboard.first().setCode, sideboard.first().collectorNumber, 1)),
         )
@@ -81,18 +83,18 @@ class DeckServiceTest {
 
     @Test
     fun `findAll delegates to queryDeckRepository`() {
-        whenever(queryDeckRepository.findHeaders()).thenReturn(listOf(buildDeckHeader(id = 1L), buildDeckHeader(id = 2L)))
+        whenever(queryDeckRepository.findHeaders(userId)).thenReturn(listOf(buildDeckHeader(id = 1L), buildDeckHeader(id = 2L)))
 
-        val result = service.findAll()
+        val result = service.findAll(userId)
 
         assertEquals(2, result.size)
     }
 
     @Test
-    fun `findById delegates to deckRepository findById`() {
-        whenever(deckRepository.findById(42L)).thenReturn(buildDeck(id = 42L))
+    fun `findById delegates to deckRepository findByIdAndUser`() {
+        whenever(deckRepository.findByIdAndUser(42L, userId)).thenReturn(buildDeck(id = 42L))
 
-        val result = service.findById(42L)
+        val result = service.findById(userId, 42L)
 
         assertEquals(42L, result.id)
     }
@@ -145,6 +147,7 @@ class DeckServiceTest {
 
     private fun buildDeck(id: Long): Deck = Deck(
         id = id,
+        userId = userId,
         name = "Test Deck",
         format = DeckFormat.STANDARD,
         colorIdentity = listOf("G"),

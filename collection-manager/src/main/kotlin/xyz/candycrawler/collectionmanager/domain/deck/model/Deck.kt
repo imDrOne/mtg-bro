@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 class Deck(
     val id: Long? = null,
+    val userId: Long,
     val name: String,
     val format: DeckFormat,
     val colorIdentity: List<String>,

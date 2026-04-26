@@ -28,6 +28,8 @@ class CollectionImportServiceTest {
 
     private val service = CollectionImportService(scryfallApiClient, scryfallMapper, persistenceService)
 
+    private val userId = 1L
+
     @Test
     fun `import parses file, fetches from scryfall and persists`() = runTest {
         val content = """
@@ -44,9 +46,9 @@ class CollectionImportServiceTest {
                 notFound = emptyList(),
             )
         )
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(2)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(2)
 
-        val result = service.import(parser, content)
+        val result = service.import(userId, parser, content)
 
         assertEquals(2, result.importedCount)
         assertTrue(result.notFound.isEmpty())
@@ -65,9 +67,9 @@ class CollectionImportServiceTest {
                 notFound = emptyList(),
             )
         )
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(1)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(1)
 
-        service.import(parser, content)
+        service.import(userId, parser, content)
 
         val requestCaptor = argumentCaptor<ScryfallCollectionRequest>()
         verify(scryfallApiClient).fetchCollection(requestCaptor.capture())
@@ -90,12 +92,12 @@ class CollectionImportServiceTest {
                 notFound = emptyList(),
             )
         )
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(1)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(1)
 
-        service.import(parser, content)
+        service.import(userId, parser, content)
 
         val quantityCaptor = argumentCaptor<Map<Triple<String, String, Boolean>, Int>>()
-        verify(persistenceService).saveImportedData(any(), quantityCaptor.capture())
+        verify(persistenceService).saveImportedData(any(), any(), quantityCaptor.capture())
 
         assertEquals(5, quantityCaptor.firstValue[Triple("ecl", "218", false)])
     }
@@ -108,9 +110,9 @@ class CollectionImportServiceTest {
         whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
             buildScryfallResponse(data = emptyList(), notFound = notFound)
         )
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(0)
 
-        val result = service.import(parser, content)
+        val result = service.import(userId, parser, content)
 
         assertEquals(1, result.notFound.size)
         assertEquals(notFound.single(), result.notFound.single())
@@ -125,18 +127,18 @@ class CollectionImportServiceTest {
         whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
             buildScryfallResponse(data = emptyList(), notFound = emptyList())
         )
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(0)
 
-        service.import(parser, content)
+        service.import(userId, parser, content)
 
         verify(scryfallApiClient, times(2)).fetchCollection(any())
     }
 
     @Test
     fun `import with empty file returns zero imported and no notFound`() = runTest {
-        whenever(persistenceService.saveImportedData(any(), any())).thenReturn(0)
+        whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(0)
 
-        val result = service.import(parser, "")
+        val result = service.import(userId, parser, "")
 
         assertEquals(0, result.importedCount)
         assertTrue(result.notFound.isEmpty())

@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 data class CollectionEntryRecord(
     val id: Long?,
+    val userId: Long,
     val cardId: Long,
     val quantity: Int,
     val foil: Boolean,

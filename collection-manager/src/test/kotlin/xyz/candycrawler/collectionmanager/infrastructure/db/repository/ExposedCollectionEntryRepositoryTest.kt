@@ -7,11 +7,10 @@ import org.mockito.kotlin.whenever
 import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntry
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CollectionEntryRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryRecordToCollectionEntryMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryToCollectionEntryRecordMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class ExposedCollectionEntryRepositoryTest {
 
@@ -20,6 +19,8 @@ class ExposedCollectionEntryRepositoryTest {
     private val toDomain: CollectionEntryRecordToCollectionEntryMapper = CollectionEntryRecordToCollectionEntryMapper()
 
     private val repository = ExposedCollectionEntryRepository(sqlMapper, toRecord, toDomain)
+
+    private val userId = 1L
 
     @Test
     fun `saveAll converts entries to records and calls upsertBatch`() {
@@ -42,36 +43,39 @@ class ExposedCollectionEntryRepositoryTest {
     }
 
     @Test
-    fun `findByCardId returns domain when record found`() {
-        val record = buildRecord(id = 10L, cardId = 42L, quantity = 4)
-        whenever(sqlMapper.selectByCardId(42L)).thenReturn(record)
-
-        val result = repository.findByCardId(42L)
-
-        assertEquals(10L, result?.id)
-        assertEquals(42L, result?.cardId)
-        assertEquals(4, result?.quantity)
-    }
-
-    @Test
-    fun `findByCardId returns null when record not found`() {
-        whenever(sqlMapper.selectByCardId(99L)).thenReturn(null)
-
-        val result = repository.findByCardId(99L)
-
-        assertNull(result)
-    }
-
-    @Test
-    fun `findAll returns all mapped domains`() {
+    fun `findByUserAndCardId returns domain entries when records found`() {
         val records = listOf(
-            buildRecord(id = 1L, cardId = 10L, quantity = 2),
-            buildRecord(id = 2L, cardId = 20L, quantity = 3),
-            buildRecord(id = 3L, cardId = 30L, quantity = 1),
+            buildRecord(id = 10L, userId = userId, cardId = 42L, quantity = 4),
         )
-        whenever(sqlMapper.selectAll()).thenReturn(records)
+        whenever(sqlMapper.selectByUserAndCardId(userId, 42L)).thenReturn(records)
 
-        val result = repository.findAll()
+        val result = repository.findByUserAndCardId(userId, 42L)
+
+        assertEquals(1, result.size)
+        assertEquals(10L, result.single().id)
+        assertEquals(42L, result.single().cardId)
+        assertEquals(4, result.single().quantity)
+    }
+
+    @Test
+    fun `findByUserAndCardId returns empty when not found`() {
+        whenever(sqlMapper.selectByUserAndCardId(userId, 99L)).thenReturn(emptyList())
+
+        val result = repository.findByUserAndCardId(userId, 99L)
+
+        assertEquals(emptyList(), result)
+    }
+
+    @Test
+    fun `findByUser returns all mapped domains`() {
+        val records = listOf(
+            buildRecord(id = 1L, userId = userId, cardId = 10L, quantity = 2),
+            buildRecord(id = 2L, userId = userId, cardId = 20L, quantity = 3),
+            buildRecord(id = 3L, userId = userId, cardId = 30L, quantity = 1),
+        )
+        whenever(sqlMapper.selectByUser(userId)).thenReturn(records)
+
+        val result = repository.findByUser(userId)
 
         assertEquals(3, result.size)
         assertEquals(listOf(10L, 20L, 30L), result.map { it.cardId })
@@ -79,43 +83,50 @@ class ExposedCollectionEntryRepositoryTest {
     }
 
     @Test
-    fun `findAll returns empty list when no entries`() {
-        whenever(sqlMapper.selectAll()).thenReturn(emptyList())
+    fun `findByUser returns empty list when no entries`() {
+        whenever(sqlMapper.selectByUser(userId)).thenReturn(emptyList())
 
-        val result = repository.findAll()
+        val result = repository.findByUser(userId)
 
         assertEquals(emptyList(), result)
     }
 
     @Test
-    fun `findByCardIds returns entries for given card ids`() {
+    fun `findByUserAndCardIds returns entries for given card ids`() {
         val records = listOf(
-            buildRecord(id = 1L, cardId = 10L, quantity = 2, foil = false),
-            buildRecord(id = 2L, cardId = 10L, quantity = 1, foil = true),
-            buildRecord(id = 3L, cardId = 20L, quantity = 3, foil = false),
+            buildRecord(id = 1L, userId = userId, cardId = 10L, quantity = 2, foil = false),
+            buildRecord(id = 2L, userId = userId, cardId = 10L, quantity = 1, foil = true),
+            buildRecord(id = 3L, userId = userId, cardId = 20L, quantity = 3, foil = false),
         )
-        whenever(sqlMapper.selectByCardIds(listOf(10L, 20L))).thenReturn(records)
+        whenever(sqlMapper.selectByUserAndCardIds(userId, listOf(10L, 20L))).thenReturn(records)
 
-        val result = repository.findByCardIds(listOf(10L, 20L))
+        val result = repository.findByUserAndCardIds(userId, listOf(10L, 20L))
 
         assertEquals(3, result.size)
         assertEquals(listOf(10L, 10L, 20L), result.map { it.cardId })
     }
 
     @Test
-    fun `findByCardIds returns empty list when cardIds empty`() {
-        val result = repository.findByCardIds(emptyList())
+    fun `findByUserAndCardIds returns empty list when cardIds empty`() {
+        val result = repository.findByUserAndCardIds(userId, emptyList())
 
         assertEquals(emptyList(), result)
     }
 
     private fun buildEntry(cardId: Long, quantity: Int): CollectionEntry =
-        CollectionEntry(id = null, cardId = cardId, quantity = quantity)
+        CollectionEntry(userId = userId, cardId = cardId, quantity = quantity)
 
-    private fun buildRecord(id: Long, cardId: Long, quantity: Int, foil: Boolean = false): CollectionEntryRecord {
+    private fun buildRecord(
+        id: Long,
+        userId: Long,
+        cardId: Long,
+        quantity: Int,
+        foil: Boolean = false,
+    ): CollectionEntryRecord {
         val now = LocalDateTime.now()
         return CollectionEntryRecord(
             id = id,
+            userId = userId,
             cardId = cardId,
             quantity = quantity,
             foil = foil,

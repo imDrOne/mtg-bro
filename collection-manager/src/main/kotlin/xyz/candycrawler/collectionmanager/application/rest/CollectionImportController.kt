@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
@@ -17,6 +19,7 @@ import xyz.candycrawler.collectionmanager.application.parser.MoxfieldFileParser
 import xyz.candycrawler.collectionmanager.application.parser.TcgPlayerFileParser
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.ImportResultResponse
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.NotFoundEntry
+import xyz.candycrawler.collectionmanager.application.security.userId
 import xyz.candycrawler.collectionmanager.application.service.CollectionImportService
 
 @Tag(name = "Collection Import", description = "Endpoints for importing card collections from external sources")
@@ -58,8 +61,9 @@ class CollectionImportController(
     @PreAuthorize("hasAuthority('PERM_api:collection:import')")
     @PostMapping("/import/tcgplayer", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun importFromTcgPlayer(
+        @AuthenticationPrincipal jwt: Jwt,
         @RequestPart("file") file: MultipartFile,
-    ): ImportResultResponse = doImport(file, tcgPlayerParser)
+    ): ImportResultResponse = doImport(jwt.userId(), file, tcgPlayerParser)
 
     @Operation(
         summary = "Import collection from Moxfield Haves CSV export",
@@ -92,15 +96,17 @@ class CollectionImportController(
     @PreAuthorize("hasAuthority('PERM_api:collection:import')")
     @PostMapping("/import/moxfield", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     suspend fun importFromMoxfield(
+        @AuthenticationPrincipal jwt: Jwt,
         @RequestPart("file") file: MultipartFile,
-    ): ImportResultResponse = doImport(file, moxfieldParser)
+    ): ImportResultResponse = doImport(jwt.userId(), file, moxfieldParser)
 
     private suspend fun doImport(
+        userId: Long,
         file: MultipartFile,
         parser: CollectionFileParser,
     ): ImportResultResponse {
         val content = file.inputStream.bufferedReader().readText()
-        val result = importService.import(parser, content)
+        val result = importService.import(userId, parser, content)
         return ImportResultResponse(
             importedCount = result.importedCount,
             notFound = result.notFound.map { NotFoundEntry(it.set, it.collectorNumber) },

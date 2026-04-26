@@ -21,21 +21,23 @@ class TribalAnalysisServiceTest {
 
     private val service = TribalAnalysisService(cardRepository, creatureTypeCacheService)
 
+    private val userId = 1L
+
     @Test
     fun `unknown tribe throws InvalidTribalQueryException`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk", "Elf"))
 
         assertFailsWith<InvalidTribalQueryException> {
-            service.analyze("Mermaid")
+            service.analyze(userId, "Mermaid")
         }
     }
 
     @Test
     fun `tribe validation is case-insensitive`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("merfolk")).thenReturn(emptyList())
+        whenever(cardRepository.findByTribe(userId, "merfolk")).thenReturn(emptyList())
 
-        val stats = service.analyze("merfolk")
+        val stats = service.analyze(userId, "merfolk")
 
         assertEquals("merfolk", stats.tribe)
     }
@@ -43,9 +45,9 @@ class TribalAnalysisServiceTest {
     @Test
     fun `empty collection returns all-zero stats with weak viability`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(emptyList())
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(emptyList())
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertEquals(0, stats.totalCards)
         assertEquals(0, stats.creatures)
@@ -61,7 +63,7 @@ class TribalAnalysisServiceTest {
     @Test
     fun `creatures kindred spells and tribal support are counted correctly`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(
                 buildCard(typeLine = "Creature — Merfolk Wizard", oracleText = "Flying."),
                 buildCard(typeLine = "Creature — Merfolk", oracleText = null),
@@ -72,7 +74,7 @@ class TribalAnalysisServiceTest {
             ),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertEquals(6, stats.totalCards)
         assertEquals(2, stats.creatures)
@@ -83,11 +85,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `artifact creature with tribe subtype counts as creature`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(buildCard(typeLine = "Artifact Creature — Merfolk Construct")),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertEquals(1, stats.creatures)
         assertEquals(0, stats.tribalSpells)
@@ -97,7 +99,7 @@ class TribalAnalysisServiceTest {
     @Test
     fun `by_cmc groups correctly with 5plus bucket`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Elf"))
-        whenever(cardRepository.findByTribe("Elf")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Elf")).thenReturn(
             listOf(
                 buildCard(typeLine = "Creature — Elf", cmc = 1.0),
                 buildCard(typeLine = "Creature — Elf", cmc = 2.0),
@@ -108,7 +110,7 @@ class TribalAnalysisServiceTest {
             ),
         )
 
-        val stats = service.analyze("Elf")
+        val stats = service.analyze(userId, "Elf")
 
         assertEquals(mapOf("1" to 1, "2" to 2, "4" to 1, "5+" to 2), stats.byCmc)
     }
@@ -116,7 +118,7 @@ class TribalAnalysisServiceTest {
     @Test
     fun `color_spread groups by sorted WUBRG combination`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(
                 buildCard(typeLine = "Creature — Merfolk", colors = listOf("U")),
                 buildCard(typeLine = "Creature — Merfolk", colors = listOf("U")),
@@ -126,7 +128,7 @@ class TribalAnalysisServiceTest {
             ),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertEquals(mapOf("U" to 2, "WU" to 2, "R" to 1), stats.colorSpread)
     }
@@ -134,11 +136,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `has_commander is true when legendary creature of tribe exists`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(buildCard(typeLine = "Legendary Creature — Merfolk Noble")),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertTrue(stats.hasCommander)
     }
@@ -146,11 +148,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `has_commander is false when no legendary creature of tribe exists`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(buildCard(typeLine = "Creature — Merfolk Wizard")),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertFalse(stats.hasCommander)
     }
@@ -158,14 +160,14 @@ class TribalAnalysisServiceTest {
     @Test
     fun `has_lord is true when any legendary tribal card exists`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(
                 buildCard(typeLine = "Creature — Merfolk"),
                 buildCard(typeLine = "Legendary Creature — Merfolk Noble"),
             ),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertTrue(stats.hasLord)
     }
@@ -173,14 +175,14 @@ class TribalAnalysisServiceTest {
     @Test
     fun `has_lord is false when no legendary tribal card exists`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Merfolk"))
-        whenever(cardRepository.findByTribe("Merfolk")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Merfolk")).thenReturn(
             listOf(
                 buildCard(typeLine = "Creature — Merfolk"),
                 buildCard(typeLine = "Kindred Instant — Merfolk"),
             ),
         )
 
-        val stats = service.analyze("Merfolk")
+        val stats = service.analyze(userId, "Merfolk")
 
         assertFalse(stats.hasLord)
     }
@@ -188,11 +190,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `deck_viability is strong with 20 or more creatures`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Goblin"))
-        whenever(cardRepository.findByTribe("Goblin")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Goblin")).thenReturn(
             (1..20).map { buildCard(typeLine = "Creature — Goblin") },
         )
 
-        val stats = service.analyze("Goblin")
+        val stats = service.analyze(userId, "Goblin")
 
         assertEquals("strong", stats.deckViability)
     }
@@ -200,11 +202,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `deck_viability is moderate with 10 to 19 creatures`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Goblin"))
-        whenever(cardRepository.findByTribe("Goblin")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Goblin")).thenReturn(
             (1..15).map { buildCard(typeLine = "Creature — Goblin") },
         )
 
-        val stats = service.analyze("Goblin")
+        val stats = service.analyze(userId, "Goblin")
 
         assertEquals("moderate", stats.deckViability)
     }
@@ -212,11 +214,11 @@ class TribalAnalysisServiceTest {
     @Test
     fun `deck_viability is weak with fewer than 10 creatures`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Goblin"))
-        whenever(cardRepository.findByTribe("Goblin")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Goblin")).thenReturn(
             (1..9).map { buildCard(typeLine = "Creature — Goblin") },
         )
 
-        val stats = service.analyze("Goblin")
+        val stats = service.analyze(userId, "Goblin")
 
         assertEquals("weak", stats.deckViability)
     }
@@ -224,7 +226,7 @@ class TribalAnalysisServiceTest {
     @Test
     fun `non-creature tribal cards do not count toward deck viability`() {
         whenever(creatureTypeCacheService.getCreatureTypes()).thenReturn(setOf("Elf"))
-        whenever(cardRepository.findByTribe("Elf")).thenReturn(
+        whenever(cardRepository.findByTribe(userId, "Elf")).thenReturn(
             listOf(
                 buildCard(typeLine = "Kindred Sorcery — Elf"),
                 buildCard(typeLine = "Kindred Enchantment — Elf"),
@@ -232,7 +234,7 @@ class TribalAnalysisServiceTest {
             ),
         )
 
-        val stats = service.analyze("Elf")
+        val stats = service.analyze(userId, "Elf")
 
         assertEquals("weak", stats.deckViability)
     }

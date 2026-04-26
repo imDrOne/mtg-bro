@@ -17,6 +17,7 @@ class CollectionPersistenceService(
 
     @Transactional
     fun saveImportedData(
+        userId: Long,
         cards: List<Card>,
         quantityByKey: Map<Triple<String, String, Boolean>, Int>,
     ): Int {
@@ -31,7 +32,7 @@ class CollectionPersistenceService(
         val collectionEntries = quantityByKey.mapNotNull { (key, quantity) ->
             val (setCode, collectorNumber, foil) = key
             cardIdBySetAndNumber[setCode to collectorNumber]?.let { cardId ->
-                CollectionEntry(cardId = cardId, quantity = quantity, foil = foil)
+                CollectionEntry(userId = userId, cardId = cardId, quantity = quantity, foil = foil)
             }
         }
 

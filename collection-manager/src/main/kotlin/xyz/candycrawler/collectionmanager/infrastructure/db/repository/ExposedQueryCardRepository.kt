@@ -14,6 +14,6 @@ class ExposedQueryCardRepository(
 ) : QueryCardRepository {
 
     @Transactional(readOnly = true)
-    override fun findAllInCollection(): List<Card> =
-        sqlMapper.findAllInCollection().map(toDomain::apply)
+    override fun findAllInCollection(userId: Long): List<Card> =
+        sqlMapper.findAllInCollection(userId).map(toDomain::apply)
 }

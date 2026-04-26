@@ -13,8 +13,8 @@ class ExposedQueryDeckRepository(
     private val sqlMapper: DeckSqlMapper,
 ) : QueryDeckRepository {
 
-    override fun findHeaders(): List<DeckHeader> =
-        sqlMapper.selectAll().map { record ->
+    override fun findHeaders(userId: Long): List<DeckHeader> =
+        sqlMapper.selectAllByUser(userId).map { record ->
             DeckHeader(
                 id = record.id!!,
                 name = record.name,

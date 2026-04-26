@@ -13,7 +13,7 @@ class TribalAnalysisService(
     private val creatureTypeCacheService: CreatureTypeCacheService,
 ) {
 
-    fun analyze(tribe: String): TribalStats {
+    fun analyze(userId: Long, tribe: String): TribalStats {
         val normalizedTribe = tribe.trim()
 
         val validTypes = creatureTypeCacheService.getCreatureTypes()
@@ -21,7 +21,7 @@ class TribalAnalysisService(
             throw InvalidTribalQueryException(normalizedTribe)
         }
 
-        val cards = cardRepository.findByTribe(normalizedTribe)
+        val cards = cardRepository.findByTribe(userId, normalizedTribe)
         val tribeLower = normalizedTribe.lowercase()
 
         val creatures = cards.filter { card ->

@@ -10,8 +10,8 @@ import xyz.candycrawler.collectionmanager.domain.card.repository.QueryCardReposi
 @Service
 class CollectionOverviewService(private val queryCardRepository: QueryCardRepository) {
 
-    fun getOverview(): CollectionOverviewResponse {
-        val cards = queryCardRepository.findAllInCollection()
+    fun getOverview(userId: Long): CollectionOverviewResponse {
+        val cards = queryCardRepository.findAllInCollection(userId)
 
         return CollectionOverviewResponse(
             totalCards = cards.size,

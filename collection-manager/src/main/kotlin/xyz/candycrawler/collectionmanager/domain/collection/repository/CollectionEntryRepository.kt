@@ -4,7 +4,7 @@ import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntr
 
 interface CollectionEntryRepository {
     fun saveAll(entries: List<CollectionEntry>)
-    fun findByCardId(cardId: Long): CollectionEntry?
-    fun findByCardIds(cardIds: List<Long>): List<CollectionEntry>
-    fun findAll(): List<CollectionEntry>
+    fun findByUserAndCardId(userId: Long, cardId: Long): List<CollectionEntry>
+    fun findByUserAndCardIds(userId: Long, cardIds: List<Long>): List<CollectionEntry>
+    fun findByUser(userId: Long): List<CollectionEntry>
 }

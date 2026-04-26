@@ -20,6 +20,7 @@ class DeckService(
 
     @Transactional
     fun save(
+        userId: Long,
         name: String,
         format: DeckFormat,
         comment: String?,
@@ -54,6 +55,7 @@ class DeckService(
             .sorted()
 
         val deck = Deck(
+            userId = userId,
             name = name,
             format = format,
             colorIdentity = colorIdentity,
@@ -65,8 +67,8 @@ class DeckService(
     }
 
     @Transactional(readOnly = true)
-    fun findById(id: Long): Deck = deckRepository.findById(id)
+    fun findById(userId: Long, id: Long): Deck = deckRepository.findByIdAndUser(id, userId)
 
     @Transactional(readOnly = true)
-    fun findAll(): List<DeckHeader> = queryDeckRepository.findHeaders()
+    fun findAll(userId: Long): List<DeckHeader> = queryDeckRepository.findHeaders(userId)
 }

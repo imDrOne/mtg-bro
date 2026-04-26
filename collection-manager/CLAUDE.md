@@ -76,6 +76,22 @@ Obtain an access token from auth-service `POST /api/v1/auth/login` (see `auth-se
 
 **Security tests**: `SecuritySmokeTest` uses `SecurityMockMvcRequestPostProcessors.jwt()` to verify protected endpoints return 401 without a token and pass with a mock JWT.
 
+## Multi-tenancy
+
+Data scoping is per-user via `user_id BIGINT` column (no FK — `auth_service_db` and `collection_manager_db` are separate databases).
+
+- **`cards`** — global catalog, no `user_id`. Shared across all users.
+- **`collection_entries`**, **`decks`**, **`deck_entries`** — scoped by `user_id`.
+
+`user_id` source: JWT claim `user_id` (BIGINT). **Not** the JWT `sub` (which is the email). Extract via:
+```kotlin
+fun Jwt.userId(): Long  // application/security/CurrentUser.kt
+```
+
+All repository methods that read or write user-scoped data accept `userId: Long` as first parameter. The unique constraint on `collection_entries` is `(user_id, card_id, foil)` — same card+foil is allowed for different users.
+
+`deck_entries.user_id` is denormalized from the parent deck — `DeckEntry` domain model has no `userId` field; the repository reads it from `Deck.userId` at insert time.
+
 ## Integration Tests
 
 Extend `AbstractIntegrationTest` (starts a `postgres:16-alpine` Testcontainer, sets `spring.datasource.*` via `@DynamicPropertySource`). Required for SQL Mappers and Repositories. Services and controllers use unit tests with mocked dependencies.

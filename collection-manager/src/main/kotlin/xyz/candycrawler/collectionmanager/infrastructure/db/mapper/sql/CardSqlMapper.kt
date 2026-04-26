@@ -138,19 +138,21 @@ class CardSqlMapper {
             .map { it.toRecord() }
     }
 
-    internal fun findAllInCollection(): List<CardRecord> =
+    internal fun findAllInCollection(userId: Long): List<CardRecord> =
         (CardsTable innerJoin CollectionEntriesTable)
             .selectAll()
+            .where { CollectionEntriesTable.userId eq userId }
             .map { it.toRecord() }
             .distinctBy { it.id }
 
-    internal fun findByTribe(tribe: String): List<CardRecord> {
+    internal fun findByTribe(userId: Long, tribe: String): List<CardRecord> {
         val pattern = "%${tribe.lowercase()}%"
         return (CardsTable innerJoin CollectionEntriesTable)
             .selectAll()
             .where {
-                (CardsTable.typeLine.lowerCase() like pattern) or
-                (CardsTable.oracleText.lowerCase() like pattern)
+                (CollectionEntriesTable.userId eq userId) and
+                ((CardsTable.typeLine.lowerCase() like pattern) or
+                (CardsTable.oracleText.lowerCase() like pattern))
             }
             .map { it.toRecord() }
             .distinctBy { it.id }

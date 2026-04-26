@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -17,6 +19,7 @@ import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardImag
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardPrices
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardResponse
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardSearchResponse
+import xyz.candycrawler.collectionmanager.application.security.userId
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
 import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
@@ -60,6 +63,7 @@ class CardSearchController(
     @PreAuthorize("hasAuthority('PERM_api:cards:search')")
     @GetMapping("/search")
     fun searchCards(
+        @AuthenticationPrincipal jwt: Jwt,
         @Parameter(description = "Fulltext search query (searches name, type line, oracle text)")
         @RequestParam(required = false) q: String?,
         @Parameter(description = "Filter by set code (e.g. 'neo', 'dmu')")
@@ -100,11 +104,11 @@ class CardSearchController(
         val result = cardRepository.search(criteria)
 
         val cardIds = result.cards.mapNotNull { it.id }
-        val collectionByCardId = collectionEntryRepository.findByCardIds(cardIds)
-            .groupBy { it.cardId }
+        val collectionByCardId = collectionEntryRepository.findByUserAndCardIds(jwt.userId(), cardIds)
+            .groupBy { entry -> entry.cardId }
             .mapValues { (_, entries) ->
-                val nonFoil = entries.filter { !it.foil }.sumOf { it.quantity }
-                val foil = entries.filter { it.foil }.sumOf { it.quantity }
+                val nonFoil = entries.filter { entry -> !entry.foil }.sumOf { entry -> entry.quantity }
+                val foil = entries.filter { entry -> entry.foil }.sumOf { entry -> entry.quantity }
                 CardCollectionInfo(quantityNonFoil = nonFoil, quantityFoil = foil)
             }
 

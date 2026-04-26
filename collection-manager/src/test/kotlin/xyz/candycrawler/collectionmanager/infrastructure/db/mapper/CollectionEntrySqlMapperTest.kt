@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @Transactional
 class CollectionEntrySqlMapperTest(
@@ -19,16 +19,20 @@ class CollectionEntrySqlMapperTest(
     @Autowired private val cardSqlMapper: CardSqlMapper,
 ) : AbstractIntegrationTest() {
 
+    private val userId = 1L
+
     @Test
     fun `upsertBatch persists all fields correctly`() {
         val cardId = insertCard(setCode = "dsk", collectorNumber = "10")
 
-        val record = CollectionEntryRecord(id = null, cardId = cardId, quantity = 3, foil = false, createdAt = null, updatedAt = null)
+        val record = CollectionEntryRecord(id = null, userId = userId, cardId = cardId, quantity = 3, foil = false, createdAt = null, updatedAt = null)
         sqlMapper.upsertBatch(listOf(record))
 
-        val result = sqlMapper.selectByCardId(cardId)
-        assertNotNull(result)
+        val results = sqlMapper.selectByUserAndCardId(userId, cardId)
+        assertEquals(1, results.size)
+        val result = results.single()
         assertNotNull(result.id)
+        assertEquals(userId, result.userId)
         assertEquals(cardId, result.cardId)
         assertEquals(3, result.quantity)
         assertNotNull(result.createdAt)
@@ -42,30 +46,30 @@ class CollectionEntrySqlMapperTest(
         val cardId3 = insertCard(setCode = "dsk", collectorNumber = "22")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 2, foil = false, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId3, quantity = 4, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId2, quantity = 2, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId3, quantity = 4, foil = false, createdAt = null, updatedAt = null),
         ))
 
-        val all = sqlMapper.selectAll()
+        val all = sqlMapper.selectByUser(userId)
         val cardIds = all.map { it.cardId }
         assert(cardIds.containsAll(listOf(cardId1, cardId2, cardId3)))
     }
 
     @Test
-    fun `upsertBatch on same card id updates quantity`() {
+    fun `upsertBatch on same user+card+foil updates quantity`() {
         val cardId = insertCard(setCode = "dsk", collectorNumber = "30")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
         ))
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 5, foil = false, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId, quantity = 5, foil = false, createdAt = null, updatedAt = null)
         ))
 
-        val result = sqlMapper.selectByCardId(cardId)
-        assertNotNull(result)
-        assertEquals(5, result.quantity)
+        val results = sqlMapper.selectByUserAndCardId(userId, cardId)
+        assertEquals(1, results.size)
+        assertEquals(5, results.single().quantity)
     }
 
     @Test
@@ -73,40 +77,42 @@ class CollectionEntrySqlMapperTest(
         val cardId = insertCard(setCode = "dsk", collectorNumber = "40")
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 1, foil = false, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId, quantity = 1, foil = false, createdAt = null, updatedAt = null)
         ))
-        val firstCreatedAt = sqlMapper.selectByCardId(cardId)!!.createdAt
+        val firstCreatedAt = sqlMapper.selectByUserAndCardId(userId, cardId).single().createdAt
 
         Thread.sleep(10)
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId, quantity = 2, foil = false, createdAt = null, updatedAt = null)
         ))
-        val secondCreatedAt = sqlMapper.selectByCardId(cardId)!!.createdAt
+        val secondCreatedAt = sqlMapper.selectByUserAndCardId(userId, cardId).single().createdAt
 
         assertEquals(firstCreatedAt, secondCreatedAt)
     }
 
     @Test
-    fun `selectByCardId returns null when not found`() {
-        val result = sqlMapper.selectByCardId(Long.MAX_VALUE)
-
-        assertNull(result)
+    fun `selectByUserAndCardId returns empty when not found`() {
+        val result = sqlMapper.selectByUserAndCardId(userId, Long.MAX_VALUE)
+        assertTrue(result.isEmpty())
     }
 
     @Test
-    fun `selectAll returns all persisted entries`() {
+    fun `selectByUser returns all entries for that user only`() {
         val cardId1 = insertCard(setCode = "ecl", collectorNumber = "50")
         val cardId2 = insertCard(setCode = "ecl", collectorNumber = "51")
+        val otherUserId = 999L
 
         sqlMapper.upsertBatch(listOf(
-            CollectionEntryRecord(id = null, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
-            CollectionEntryRecord(id = null, cardId = cardId2, quantity = 3, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId1, quantity = 1, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = userId, cardId = cardId2, quantity = 3, foil = false, createdAt = null, updatedAt = null),
+            CollectionEntryRecord(id = null, userId = otherUserId, cardId = cardId1, quantity = 2, foil = false, createdAt = null, updatedAt = null),
         ))
 
-        val all = sqlMapper.selectAll()
+        val all = sqlMapper.selectByUser(userId)
         val cardIds = all.map { it.cardId }
         assert(cardIds.containsAll(listOf(cardId1, cardId2)))
+        assert(all.all { it.userId == userId }) { "Only userId=$userId entries expected" }
     }
 
     private fun insertCard(setCode: String, collectorNumber: String): Long =

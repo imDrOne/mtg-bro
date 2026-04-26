@@ -39,8 +39,8 @@ class ExposedCardRepository(
         sqlMapper.selectBySetCodeAndCollectorNumber(setCode, collectorNumber)?.let(toDomain::apply)
 
     @Transactional(readOnly = true)
-    override fun findByTribe(tribe: String): List<Card> =
-        sqlMapper.findByTribe(tribe).map(toDomain::apply)
+    override fun findByTribe(userId: Long, tribe: String): List<Card> =
+        sqlMapper.findByTribe(userId, tribe).map(toDomain::apply)
 
     @Transactional(readOnly = true)
     override fun search(criteria: CardSearchCriteria): CardPage {

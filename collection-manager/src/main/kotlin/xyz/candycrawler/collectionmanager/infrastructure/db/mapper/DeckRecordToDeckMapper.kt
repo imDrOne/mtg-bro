@@ -12,6 +12,7 @@ class DeckRecordToDeckMapper {
 
     fun apply(record: DeckRecord, entries: List<DeckEntryRecord>): Deck = Deck(
         id = record.id,
+        userId = record.userId,
         name = record.name,
         format = DeckFormat.valueOf(record.format),
         colorIdentity = record.colorIdentity,

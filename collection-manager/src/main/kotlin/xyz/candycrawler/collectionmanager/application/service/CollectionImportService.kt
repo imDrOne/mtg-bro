@@ -22,7 +22,7 @@ class CollectionImportService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    suspend fun import(parser: CollectionFileParser, content: String): ImportResult {
+    suspend fun import(userId: Long, parser: CollectionFileParser, content: String): ImportResult {
         val entries = parser.parse(content)
         log.info("Parsed {} lines from file", entries.size)
 
@@ -42,7 +42,7 @@ class CollectionImportService(
         }
 
         val importedCount = withContext(Dispatchers.IO) {
-            persistenceService.saveImportedData(cards, merged)
+            persistenceService.saveImportedData(userId, cards, merged)
         }
 
         return ImportResult(importedCount = importedCount, notFound = notFound)

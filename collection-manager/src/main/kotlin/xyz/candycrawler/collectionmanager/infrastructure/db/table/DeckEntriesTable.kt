@@ -3,6 +3,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 object DeckEntriesTable : LongIdTable("deck_entries") {
+    val userId = long("user_id")
     val deckId = long("deck_id").references(DecksTable.id)
     val cardId = long("card_id").references(CardsTable.id)
     val quantity = integer("quantity")

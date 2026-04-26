@@ -249,6 +249,20 @@ post_logout_redirect_uris = 'https://claude.ai'
 
 ---
 
+## JWT Claims
+
+Access tokens issued by `AccessTokenIssuer` contain the following custom claims:
+
+| Claim | Type | Description |
+|---|---|---|
+| `permissions` | `List<String>` | Granted permission scopes (e.g. `PERM_api:decks:read`) |
+| `roles` | `List<String>` | User roles (e.g. `ROLE_USER`) |
+| `user_id` | `Long` (BIGINT) | Numeric user ID from `auth_service_db.users.id`. Used by downstream services (e.g. collection-manager) to scope data per user. |
+
+> **Not** the JWT `sub` (which is the email). Downstream services must read `user_id` claim, not `sub`.
+
+---
+
 ## Конфигурация окружения
 
 | Переменная | Описание | Пример (prod) |

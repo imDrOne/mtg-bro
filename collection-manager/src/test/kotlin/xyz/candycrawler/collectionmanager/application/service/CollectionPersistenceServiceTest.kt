@@ -21,6 +21,8 @@ class CollectionPersistenceServiceTest {
 
     private val service = CollectionPersistenceService(cardRepository, collectionEntryRepository)
 
+    private val userId = 1L
+
     @Test
     fun `saveImportedData saves cards and creates collection entries`() {
         val card = buildCard(id = 1L, setCode = "dsk", collectorNumber = "100")
@@ -28,7 +30,7 @@ class CollectionPersistenceServiceTest {
 
         whenever(cardRepository.saveAll(listOf(card))).thenReturn(listOf(card))
 
-        val result = service.saveImportedData(listOf(card), quantityByKey)
+        val result = service.saveImportedData(userId, listOf(card), quantityByKey)
 
         assertEquals(1, result)
 
@@ -36,6 +38,7 @@ class CollectionPersistenceServiceTest {
         verify(collectionEntryRepository).saveAll(entriesCaptor.capture())
 
         val entry = entriesCaptor.firstValue.single()
+        assertEquals(userId, entry.userId)
         assertEquals(1L, entry.cardId)
         assertEquals(3, entry.quantity)
         assertEquals(false, entry.foil)
@@ -51,9 +54,8 @@ class CollectionPersistenceServiceTest {
 
         whenever(cardRepository.saveAll(listOf(card))).thenReturn(listOf(card))
 
-        val result = service.saveImportedData(listOf(card), quantityByKey)
+        val result = service.saveImportedData(userId, listOf(card), quantityByKey)
 
-        // only 1 entry created — card for "999" was not returned by repository
         assertEquals(1, result)
 
         val entriesCaptor = argumentCaptor<List<CollectionEntry>>()
@@ -66,7 +68,7 @@ class CollectionPersistenceServiceTest {
     fun `saveImportedData returns zero and saves empty entries when no cards`() {
         whenever(cardRepository.saveAll(emptyList())).thenReturn(emptyList())
 
-        val result = service.saveImportedData(emptyList(), emptyMap())
+        val result = service.saveImportedData(userId, emptyList(), emptyMap())
 
         assertEquals(0, result)
 
@@ -90,7 +92,7 @@ class CollectionPersistenceServiceTest {
 
         whenever(cardRepository.saveAll(cards)).thenReturn(cards)
 
-        val result = service.saveImportedData(cards, quantityByKey)
+        val result = service.saveImportedData(userId, cards, quantityByKey)
 
         assertEquals(3, result)
 
@@ -100,6 +102,7 @@ class CollectionPersistenceServiceTest {
         val entries = entriesCaptor.firstValue.sortedBy { it.cardId }
         assertEquals(listOf(1L, 2L, 3L), entries.map { it.cardId })
         assertEquals(listOf(4, 2, 1), entries.map { it.quantity })
+        assertTrue(entries.all { it.userId == userId })
     }
 
     private fun buildCard(id: Long, setCode: String, collectorNumber: String): Card = Card(

@@ -20,6 +20,8 @@ class CardSqlMapperFindByTribeTest(
     @Autowired private val collectionEntrySqlMapper: CollectionEntrySqlMapper,
 ) : AbstractIntegrationTest() {
 
+    private val userId = 1L
+
     @Test
     fun `returns only cards that are in the collection`() {
         val inCollection = saveCard(typeLine = "Creature — Merfolk Wizard")
@@ -27,7 +29,7 @@ class CardSqlMapperFindByTribeTest(
 
         addToCollection(inCollection.id!!)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertEquals(1, result.size)
         assertEquals(inCollection.id, result.single().id)
@@ -38,7 +40,7 @@ class CardSqlMapperFindByTribeTest(
         val card = saveCard(typeLine = "Creature — Merfolk Wizard", oracleText = "Flying.")
         addToCollection(card.id!!)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertEquals(1, result.size)
         assertTrue(result.single().typeLine.contains("Merfolk"))
@@ -49,7 +51,7 @@ class CardSqlMapperFindByTribeTest(
         val card = saveCard(typeLine = "Instant", oracleText = "All Merfolk you control get +1/+1.")
         addToCollection(card.id!!)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertEquals(1, result.size)
         assertEquals("Instant", result.single().typeLine)
@@ -60,7 +62,7 @@ class CardSqlMapperFindByTribeTest(
         val card = saveCard(typeLine = "Creature — Goblin", oracleText = "Haste.")
         addToCollection(card.id!!)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertTrue(result.isEmpty())
     }
@@ -70,7 +72,7 @@ class CardSqlMapperFindByTribeTest(
         val card = saveCard(typeLine = "Creature — MERFOLK WIZARD")
         addToCollection(card.id!!)
 
-        val result = cardSqlMapper.findByTribe("merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "merfolk")
 
         assertEquals(1, result.size)
     }
@@ -81,7 +83,7 @@ class CardSqlMapperFindByTribeTest(
         addToCollection(cardId = card.id!!, foil = false)
         addToCollection(cardId = card.id!!, foil = true)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertEquals(1, result.size)
         assertEquals(card.id, result.single().id)
@@ -99,7 +101,7 @@ class CardSqlMapperFindByTribeTest(
         addToCollection(support.id!!)
         addToCollection(unrelated.id!!)
 
-        val result = cardSqlMapper.findByTribe("Merfolk")
+        val result = cardSqlMapper.findByTribe(userId, "Merfolk")
 
         assertEquals(3, result.size)
         val ids = result.map { it.id }.toSet()
@@ -122,6 +124,7 @@ class CardSqlMapperFindByTribeTest(
             listOf(
                 CollectionEntryRecord(
                     id = null,
+                    userId = userId,
                     cardId = cardId,
                     quantity = 1,
                     foil = foil,

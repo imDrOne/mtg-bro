@@ -2,6 +2,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -19,6 +20,7 @@ class DeckSqlMapper {
     internal fun insert(record: DeckRecord): DeckRecord {
         val now = LocalDateTime.now()
         val id = DecksTable.insertAndGetId {
+            it[userId] = record.userId
             it[name] = record.name
             it[format] = record.format
             it[colorIdentity] = record.colorIdentity
@@ -32,6 +34,7 @@ class DeckSqlMapper {
     internal fun insertEntries(entries: List<DeckEntryRecord>) {
         if (entries.isEmpty()) return
         DeckEntriesTable.batchInsert(entries) { entry ->
+            this[DeckEntriesTable.userId] = entry.userId
             this[DeckEntriesTable.deckId] = entry.deckId
             this[DeckEntriesTable.cardId] = entry.cardId
             this[DeckEntriesTable.quantity] = entry.quantity
@@ -39,9 +42,9 @@ class DeckSqlMapper {
         }
     }
 
-    internal fun selectById(id: Long): DeckRecord? =
+    internal fun selectByIdAndUser(id: Long, userId: Long): DeckRecord? =
         DecksTable.selectAll()
-            .where { DecksTable.id eq id }
+            .where { (DecksTable.id eq id) and (DecksTable.userId eq userId) }
             .map { it.toDeckRecord() }
             .singleOrNull()
 
@@ -50,13 +53,15 @@ class DeckSqlMapper {
             .where { DeckEntriesTable.deckId eq deckId }
             .map { it.toEntryRecord() }
 
-    internal fun selectAll(): List<DeckRecord> =
+    internal fun selectAllByUser(userId: Long): List<DeckRecord> =
         DecksTable.selectAll()
+            .where { DecksTable.userId eq userId }
             .orderBy(DecksTable.createdAt to SortOrder.DESC)
             .map { it.toDeckRecord() }
 
     private fun ResultRow.toDeckRecord() = DeckRecord(
         id = this[DecksTable.id].value,
+        userId = this[DecksTable.userId],
         name = this[DecksTable.name],
         format = this[DecksTable.format],
         colorIdentity = this[DecksTable.colorIdentity],
@@ -67,6 +72,7 @@ class DeckSqlMapper {
 
     private fun ResultRow.toEntryRecord() = DeckEntryRecord(
         id = this[DeckEntriesTable.id].value,
+        userId = this[DeckEntriesTable.userId],
         deckId = this[DeckEntriesTable.deckId],
         cardId = this[DeckEntriesTable.cardId],
         quantity = this[DeckEntriesTable.quantity],

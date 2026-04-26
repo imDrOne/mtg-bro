@@ -33,7 +33,7 @@ class SecuritySmokeTest : AbstractIntegrationTest() {
     @Test
     fun `GET cards search with valid JWT passes authentication`() {
         val status = mockMvc.get("/api/v1/cards/search") {
-            with(jwt())
+            with(jwt().jwt { it.claim("user_id", 1L) })
         }.andReturn().response.status
         assert(status != 401) { "Expected non-401 with JWT, got $status" }
     }

@@ -10,6 +10,7 @@ class CollectionEntryRecordToCollectionEntryMapper : Function<CollectionEntryRec
 
     override fun apply(record: CollectionEntryRecord): CollectionEntry = CollectionEntry(
         id = record.id,
+        userId = record.userId,
         cardId = record.cardId,
         quantity = record.quantity,
         foil = record.foil,

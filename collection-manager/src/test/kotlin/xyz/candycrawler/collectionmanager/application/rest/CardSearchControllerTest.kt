@@ -6,6 +6,7 @@ import org.mockito.kotlin.argThat
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.security.oauth2.jwt.Jwt
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
@@ -21,6 +22,11 @@ class CardSearchControllerTest {
     private val cardRepository: CardRepository = mock()
     private val collectionEntryRepository: CollectionEntryRepository = mock()
     private val controller = CardSearchController(cardRepository, collectionEntryRepository)
+
+    private val userId = 1L
+    private val jwt: Jwt = mock<Jwt>().also {
+        whenever(it.claims).thenReturn(mapOf("user_id" to userId))
+    }
 
     @Test
     fun `searchCards builds criteria from params and returns paginated response`() {
@@ -39,9 +45,10 @@ class CardSearchControllerTest {
                 criteria.page == 1 &&
                 criteria.pageSize == 20
         })).thenReturn(page)
-        whenever(collectionEntryRepository.findByCardIds(listOf(1L))).thenReturn(emptyList())
+        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(1L))).thenReturn(emptyList())
 
         val response = controller.searchCards(
+            jwt = jwt,
             q = "bolt",
             set = "neo",
             collectorNumber = null,
@@ -68,9 +75,9 @@ class CardSearchControllerTest {
     fun `searchCards coerces page to at least 1`() {
         whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.page == 1 }))
             .thenReturn(CardPage(emptyList(), 0L, false, 1, 20))
-        whenever(collectionEntryRepository.findByCardIds(emptyList())).thenReturn(emptyList())
+        whenever(collectionEntryRepository.findByUserAndCardIds(userId, emptyList())).thenReturn(emptyList())
 
-        controller.searchCards(q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
+        controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
 
         verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.page == 1 })
     }
@@ -79,9 +86,9 @@ class CardSearchControllerTest {
     fun `searchCards coerces pageSize to max 175`() {
         whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.pageSize == 175 }))
             .thenReturn(CardPage(emptyList(), 0L, false, 1, 175))
-        whenever(collectionEntryRepository.findByCardIds(emptyList())).thenReturn(emptyList())
+        whenever(collectionEntryRepository.findByUserAndCardIds(userId, emptyList())).thenReturn(emptyList())
 
-        controller.searchCards(q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
+        controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
 
         verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.pageSize == 175 })
     }
@@ -98,9 +105,9 @@ class CardSearchControllerTest {
         )
         whenever(cardRepository.search(any()))
             .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
-        whenever(collectionEntryRepository.findByCardIds(listOf(2L))).thenReturn(emptyList())
+        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(2L))).thenReturn(emptyList())
 
-        val response = controller.searchCards(q = "test", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+        val response = controller.searchCards(jwt = jwt, q = "test", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
 
         val dto = response.data.single()
         assertEquals("https://small", dto.imageUris?.small)
@@ -114,14 +121,14 @@ class CardSearchControllerTest {
         val card = buildCard(id = 3L, name = "Bolt")
         whenever(cardRepository.search(any()))
             .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
-        whenever(collectionEntryRepository.findByCardIds(listOf(3L))).thenReturn(
+        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(3L))).thenReturn(
             listOf(
-                CollectionEntry(cardId = 3L, quantity = 2, foil = false),
-                CollectionEntry(cardId = 3L, quantity = 1, foil = true),
+                CollectionEntry(userId = userId, cardId = 3L, quantity = 2, foil = false),
+                CollectionEntry(userId = userId, cardId = 3L, quantity = 1, foil = true),
             ),
         )
 
-        val response = controller.searchCards(q = "bolt", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+        val response = controller.searchCards(jwt = jwt, q = "bolt", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
 
         val dto = response.data.single()
         assertEquals(2, dto.collection?.quantityNonFoil)

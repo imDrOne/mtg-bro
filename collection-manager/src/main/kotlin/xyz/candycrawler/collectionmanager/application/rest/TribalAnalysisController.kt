@@ -3,11 +3,14 @@ package xyz.candycrawler.collectionmanager.application.rest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.TribalStatsResponse
+import xyz.candycrawler.collectionmanager.application.security.userId
 import xyz.candycrawler.collectionmanager.application.service.TribalAnalysisService
 
 @Tag(name = "Tribal Analysis", description = "Analyze tribal depth in the local collection")
@@ -18,8 +21,11 @@ class TribalAnalysisController(private val tribalAnalysisService: TribalAnalysis
     @PreAuthorize("hasAuthority('PERM_api:cards:tribal')")
     @Operation(summary = "Analyze tribal depth for a given creature type")
     @GetMapping("/{tribe}")
-    fun analyze(@PathVariable tribe: String): TribalStatsResponse {
-        val stats = tribalAnalysisService.analyze(tribe)
+    fun analyze(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable tribe: String,
+    ): TribalStatsResponse {
+        val stats = tribalAnalysisService.analyze(jwt.userId(), tribe)
         return TribalStatsResponse(
             tribe = stats.tribe,
             totalCards = stats.totalCards,

@@ -20,6 +20,7 @@ class ExposedDeckRepository(
     override fun save(deck: Deck): Deck {
         val record = DeckRecord(
             id = null,
+            userId = deck.userId,
             name = deck.name,
             format = deck.format.name,
             colorIdentity = deck.colorIdentity,
@@ -33,6 +34,7 @@ class ExposedDeckRepository(
         val entryRecords = deck.entries.map { e ->
             DeckEntryRecord(
                 id = null,
+                userId = deck.userId,
                 deckId = deckId,
                 cardId = e.cardId,
                 quantity = e.quantity,
@@ -45,10 +47,9 @@ class ExposedDeckRepository(
         return toDomain.apply(saved, savedEntries)
     }
 
-    override fun findById(id: Long): Deck {
-        val record = sqlMapper.selectById(id) ?: throw DeckNotFoundException(id)
+    override fun findByIdAndUser(id: Long, userId: Long): Deck {
+        val record = sqlMapper.selectByIdAndUser(id, userId) ?: throw DeckNotFoundException(id)
         val entries = sqlMapper.selectEntriesByDeckId(id)
         return toDomain.apply(record, entries)
     }
-
 }

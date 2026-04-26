@@ -33,6 +33,7 @@ class AccessTokenIssuer(
             .subject(user.email)
             .issuedAt(now)
             .expiresAt(expiresAt)
+            .claim("user_id", userId)
             .claim("roles", roles.map { it.name })
             .claim("permissions", permissions.map { it.name })
             .build()

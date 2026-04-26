@@ -5,8 +5,8 @@ import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntry
 import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryRecordToCollectionEntryMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CollectionEntryToCollectionEntryRecordMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 
 @Repository
 @Transactional
@@ -20,12 +20,12 @@ class ExposedCollectionEntryRepository(
         sqlMapper.upsertBatch(entries.map(toRecord::apply))
     }
 
-    override fun findByCardId(cardId: Long): CollectionEntry? =
-        sqlMapper.selectByCardId(cardId)?.let(toDomain::apply)
+    override fun findByUserAndCardId(userId: Long, cardId: Long): List<CollectionEntry> =
+        sqlMapper.selectByUserAndCardId(userId, cardId).map(toDomain::apply)
 
-    override fun findByCardIds(cardIds: List<Long>): List<CollectionEntry> =
-        sqlMapper.selectByCardIds(cardIds).map(toDomain::apply)
+    override fun findByUserAndCardIds(userId: Long, cardIds: List<Long>): List<CollectionEntry> =
+        sqlMapper.selectByUserAndCardIds(userId, cardIds).map(toDomain::apply)
 
-    override fun findAll(): List<CollectionEntry> =
-        sqlMapper.selectAll().map(toDomain::apply)
+    override fun findByUser(userId: Long): List<CollectionEntry> =
+        sqlMapper.selectByUser(userId).map(toDomain::apply)
 }

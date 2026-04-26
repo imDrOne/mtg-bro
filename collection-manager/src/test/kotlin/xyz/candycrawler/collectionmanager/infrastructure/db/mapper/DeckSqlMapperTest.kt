@@ -22,12 +22,15 @@ class DeckSqlMapperTest(
     @Autowired private val cardSqlMapper: CardSqlMapper,
 ) : AbstractIntegrationTest() {
 
+    private val userId = 1L
+
     @Test
     fun `insert saves deck and returns record with generated id`() {
         val record = buildDeckRecord()
         val saved = sqlMapper.insert(record)
 
         assertNotNull(saved.id)
+        assertEquals(userId, saved.userId)
         assertEquals("Test Deck", saved.name)
         assertEquals("STANDARD", saved.format)
         assertEquals(listOf("G"), saved.colorIdentity)
@@ -45,18 +48,26 @@ class DeckSqlMapperTest(
     }
 
     @Test
-    fun `selectById returns null for unknown id`() {
-        val result = sqlMapper.selectById(Long.MAX_VALUE)
+    fun `selectByIdAndUser returns null for unknown id`() {
+        val result = sqlMapper.selectByIdAndUser(Long.MAX_VALUE, userId)
         assertNull(result)
     }
 
     @Test
-    fun `selectById returns saved deck with correct fields`() {
+    fun `selectByIdAndUser returns null for wrong userId`() {
+        val saved = sqlMapper.insert(buildDeckRecord(name = "My Deck"))
+        val result = sqlMapper.selectByIdAndUser(saved.id!!, 999L)
+        assertNull(result)
+    }
+
+    @Test
+    fun `selectByIdAndUser returns saved deck with correct fields`() {
         val saved = sqlMapper.insert(buildDeckRecord(name = "My Deck"))
 
-        val found = sqlMapper.selectById(saved.id!!)
+        val found = sqlMapper.selectByIdAndUser(saved.id!!, userId)
         assertNotNull(found)
         assertEquals(saved.id, found.id)
+        assertEquals(userId, found.userId)
         assertEquals("My Deck", found.name)
         assertEquals("STANDARD", found.format)
     }
@@ -67,8 +78,8 @@ class DeckSqlMapperTest(
         val deckId = sqlMapper.insert(buildDeckRecord()).id!!
 
         sqlMapper.insertEntries(listOf(
-            DeckEntryRecord(id = null, deckId = deckId, cardId = cardId, quantity = 4, isSideboard = false),
-            DeckEntryRecord(id = null, deckId = deckId, cardId = cardId, quantity = 2, isSideboard = true),
+            DeckEntryRecord(id = null, userId = userId, deckId = deckId, cardId = cardId, quantity = 4, isSideboard = false),
+            DeckEntryRecord(id = null, userId = userId, deckId = deckId, cardId = cardId, quantity = 2, isSideboard = true),
         ))
 
         val entries = sqlMapper.selectEntriesByDeckId(deckId)
@@ -77,6 +88,7 @@ class DeckSqlMapperTest(
         val mainboard = entries.first { !it.isSideboard }
         assertEquals(cardId, mainboard.cardId)
         assertEquals(4, mainboard.quantity)
+        assertEquals(userId, mainboard.userId)
 
         val sideboard = entries.first { it.isSideboard }
         assertEquals(cardId, sideboard.cardId)
@@ -90,8 +102,8 @@ class DeckSqlMapperTest(
         val deck2Id = sqlMapper.insert(buildDeckRecord()).id!!
 
         sqlMapper.insertEntries(listOf(
-            DeckEntryRecord(id = null, deckId = deck1Id, cardId = cardId, quantity = 1, isSideboard = false),
-            DeckEntryRecord(id = null, deckId = deck2Id, cardId = cardId, quantity = 2, isSideboard = false),
+            DeckEntryRecord(id = null, userId = userId, deckId = deck1Id, cardId = cardId, quantity = 1, isSideboard = false),
+            DeckEntryRecord(id = null, userId = userId, deckId = deck2Id, cardId = cardId, quantity = 2, isSideboard = false),
         ))
 
         val deck1Entries = sqlMapper.selectEntriesByDeckId(deck1Id)
@@ -100,12 +112,12 @@ class DeckSqlMapperTest(
     }
 
     @Test
-    fun `selectAll returns decks ordered by createdAt descending`() {
+    fun `selectAllByUser returns decks for that user ordered by createdAt descending`() {
         val deck1 = sqlMapper.insert(buildDeckRecord(name = "First"))
         Thread.sleep(5)
         val deck2 = sqlMapper.insert(buildDeckRecord(name = "Second"))
 
-        val all = sqlMapper.selectAll()
+        val all = sqlMapper.selectAllByUser(userId)
         assertTrue(all.size >= 2)
         val ids = all.map { it.id }
         val idx1 = ids.indexOf(deck1.id)
@@ -113,8 +125,19 @@ class DeckSqlMapperTest(
         assertTrue(idx2 < idx1, "More recently created deck should appear first")
     }
 
-    private fun buildDeckRecord(name: String = "Test Deck", comment: String? = null) = DeckRecord(
+    @Test
+    fun `selectAllByUser does not return decks of other users`() {
+        sqlMapper.insert(buildDeckRecord(name = "My Deck"))
+        sqlMapper.insert(buildDeckRecord(name = "Other User Deck", userId = 999L))
+
+        val all = sqlMapper.selectAllByUser(userId)
+        assertTrue(all.all { it.userId == userId }, "Only decks for userId=$userId expected")
+        assertTrue(all.none { it.name == "Other User Deck" })
+    }
+
+    private fun buildDeckRecord(name: String = "Test Deck", comment: String? = null, userId: Long = this.userId) = DeckRecord(
         id = null,
+        userId = userId,
         name = name,
         format = "STANDARD",
         colorIdentity = listOf("G"),

@@ -10,6 +10,7 @@ class DeckTest {
         DeckEntry(cardId = cardId, quantity = quantity, isSideboard = sideboard)
 
     private fun standardDeck(entries: List<DeckEntry>, name: String = "Test Deck") = Deck(
+        userId = 1L,
         name = name,
         format = DeckFormat.STANDARD,
         colorIdentity = listOf("G"),
@@ -33,6 +34,7 @@ class DeckTest {
     fun `sealed deck with exactly 40 mainboard cards passes`() {
         val entries = (1..40).map { entry(cardId = it.toLong()) }
         Deck(
+            userId = 1L,
             name = "Sealed Deck",
             format = DeckFormat.SEALED,
             colorIdentity = emptyList(),
@@ -46,6 +48,7 @@ class DeckTest {
         val entries = (1..39).map { entry(cardId = it.toLong()) }
         assertFailsWith<InvalidDeckException> {
             Deck(
+                userId = 1L,
                 name = "Sealed Deck",
                 format = DeckFormat.SEALED,
                 colorIdentity = emptyList(),
@@ -67,6 +70,7 @@ class DeckTest {
         val entries = (1..60).map { entry(cardId = it.toLong()) }
         assertFailsWith<InvalidDeckException> {
             Deck(
+                userId = 1L,
                 name = "  ",
                 format = DeckFormat.STANDARD,
                 colorIdentity = emptyList(),
