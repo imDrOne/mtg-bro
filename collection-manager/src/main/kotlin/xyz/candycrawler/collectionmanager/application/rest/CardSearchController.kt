@@ -20,11 +20,10 @@ import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardPric
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardResponse
 import xyz.candycrawler.collectionmanager.application.rest.dto.response.CardSearchResponse
 import xyz.candycrawler.collectionmanager.application.security.userId
-import xyz.candycrawler.collectionmanager.domain.card.model.Card
-import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
-import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
+import xyz.candycrawler.collectionmanager.application.service.CardSearchService
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollection
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 
 private fun parseColorFilter(input: String?): List<String>? {
@@ -38,14 +37,13 @@ private fun parseColorFilter(input: String?): List<String>? {
 @RestController
 @RequestMapping("/api/v1/cards")
 class CardSearchController(
-    private val cardRepository: CardRepository,
-    private val collectionEntryRepository: CollectionEntryRepository,
+    private val cardSearchService: CardSearchService,
 ) {
 
     @Operation(
         summary = "Search cards in the local library",
         description = """
-            Returns a paginated list of cards matching the search criteria.
+            Returns a paginated list of cards from the user's collection matching the search criteria.
             The query parameter searches across card name, type line, and oracle text.
             Results can be sorted and filtered by set code and rarity.
         """,
@@ -101,65 +99,59 @@ class CardSearchController(
             pageSize = pageSize.coerceIn(1, CardSearchCriteria.MAX_PAGE_SIZE),
         )
 
-        val result = cardRepository.search(criteria)
-
-        val cardIds = result.cards.mapNotNull { it.id }
-        val collectionByCardId = collectionEntryRepository.findByUserAndCardIds(jwt.userId(), cardIds)
-            .groupBy { entry -> entry.cardId }
-            .mapValues { (_, entries) ->
-                val nonFoil = entries.filter { entry -> !entry.foil }.sumOf { entry -> entry.quantity }
-                val foil = entries.filter { entry -> entry.foil }.sumOf { entry -> entry.quantity }
-                CardCollectionInfo(quantityNonFoil = nonFoil, quantityFoil = foil)
-            }
+        val result = cardSearchService.searchByUser(jwt.userId(), criteria)
 
         return CardSearchResponse(
             totalCards = result.totalCards,
             hasMore = result.hasMore,
             page = result.page,
             pageSize = result.pageSize,
-            data = result.cards.map { it.toResponse(collectionByCardId[it.id]) },
+            data = result.cards.map { it.toResponse() },
         )
     }
 
-    private fun Card.toResponse(collection: CardCollectionInfo? = null): CardResponse = CardResponse(
-        id = id,
-        scryfallId = scryfallId,
-        oracleId = oracleId,
-        name = name,
-        lang = lang,
-        layout = layout,
-        manaCost = manaCost,
-        cmc = cmc,
-        typeLine = typeLine,
-        oracleText = oracleText,
-        colors = colors,
-        colorIdentity = colorIdentity,
-        keywords = keywords,
-        power = power,
-        toughness = toughness,
-        loyalty = loyalty,
-        setCode = setCode,
-        setName = setName,
-        collectorNumber = collectorNumber,
-        rarity = rarity,
-        releasedAt = releasedAt,
+    private fun CardWithCollection.toResponse(): CardResponse = CardResponse(
+        id = card.id,
+        scryfallId = card.scryfallId,
+        oracleId = card.oracleId,
+        name = card.name,
+        lang = card.lang,
+        layout = card.layout,
+        manaCost = card.manaCost,
+        cmc = card.cmc,
+        typeLine = card.typeLine,
+        oracleText = card.oracleText,
+        colors = card.colors,
+        colorIdentity = card.colorIdentity,
+        keywords = card.keywords,
+        power = card.power,
+        toughness = card.toughness,
+        loyalty = card.loyalty,
+        setCode = card.setCode,
+        setName = card.setName,
+        collectorNumber = card.collectorNumber,
+        rarity = card.rarity,
+        releasedAt = card.releasedAt,
         imageUris = CardImageUris(
-            small = imageUriSmall,
-            normal = imageUriNormal,
-            large = imageUriLarge,
-            png = imageUriPng,
-            artCrop = imageUriArtCrop,
-            borderCrop = imageUriBorderCrop,
+            small = card.imageUriSmall,
+            normal = card.imageUriNormal,
+            large = card.imageUriLarge,
+            png = card.imageUriPng,
+            artCrop = card.imageUriArtCrop,
+            borderCrop = card.imageUriBorderCrop,
         ),
         prices = CardPrices(
-            usd = priceUsd,
-            usdFoil = priceUsdFoil,
-            eur = priceEur,
-            eurFoil = priceEurFoil,
+            usd = card.priceUsd,
+            usdFoil = card.priceUsdFoil,
+            eur = card.priceEur,
+            eurFoil = card.priceEurFoil,
         ),
-        flavorText = flavorText,
-        artist = artist,
-        mtgaId = mtgaId,
-        collection = collection,
+        flavorText = card.flavorText,
+        artist = card.artist,
+        mtgaId = card.mtgaId,
+        collection = CardCollectionInfo(
+            quantityNonFoil = quantityNonFoil,
+            quantityFoil = quantityFoil,
+        ),
     )
 }

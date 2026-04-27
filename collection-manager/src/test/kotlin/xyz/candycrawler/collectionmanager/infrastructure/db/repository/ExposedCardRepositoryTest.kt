@@ -16,8 +16,9 @@ import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToCardMapper
-import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardToCardRecordMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -26,10 +27,11 @@ import kotlin.test.assertNull
 class ExposedCardRepositoryTest {
 
     private val sqlMapper: CardSqlMapper = mock()
+    private val collectionEntrySqlMapper: CollectionEntrySqlMapper = mock()
     private val toRecord: CardToCardRecordMapper = CardToCardRecordMapper()
     private val toDomain: CardRecordToCardMapper = CardRecordToCardMapper()
 
-    private val repository = ExposedCardRepository(sqlMapper, toRecord, toDomain)
+    private val repository = ExposedCardRepository(sqlMapper, collectionEntrySqlMapper, toRecord, toDomain)
 
     @Test
     fun `saveAll converts domains to records, calls upsertBatch, returns domains`() {

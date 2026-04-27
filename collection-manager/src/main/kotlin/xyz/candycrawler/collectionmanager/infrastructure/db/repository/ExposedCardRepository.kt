@@ -6,15 +6,19 @@ import xyz.candycrawler.collectionmanager.domain.card.exception.CardNotFoundExce
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollection
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollectionPage
 import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToCardMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardToCardRecordMapper
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
+import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CollectionEntrySqlMapper
 
 @Repository
 @Transactional
 class ExposedCardRepository(
     private val sqlMapper: CardSqlMapper,
+    private val collectionEntrySqlMapper: CollectionEntrySqlMapper,
     private val toRecord: CardToCardRecordMapper,
     private val toDomain: CardRecordToCardMapper,
 ) : CardRepository {
@@ -37,6 +41,56 @@ class ExposedCardRepository(
 
     override fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card? =
         sqlMapper.selectBySetCodeAndCollectorNumber(setCode, collectorNumber)?.let(toDomain::apply)
+
+    @Transactional(readOnly = true)
+    override fun searchByUser(userId: Long, criteria: CardSearchCriteria): CardWithCollectionPage {
+        val offset = ((criteria.page - 1) * criteria.pageSize).toLong()
+
+        val cards = sqlMapper.searchByUser(
+            userId = userId,
+            queryText = criteria.query,
+            setCode = criteria.setCode,
+            collectorNumber = criteria.collectorNumber,
+            colors = criteria.colors,
+            colorIdentity = criteria.colorIdentity,
+            type = criteria.type,
+            rarity = criteria.rarity,
+            order = criteria.order,
+            direction = criteria.direction,
+            limit = criteria.pageSize,
+            offset = offset,
+        )
+
+        val totalCards = sqlMapper.countSearchByUser(
+            userId = userId,
+            queryText = criteria.query,
+            setCode = criteria.setCode,
+            collectorNumber = criteria.collectorNumber,
+            colors = criteria.colors,
+            colorIdentity = criteria.colorIdentity,
+            type = criteria.type,
+            rarity = criteria.rarity,
+        )
+
+        val cardIds = cards.mapNotNull { it.id }
+        val entriesByCardId = collectionEntrySqlMapper.selectByUserAndCardIds(userId, cardIds)
+            .groupBy { it.cardId }
+
+        return CardWithCollectionPage(
+            cards = cards.map { record ->
+                val entries = entriesByCardId[record.id] ?: emptyList()
+                CardWithCollection(
+                    card = toDomain.apply(record),
+                    quantityNonFoil = entries.filter { !it.foil }.sumOf { it.quantity },
+                    quantityFoil = entries.filter { it.foil }.sumOf { it.quantity },
+                )
+            },
+            totalCards = totalCards,
+            hasMore = offset + criteria.pageSize < totalCards,
+            page = criteria.page,
+            pageSize = criteria.pageSize,
+        )
+    }
 
     @Transactional(readOnly = true)
     override fun findByTribe(userId: Long, tribe: String): List<Card> =

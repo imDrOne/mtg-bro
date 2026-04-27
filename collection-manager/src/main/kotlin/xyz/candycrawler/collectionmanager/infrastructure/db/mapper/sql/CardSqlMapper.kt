@@ -145,6 +145,68 @@ class CardSqlMapper {
             .map { it.toRecord() }
             .distinctBy { it.id }
 
+    internal fun searchByUser(
+        userId: Long,
+        queryText: String?,
+        setCode: String?,
+        collectorNumber: String?,
+        colors: List<String>?,
+        colorIdentity: List<String>?,
+        type: String?,
+        rarity: String?,
+        order: CardSortOrder,
+        direction: SortDirection,
+        limit: Int,
+        offset: Long,
+    ): List<CardRecord> {
+        val userCondition = CollectionEntriesTable.userId eq userId
+        val searchCondition = buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
+        val condition = searchCondition?.let { userCondition and it } ?: userCondition
+
+        val sortColumn = resolveOrderColumn(order)
+        val sortOrder = resolveDirection(order, direction)
+
+        val allIds = (CardsTable innerJoin CollectionEntriesTable)
+            .selectAll()
+            .where { condition }
+            .orderBy(sortColumn to sortOrder)
+            .map { it[CardsTable.id].value }
+            .distinct()
+
+        val pageIds = allIds.drop(offset.toInt()).take(limit)
+        if (pageIds.isEmpty()) return emptyList()
+
+        val byId = CardsTable.selectAll()
+            .where { CardsTable.id inList pageIds }
+            .map { it.toRecord() }
+            .associateBy { it.id }
+
+        return pageIds.mapNotNull { byId[it] }
+    }
+
+    internal fun countSearchByUser(
+        userId: Long,
+        queryText: String?,
+        setCode: String?,
+        collectorNumber: String?,
+        colors: List<String>?,
+        colorIdentity: List<String>?,
+        type: String?,
+        rarity: String?,
+    ): Long {
+        val userCondition = CollectionEntriesTable.userId eq userId
+        val searchCondition = buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
+        val condition = searchCondition?.let { userCondition and it } ?: userCondition
+
+        return (CardsTable innerJoin CollectionEntriesTable)
+            .selectAll()
+            .where { condition }
+            .map { it[CardsTable.id].value }
+            .distinct()
+            .size
+            .toLong()
+    }
+
     internal fun findByTribe(userId: Long, tribe: String): List<CardRecord> {
         val pattern = "%${tribe.lowercase()}%"
         return (CardsTable innerJoin CollectionEntriesTable)

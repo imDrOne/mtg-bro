@@ -7,6 +7,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -97,7 +98,7 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
             val setCode = card["setCode"]?.jsonPrimitive?.content ?: ""
             val collectorNumber = card["collectorNumber"]?.jsonPrimitive?.content ?: ""
             val rarityVal = card["rarity"]?.jsonPrimitive?.content ?: ""
-            val coll = card["collection"]?.jsonObject
+            val coll = card["collection"] as? JsonObject
             val nonFoil = coll?.get("quantityNonFoil")?.jsonPrimitive?.content?.toIntOrNull() ?: 0
             val foil = coll?.get("quantityFoil")?.jsonPrimitive?.content?.toIntOrNull() ?: 0
             val copies = when {
@@ -106,8 +107,8 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
                 nonFoil > 0 -> "$nonFoil copies"
                 else -> "not in collection"
             }
-            val imageUrl = card["imageUris"]?.jsonObject?.get("normal")?.jsonPrimitive?.content ?: ""
-            val priceUsd = card["prices"]?.jsonObject?.get("usd")?.jsonPrimitive?.content ?: ""
+            val imageUrl = (card["imageUris"] as? JsonObject)?.get("normal")?.jsonPrimitive?.content ?: ""
+            val priceUsd = (card["prices"] as? JsonObject)?.get("usd")?.jsonPrimitive?.content ?: ""
             val ptStr = if (power != null && toughness != null) "$power/$toughness" else "-"
             buildString {
                 append("${i + 1}. $name ($setCode #$collectorNumber) [$rarityVal]")

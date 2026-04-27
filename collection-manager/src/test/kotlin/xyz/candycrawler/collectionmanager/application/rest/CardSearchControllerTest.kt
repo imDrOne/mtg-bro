@@ -3,25 +3,23 @@ package xyz.candycrawler.collectionmanager.application.rest
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.security.oauth2.jwt.Jwt
+import xyz.candycrawler.collectionmanager.application.service.CardSearchService
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
-import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
-import xyz.candycrawler.collectionmanager.domain.card.repository.CardRepository
-import xyz.candycrawler.collectionmanager.domain.collection.model.CollectionEntry
-import xyz.candycrawler.collectionmanager.domain.collection.repository.CollectionEntryRepository
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollection
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollectionPage
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 
 class CardSearchControllerTest {
 
-    private val cardRepository: CardRepository = mock()
-    private val collectionEntryRepository: CollectionEntryRepository = mock()
-    private val controller = CardSearchController(cardRepository, collectionEntryRepository)
+    private val cardSearchService: CardSearchService = mock()
+    private val controller = CardSearchController(cardSearchService)
 
     private val userId = 1L
     private val jwt: Jwt = mock<Jwt>().also {
@@ -30,22 +28,15 @@ class CardSearchControllerTest {
 
     @Test
     fun `searchCards builds criteria from params and returns paginated response`() {
-        val card = buildCard(id = 1L, name = "Lightning Bolt")
-        val page = CardPage(
-            cards = listOf(card),
-            totalCards = 1L,
-            hasMore = false,
-            page = 1,
-            pageSize = 20,
-        )
-        whenever(cardRepository.search(argThat { criteria ->
+        val card = buildCardWithCollection(id = 1L, name = "Lightning Bolt")
+        val page = buildPage(listOf(card), totalCards = 1L)
+        whenever(cardSearchService.searchByUser(eq(userId), argThat { criteria ->
             criteria.query == "bolt" &&
                 criteria.setCode == "neo" &&
                 criteria.rarity == "rare" &&
                 criteria.page == 1 &&
                 criteria.pageSize == 20
         })).thenReturn(page)
-        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(1L))).thenReturn(emptyList())
 
         val response = controller.searchCards(
             jwt = jwt,
@@ -73,29 +64,27 @@ class CardSearchControllerTest {
 
     @Test
     fun `searchCards coerces page to at least 1`() {
-        whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.page == 1 }))
-            .thenReturn(CardPage(emptyList(), 0L, false, 1, 20))
-        whenever(collectionEntryRepository.findByUserAndCardIds(userId, emptyList())).thenReturn(emptyList())
+        whenever(cardSearchService.searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.page == 1 }))
+            .thenReturn(buildPage(emptyList(), totalCards = 0L))
 
         controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
 
-        verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.page == 1 })
+        org.mockito.kotlin.verify(cardSearchService).searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.page == 1 })
     }
 
     @Test
     fun `searchCards coerces pageSize to max 175`() {
-        whenever(cardRepository.search(argThat { c: CardSearchCriteria -> c.pageSize == 175 }))
-            .thenReturn(CardPage(emptyList(), 0L, false, 1, 175))
-        whenever(collectionEntryRepository.findByUserAndCardIds(userId, emptyList())).thenReturn(emptyList())
+        whenever(cardSearchService.searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.pageSize == 175 }))
+            .thenReturn(buildPage(emptyList(), totalCards = 0L, pageSize = 175))
 
         controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
 
-        verify(cardRepository).search(argThat { c: CardSearchCriteria -> c.pageSize == 175 })
+        org.mockito.kotlin.verify(cardSearchService).searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.pageSize == 175 })
     }
 
     @Test
     fun `searchCards maps card to response with imageUris and prices`() {
-        val card = buildCard(
+        val card = buildCardWithCollection(
             id = 2L,
             name = "Test",
             imageUriSmall = "https://small",
@@ -103,9 +92,7 @@ class CardSearchControllerTest {
             priceUsd = "1.50",
             priceEur = "1.20",
         )
-        whenever(cardRepository.search(any()))
-            .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
-        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(2L))).thenReturn(emptyList())
+        whenever(cardSearchService.searchByUser(eq(userId), any())).thenReturn(buildPage(listOf(card), 1L))
 
         val response = controller.searchCards(jwt = jwt, q = "test", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
 
@@ -117,16 +104,9 @@ class CardSearchControllerTest {
     }
 
     @Test
-    fun `searchCards includes collection info when card is in collection`() {
-        val card = buildCard(id = 3L, name = "Bolt")
-        whenever(cardRepository.search(any()))
-            .thenReturn(CardPage(listOf(card), 1L, false, 1, 20))
-        whenever(collectionEntryRepository.findByUserAndCardIds(userId, listOf(3L))).thenReturn(
-            listOf(
-                CollectionEntry(userId = userId, cardId = 3L, quantity = 2, foil = false),
-                CollectionEntry(userId = userId, cardId = 3L, quantity = 1, foil = true),
-            ),
-        )
+    fun `searchCards includes collection info`() {
+        val card = buildCardWithCollection(id = 3L, name = "Bolt", nonFoil = 2, foil = 1)
+        whenever(cardSearchService.searchByUser(eq(userId), any())).thenReturn(buildPage(listOf(card), 1L))
 
         val response = controller.searchCards(jwt = jwt, q = "bolt", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
 
@@ -135,6 +115,34 @@ class CardSearchControllerTest {
         assertEquals(1, dto.collection?.quantityFoil)
         assertEquals(3, dto.collection?.totalQuantity)
     }
+
+    private fun buildPage(
+        cards: List<CardWithCollection>,
+        totalCards: Long,
+        page: Int = 1,
+        pageSize: Int = 20,
+    ) = CardWithCollectionPage(
+        cards = cards,
+        totalCards = totalCards,
+        hasMore = false,
+        page = page,
+        pageSize = pageSize,
+    )
+
+    private fun buildCardWithCollection(
+        id: Long? = null,
+        name: String = "Card",
+        nonFoil: Int = 0,
+        foil: Int = 0,
+        imageUriSmall: String? = null,
+        imageUriNormal: String? = null,
+        priceUsd: String? = null,
+        priceEur: String? = null,
+    ) = CardWithCollection(
+        card = buildCard(id, name, imageUriSmall, imageUriNormal, priceUsd, priceEur),
+        quantityNonFoil = nonFoil,
+        quantityFoil = foil,
+    )
 
     private fun buildCard(
         id: Long? = null,

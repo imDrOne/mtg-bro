@@ -3,6 +3,7 @@ package xyz.candycrawler.collectionmanager.domain.card.repository
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
 import xyz.candycrawler.collectionmanager.domain.card.model.CardPage
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSearchCriteria
+import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollectionPage
 
 interface CardRepository {
     fun saveAll(cards: List<Card>): List<Card>
@@ -12,5 +13,6 @@ interface CardRepository {
     fun findBySetAndCollectorPairs(pairs: List<Pair<String, String>>): List<Card>
     fun findBySetCodeAndCollectorNumber(setCode: String, collectorNumber: String): Card?
     fun search(criteria: CardSearchCriteria): CardPage
+    fun searchByUser(userId: Long, criteria: CardSearchCriteria): CardWithCollectionPage
     fun findByTribe(userId: Long, tribe: String): List<Card>
 }
