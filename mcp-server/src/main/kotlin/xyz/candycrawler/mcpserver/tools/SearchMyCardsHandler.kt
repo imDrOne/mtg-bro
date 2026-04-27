@@ -75,6 +75,12 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
             parameter("page_size", pageSize.coerceIn(1, 175))
         }.body<String>()
 
+        if (response.isBlank()) {
+            return CallToolResult(
+                content = listOf(TextContent("Error: collection-manager returned empty response. Token may be missing user_id claim — re-authenticate and retry.")),
+                isError = true,
+            )
+        }
         val json = Json.parseToJsonElement(response).jsonObject
         val data = json["data"]?.jsonArray ?: emptyList()
         val totalCards = json["totalCards"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L

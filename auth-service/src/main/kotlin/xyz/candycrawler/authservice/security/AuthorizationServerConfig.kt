@@ -122,6 +122,7 @@ class AuthorizationServerConfig(
                 val email = context.getPrincipal<Authentication>().name
                 val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
                 val roles = userRoleRepository.findByUserId(user.id!!)
+                context.claims.claim("user_id", user.id)
                 context.claims.claim("roles", roles.map { it.name })
                 val permissions = apiPermissionRepository.findByRoles(roles)
                 context.claims.claim("permissions", permissions.map { it.name })
