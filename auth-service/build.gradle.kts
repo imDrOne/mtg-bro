@@ -13,6 +13,7 @@ configurations.all {
 val springDocWebMVCVersion: String by project
 
 dependencies {
+    implementation(project(":common"))
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-authorization-server")
     runtimeOnly("commons-logging:commons-logging:1.3.5")
