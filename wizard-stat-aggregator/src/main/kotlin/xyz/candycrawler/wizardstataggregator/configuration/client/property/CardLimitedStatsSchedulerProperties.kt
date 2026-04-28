@@ -6,5 +6,4 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class CardLimitedStatsSchedulerProperties(
     val enabled: Boolean = false,
     val cron: String = "@daily",
-    val setCode: String,
 )

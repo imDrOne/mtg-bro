@@ -6,19 +6,44 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import xyz.candycrawler.wizardstataggregator.application.service.CardLimitedStatsCollectionService
-import xyz.candycrawler.wizardstataggregator.configuration.client.property.CardLimitedStatsSchedulerProperties
+import xyz.candycrawler.wizardstataggregator.application.service.TrackedLimitedStatSetService
 
 @Component
 @ConditionalOnProperty(name = ["scheduler.card-limited-stats.enabled"], havingValue = "true")
 class CardLimitedStatsScheduler(
     private val collectionService: CardLimitedStatsCollectionService,
-    private val props: CardLimitedStatsSchedulerProperties,
+    private val trackedSetService: TrackedLimitedStatSetService,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "\${scheduler.card-limited-stats.cron}")
     fun collect() {
-        log.info("Scheduler ${javaClass.simpleName} triggered for set=${props.setCode}")
-        runBlocking { collectionService.collectAll(props.setCode) }
+        val activeSets = trackedSetService.findActive()
+        if (activeSets.isEmpty()) {
+            log.info("Scheduler {} triggered with no active tracked sets", javaClass.simpleName)
+            return
+        }
+
+        log.info(
+            "Scheduler {} triggered for {} active tracked sets: {}",
+            javaClass.simpleName,
+            activeSets.size,
+            activeSets.joinToString { it.setCode },
+        )
+
+        runBlocking {
+            activeSets.forEach { trackedSet ->
+                try {
+                    collectionService.collectAll(trackedSet.setCode)
+                } catch (e: Exception) {
+                    log.error(
+                        "Failed scheduled card limited stats collection for set={}: {}",
+                        trackedSet.setCode,
+                        e.message,
+                        e,
+                    )
+                }
+            }
+        }
     }
 }
