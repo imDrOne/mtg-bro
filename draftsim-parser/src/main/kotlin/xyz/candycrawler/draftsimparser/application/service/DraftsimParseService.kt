@@ -33,6 +33,7 @@ class DraftsimParseService(
     private val articleRepository: ArticleRepository,
     private val wpApiClient: DraftsimWpApiClient,
     private val eventPublisher: ApplicationEventPublisher,
+    private val parseAlertService: ParseAlertService,
     @Value("\${infrastructure.analysis.auto-publish}") private val autoPublish: Boolean,
 ) : DisposableBean {
 
@@ -57,6 +58,7 @@ class DraftsimParseService(
 
         scope.launch {
             try {
+                parseAlertService.parsingStarted(taskId, keyword)
                 runParseTask(taskId, keyword)
             } catch (e: Exception) {
                 log.error("Parse task {} failed", taskId, e)
@@ -69,6 +71,7 @@ class DraftsimParseService(
                         )
                     }
                 }
+                parseAlertService.parseTaskFailed(taskId, keyword, e)
             }
         }
 
@@ -104,11 +107,16 @@ class DraftsimParseService(
                 val chunkResults = chunk.map { post ->
                     async {
                         semaphore.withPermit {
-                            processPost(taskId, post)
+                            runCatching {
+                                processPost(taskId, post)
+                            }.onFailure {
+                                log.error("Task {}: article post id={} failed", taskId, post.id, it)
+                                parseAlertService.articleParsingFailed(taskId, keyword, post.id, post.link, it)
+                            }.getOrNull()
                         }
                     }
                 }.awaitAll()
-                savedArticles.addAll(chunkResults)
+                savedArticles.addAll(chunkResults.filterNotNull())
                 parseTaskRepository.incrementProcessedArticles(taskId, chunk.size)
             }
         }
@@ -142,6 +150,7 @@ class DraftsimParseService(
             htmlContent = post.content.rendered,
             textContent = textContent,
             analyzedText = null,
+            keywords = emptyList(),
             favorite = false,
             errorMsg = null,
             analyzStartedAt = null,

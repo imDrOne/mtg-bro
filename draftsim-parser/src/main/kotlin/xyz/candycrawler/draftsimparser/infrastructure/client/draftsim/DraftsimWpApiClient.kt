@@ -1,13 +1,16 @@
 package xyz.candycrawler.draftsimparser.infrastructure.client.draftsim
 
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import xyz.candycrawler.draftsimparser.infrastructure.client.draftsim.dto.WpPostResponse
 
 @Component
-class DraftsimWpApiClient(private val draftsimRestClient: RestClient) {
+class DraftsimWpApiClient(
+    @Qualifier("draftsimRestClient") private val draftsimRestClient: RestClient,
+) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

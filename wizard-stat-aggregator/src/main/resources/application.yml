@@ -33,6 +33,13 @@ infrastructure:
           initial-delay-ms: ${HTTP_CLIENT_LANDS17_RETRY_INITIAL_DELAY_MS:500}
           multiplier: ${HTTP_CLIENT_LANDS17_RETRY_MULTIPLIER:2.0}
           max-delay-ms: ${HTTP_CLIENT_LANDS17_RETRY_MAX_DELAY_MS:5000}
+      telegram:
+        base-url: ${TELEGRAM_BASE_URL:https://api.telegram.org}
+  alerts:
+    telegram:
+      enabled: ${TELEGRAM_ALERTS_ENABLED:false}
+      bot-token: ${TELEGRAM_BOT_TOKEN:}
+      chat-id: ${TELEGRAM_CHAT_ID:}
 
 scheduler:
   card-limited-stats:

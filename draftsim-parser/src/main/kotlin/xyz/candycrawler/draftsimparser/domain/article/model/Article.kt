@@ -12,6 +12,7 @@ data class Article(
     val htmlContent: String?,
     val textContent: String?,
     val analyzedText: String?,
+    val keywords: List<String>,
     val favorite: Boolean,
     val errorMsg: String?,
     val analyzStartedAt: LocalDateTime?,

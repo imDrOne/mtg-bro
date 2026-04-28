@@ -37,7 +37,7 @@ class ArticleSqlMapper {
             this[ArticlesTable.textContent] = r.textContent
             this[ArticlesTable.publishedAt] = r.publishedAt
             this[ArticlesTable.fetchedAt] = r.fetchedAt
-            // favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
+            // keywords, favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
             // are NOT updated on conflict — preserved from existing row
         }.single().toRecord()
 
@@ -88,9 +88,11 @@ class ArticleSqlMapper {
             .where { ParseTaskArticlesTable.parseTaskId eq Uuid.parse(taskId.toString()) }
             .map { it.toRecord() }
 
-    internal fun updateAnalysis(id: Long, record: ArticleRecord) {
+    internal fun updateMutableFields(id: Long, record: ArticleRecord) {
         ArticlesTable.update({ ArticlesTable.id eq id }) {
             it[analyzedText] = record.analyzedText
+            it[keywords] = record.keywords
+            it[favorite] = record.favorite
             it[errorMsg] = record.errorMsg
             it[analyzStartedAt] = record.analyzStartedAt
             it[analyzEndedAt] = record.analyzEndedAt
@@ -113,6 +115,7 @@ class ArticleSqlMapper {
         htmlContent = this[ArticlesTable.htmlContent],
         textContent = this[ArticlesTable.textContent],
         analyzedText = this[ArticlesTable.analyzedText],
+        keywords = this[ArticlesTable.keywords],
         favorite = this[ArticlesTable.favorite],
         errorMsg = this[ArticlesTable.errorMsg],
         analyzStartedAt = this[ArticlesTable.analyzStartedAt],

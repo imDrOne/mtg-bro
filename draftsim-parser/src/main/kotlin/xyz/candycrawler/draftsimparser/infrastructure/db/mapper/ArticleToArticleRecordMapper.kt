@@ -17,6 +17,7 @@ class ArticleToArticleRecordMapper : Function<Article, ArticleRecord> {
         htmlContent = article.htmlContent,
         textContent = article.textContent,
         analyzedText = article.analyzedText,
+        keywords = article.keywords,
         favorite = article.favorite,
         errorMsg = article.errorMsg,
         analyzStartedAt = article.analyzStartedAt,
