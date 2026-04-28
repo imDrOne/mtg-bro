@@ -27,6 +27,7 @@ class ArticleSqlMapper {
         ArticlesTable.batchUpsert(
             listOf(record),
             keys = arrayOf(ArticlesTable.externalId),
+            onUpdateExclude = listOf(ArticlesTable.keywords),
             shouldReturnGeneratedValues = true,
         ) { r ->
             this[ArticlesTable.externalId] = r.externalId
@@ -37,7 +38,8 @@ class ArticleSqlMapper {
             this[ArticlesTable.textContent] = r.textContent
             this[ArticlesTable.publishedAt] = r.publishedAt
             this[ArticlesTable.fetchedAt] = r.fetchedAt
-            // keywords, favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
+            this[ArticlesTable.keywords] = r.keywords
+            // favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
             // are NOT updated on conflict — preserved from existing row
         }.single().toRecord()
 
