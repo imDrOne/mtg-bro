@@ -34,6 +34,7 @@ class DraftsimParseService(
     private val wpApiClient: DraftsimWpApiClient,
     private val eventPublisher: ApplicationEventPublisher,
     private val parseAlertService: ParseAlertService,
+    private val articleKeywordExtractor: ArticleKeywordExtractor,
     @Value("\${infrastructure.analysis.auto-publish}") private val autoPublish: Boolean,
 ) : DisposableBean {
 
@@ -159,8 +160,10 @@ class DraftsimParseService(
             fetchedAt = LocalDateTime.now(),
         )
         val saved = articleRepository.save(article)
-        articleRepository.saveTaskArticleLink(taskId, saved.id!!)
-        return saved
+        val savedArticleId = saved.id!!
+        articleRepository.saveTaskArticleLink(taskId, savedArticleId)
+        val keywords = articleKeywordExtractor.extract(saved.textContent)
+        return articleRepository.update(savedArticleId) { it.copy(keywords = keywords) }
     }
 
     override fun destroy() {
