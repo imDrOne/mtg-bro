@@ -103,7 +103,6 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 | `DB_NAME` | `wizard_stat_db` |
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
-| `SCHEDULER_CARD_LIMITED_STATS_SET_CODE` | Код сета для агрегации, например `BLB` (дефолт `DMU`) |
 | `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` **(обязательно)** |
 
 #### `production-mcp-server`

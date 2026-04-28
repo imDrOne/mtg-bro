@@ -38,4 +38,3 @@ scheduler:
   card-limited-stats:
     enabled: ${SCHEDULER_CARD_LIMITED_STATS_ENABLED:true}
     cron: ${SCHEDULER_CARD_LIMITED_STATS_CRON:@daily}
-    set-code: ${SCHEDULER_CARD_LIMITED_STATS_SET_CODE:DMU}

@@ -25,6 +25,7 @@ class SecurityConfig {
                     "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
                     "/api-docs", "/api-docs/**"
                 ).permitAll()
+                .requestMatchers("/api/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         }
         .oauth2ResourceServer { it.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()) } }
