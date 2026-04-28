@@ -6,10 +6,12 @@ data class ArticleAnalysisResponse(
     val id: Long,
     val title: String,
     val analyzedText: String?,
+    val keywords: List<String>,
 )
 
 fun Article.toAnalysisResponse() = ArticleAnalysisResponse(
     id = id!!,
     title = title,
     analyzedText = analyzedText,
+    keywords = keywords,
 )

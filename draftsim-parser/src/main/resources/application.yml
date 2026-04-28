@@ -27,9 +27,16 @@ infrastructure:
     client:
       draftsim:
         base-url: ${DRAFTSIM_BASE_URL:https://draftsim.com}
+      telegram:
+        base-url: ${TELEGRAM_BASE_URL:https://api.telegram.org}
   llm:
     client: ${LLM_CLIENT:CLAUDE}
     anthropic:
       api-key: ${ANTHROPIC_API_KEY:}
   analysis:
     auto-publish: ${ANALYSIS_AUTO_PUBLISH:false}
+  alerts:
+    telegram:
+      enabled: ${TELEGRAM_ALERTS_ENABLED:false}
+      bot-token: ${TELEGRAM_BOT_TOKEN:}
+      chat-id: ${TELEGRAM_CHAT_ID:}
