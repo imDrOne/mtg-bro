@@ -38,6 +38,18 @@ class ArticleKeywordExtractorTest {
     }
 
     @Test
+    fun `removes wordpress replaced marker regardless of case`() {
+        val result = extractor.extract(
+            "Station REPLACED station replaced RePlAcEd draft strategy",
+            limit = 20,
+        )
+
+        assertTrue("replaced" !in result)
+        assertTrue(result.none { "replaced" in it })
+        assertTrue("station" in result)
+    }
+
+    @Test
     fun `respects result limit`() {
         val text = (1..30).joinToString(" ") { "keyword$it" }
 

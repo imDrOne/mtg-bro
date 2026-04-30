@@ -11,9 +11,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisConsumer
 import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisMessage
 import xyz.candycrawler.draftsimparser.application.port.LlmClient
+import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 import java.time.LocalDateTime
@@ -25,6 +28,8 @@ class ArticleAnalysisService(
     private val llmClient: LlmClient,
     private val articleRepository: ArticleRepository,
     private val queryArticleRepository: QueryArticleRepository,
+    private val promptBuilder: ArticleAnalysisPromptBuilder,
+    private val objectMapper: ObjectMapper,
 ) : ArticleAnalysisConsumer {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -50,25 +55,34 @@ class ArticleAnalysisService(
         articleRepository.update(message.articleId) { it.copy(analyzStartedAt = LocalDateTime.now()) }
 
         runCatching {
+            val classification = classify(article)
+            if (classification.processingProfile == ProcessingProfile.IGNORE) {
+                articleRepository.update(message.articleId) {
+                    it.copy(analyzedText = buildAnalysisJson(article, classification, emptyList()), analyzEndedAt = LocalDateTime.now())
+                }
+                log.info("Article id={}: classified as ignore, skipping paragraph analysis", message.articleId)
+                return@runCatching
+            }
+
             val results = coroutineScope {
                 paragraphs.map { paragraph ->
                     async(Dispatchers.IO) {
                         semaphore.withPermit {
                             runCatching {
-                                llmClient.complete(buildPrompt(paragraph, article.slug, article.url))
+                                llmClient.complete(promptBuilder.buildAnalysisPrompt(paragraph, article, classification))
                             }.getOrNull()
                         }
                     }
                 }.awaitAll()
             }
 
-            val valid = results.filterNotNull().filter { it.isNotBlank() && it != "null" }
-            val json = if (valid.isNotEmpty()) "[${valid.joinToString(",")}]" else null
+            val insights = results.mapNotNull { parseInsight(it) }
+            val json = buildAnalysisJson(article, classification, insights)
 
             articleRepository.update(message.articleId) {
                 it.copy(analyzedText = json, analyzEndedAt = LocalDateTime.now())
             }
-            log.info("Article id={}: analysis done, {} card entries saved", message.articleId, valid.size)
+            log.info("Article id={}: analysis done, {} insight entries saved", message.articleId, insights.size)
         }.onFailure { ex ->
             log.error("Article id={}: analysis failed", message.articleId, ex)
             articleRepository.update(message.articleId) {
@@ -77,35 +91,58 @@ class ArticleAnalysisService(
         }
     }
 
-    private fun buildPrompt(paragraph: String, slug: String, url: String): String = """
-        Extract MTG knowledge from this article paragraph. The paragraph may be about a specific card, an archetype, a set mechanic, or a draft strategy.
-        Return ONLY valid JSON, no other text. Return null (not an object) if the paragraph contains no useful MTG knowledge.
-
-        Article URL: $url
-        Article slug: $slug
-        Paragraph: $paragraph
-
-        Return this JSON structure:
-        {
-          "card": "exact card name, or null if paragraph is not about a specific card",
-          "archetype": "archetype or mechanic name (e.g. 'UW Control', 'Convoke', 'Domain Ramp', 'Aggro') or null if not applicable",
-          "set": "set code if determinable (e.g. FDN, BLB, DSK), else null",
-          "chunk": "1-3 sentence expert summary: why this card/archetype is good/bad, key synergies, or how the mechanic works in context",
-          "tags": ["array", "of", "relevant", "tags"],
-          "combo_cards": ["cards that combo with this one, if mentioned, else empty array"],
-          "tier": "for cards: bomb/staple/roleplayer/bulk; for archetypes: S/A/B/C/D; null if unclear",
-          "format_notes": "format-specific observations (Limited, Standard, Pioneer, etc.) or null"
+    private suspend fun classify(article: Article): ArticleAnalysisClassification {
+        val response = llmClient.complete(promptBuilder.buildClassificationPrompt(article))
+        val json = response.cleanJsonResponse() ?: return ArticleAnalysisClassification.DEFAULT
+        return runCatching {
+            val node = objectMapper.readTree(json)
+            val articleType = ArticleType.from(node["article_type"]?.asString())
+            ArticleAnalysisClassification(
+                articleType = articleType,
+                processingProfile = ProcessingProfile.from(node["processing_profile"]?.asString(), articleType),
+                reason = node["reason"]?.asString(),
+                confidence = node["confidence"]?.takeIf { it.isNumber }?.asDouble(),
+            )
+        }.getOrElse {
+            log.warn("Article id={}: failed to parse classification response", article.id, it)
+            ArticleAnalysisClassification.DEFAULT
         }
+    }
 
-        Tags can include:
-        - Card role: combo, staple, bomb, removal, ramp, draw, counter, tutor, finisher, enabler
-        - Strategy: aggro, control, midrange, reanimator, tempo, prison, storm
-        - Tribe/theme: tribal, vampire, zombie, goblin, elf, artifact, enchantment, graveyard
-        - Draft: limited_bomb, limited_bulk, late_pick, early_pick, archetype_payoff, filler
-        - Meta: budget, expensive, new_card, reprint, sleeper, overrated, underrated
-        - Mechanic: convoke, discover, surveil, ward, populate, proliferate (use actual mechanic name)
-        - Archetype tag: archetype (always include when "archetype" field is non-null)
+    private fun parseInsight(response: String?): JsonNode? {
+        val json = response.cleanJsonResponse() ?: return null
+        return runCatching {
+            objectMapper.readTree(json).takeUnless { it.isNull }
+        }.getOrNull()
+    }
 
-        Return null if the paragraph is introductory text, navigation, ads, or contains no actionable MTG knowledge.
-    """.trimIndent()
+    private fun buildAnalysisJson(
+        article: Article,
+        classification: ArticleAnalysisClassification,
+        insights: List<JsonNode>,
+    ): String =
+        objectMapper.writeValueAsString(
+            mapOf(
+                "schema_version" to 2,
+                "article_type" to classification.articleType.name.lowercase(),
+                "processing_profile" to classification.processingProfile.name.lowercase(),
+                "classification" to mapOf(
+                    "reason" to classification.reason,
+                    "confidence" to classification.confidence,
+                ),
+                "keywords" to article.keywords,
+                "insights" to insights,
+            )
+        )
+
+    private fun String?.cleanJsonResponse(): String? {
+        val trimmed = this?.trim().orEmpty()
+        if (trimmed.isBlank() || trimmed == "null") return null
+        return trimmed
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
+            .trim()
+            .takeIf { it.isNotBlank() && it != "null" }
+    }
 }

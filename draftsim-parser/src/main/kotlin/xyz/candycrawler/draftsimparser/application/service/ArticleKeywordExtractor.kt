@@ -9,7 +9,7 @@ class ArticleKeywordExtractor {
     fun extract(text: String?, limit: Int = DEFAULT_LIMIT): List<String> {
         if (text.isNullOrBlank() || limit <= 0) return emptyList()
 
-        val tokens = TOKEN_REGEX.findAll(text.lowercase())
+        val tokens = TOKEN_REGEX.findAll(removeWordPressReplacementMarker(text).lowercase())
             .map { it.value.trim('\'') }
             .filter { it.length >= MIN_TOKEN_LENGTH && it !in STOP_WORDS }
             .toList()
@@ -42,10 +42,14 @@ class ArticleKeywordExtractor {
         return count * phraseBoost * lengthBoost
     }
 
+    private fun removeWordPressReplacementMarker(text: String): String =
+        WORDPRESS_REPLACED_REGEX.replace(text, " ")
+
     companion object {
         const val DEFAULT_LIMIT = 20
         private const val MIN_TOKEN_LENGTH = 3
         private val TOKEN_REGEX = Regex("[a-z][a-z0-9']+")
+        private val WORDPRESS_REPLACED_REGEX = Regex("\\bREPLACED\\b", RegexOption.IGNORE_CASE)
         private val STOP_WORDS = setOf(
             "about", "above", "after", "again", "against", "also", "although", "always", "among",
             "and", "another", "any", "are", "around", "because", "been", "before", "being", "below",
@@ -56,7 +60,8 @@ class ArticleKeywordExtractor {
             "our", "out", "over", "own", "same", "she", "should", "since", "some", "such", "than",
             "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through",
             "too", "under", "until", "very", "was", "way", "were", "what", "when", "where", "whether",
-            "which", "while", "who", "why", "will", "with", "within", "without", "would", "you", "your"
+            "which", "while", "who", "why", "will", "with", "within", "without", "would", "you", "your",
+            "replaced"
         )
     }
 }
