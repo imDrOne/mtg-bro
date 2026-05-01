@@ -20,6 +20,8 @@ import tools.jackson.databind.ObjectMapper
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorDocument
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorStore
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
+import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 @Service
 class ArticleVectorIndexService(
@@ -75,7 +77,7 @@ class ArticleVectorIndexService(
         return insights.mapIndexedNotNull { index, insight ->
             val content = buildContent(article, insight).takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
             ArticleVectorDocument(
-                id = "draftsim-article-${articleId}-insight-$index",
+                id = buildDocumentId(articleId, index),
                 content = content,
                 metadata = buildMetadata(article, root, insight, index),
             )
@@ -125,6 +127,11 @@ class ArticleVectorIndexService(
 }
 
 private const val MAX_CONCURRENT_VECTOR_INDEXES = 3
+
+private fun buildDocumentId(articleId: Long, insightIndex: Int): String =
+    UUID.nameUUIDFromBytes(
+        "draftsim-article-$articleId-insight-$insightIndex".toByteArray(StandardCharsets.UTF_8)
+    ).toString()
 
 private fun JsonNode.stringValues(): List<String> =
     if (isArray) mapNotNull { it.asString()?.takeIf(String::isNotBlank) } else emptyList()

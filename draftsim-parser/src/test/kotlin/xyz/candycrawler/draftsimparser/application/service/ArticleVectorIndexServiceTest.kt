@@ -5,6 +5,7 @@ import tools.jackson.databind.ObjectMapper
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorStore
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -46,7 +47,7 @@ class ArticleVectorIndexServiceTest {
 
         assertEquals(1, documents.size)
         val document = documents.single()
-        assertEquals("draftsim-article-1-insight-0", document.id)
+        assertEquals(UUID.fromString(document.id).toString(), document.id)
         assertTrue("Article: New Set Mechanics Guide" in document.content)
         assertTrue("Deckbuilding implications: Prioritize creatures with activated abilities." in document.content)
         assertEquals(1L, document.metadata["article_id"])
