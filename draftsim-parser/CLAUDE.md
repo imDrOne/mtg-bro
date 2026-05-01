@@ -55,8 +55,9 @@ Same hexagonal pattern as other Spring modules:
 | `QDRANT_HOST` | `localhost` | No | Qdrant host |
 | `QDRANT_PORT` | `6334` | No | Qdrant gRPC port |
 | `QDRANT_API_KEY` | — | No | Qdrant API key if enabled |
-| `QDRANT_COLLECTION` | `draftsim_article_insights` | No | Vector collection for article insights |
-| `QDRANT_INITIALIZE_SCHEMA` | `false` | No | Whether Spring AI should initialize vector schema |
+| `QDRANT_COLLECTION` | `draftsim_article_insights_v1` | No | Versioned vector collection for article insights |
+| `QDRANT_VECTOR_SIZE` | `1536` | No | Vector dimension used by `scripts/qdrant-migrate.py` |
+| `QDRANT_DISTANCE` | `Cosine` | No | Vector distance used by `scripts/qdrant-migrate.py` |
 | `ARTICLE_VECTOR_INDEX_ENABLED` | `true` | No | Enable Qdrant indexing and semantic search |
 | `ARTICLE_VECTOR_SEARCH_CACHE_MAX_SIZE` | `500` | No | Max cached semantic search result sets |
 | `ARTICLE_VECTOR_SEARCH_CACHE_TTL` | `PT10M` | No | Semantic search cache TTL |
@@ -87,6 +88,21 @@ Migrations: `src/main/resources/db/changelog/migrations/`
 ./gradlew :draftsim-parser:createMigration -PsqlName=add_new_table
 ./gradlew :draftsim-parser:update
 ```
+
+## Qdrant Schema
+
+Spring AI runtime schema initialization is disabled. Create or validate the Qdrant collection explicitly:
+
+```bash
+QDRANT_URL=http://localhost:6333 \
+QDRANT_COLLECTION=draftsim_article_insights_v1 \
+QDRANT_VECTOR_SIZE=1536 \
+QDRANT_DISTANCE=Cosine \
+AI_EMBEDDING_MODEL=text-embedding-3-small \
+python3 scripts/qdrant-migrate.py
+```
+
+Do not change embedding dimensions in-place. If the embedding model changes dimension, create a new versioned collection such as `draftsim_article_insights_v2` and reindex articles.
 
 ## Integration Tests
 

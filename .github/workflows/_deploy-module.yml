@@ -99,6 +99,16 @@ jobs:
             /tmp/module.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/docker/.${{ inputs.module }}.env
 
+      - name: Copy Qdrant migration script to server
+        if: ${{ inputs.module == 'draftsim-parser' }}
+        run: |
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'mkdir -p /opt/mtg-bro/scripts'
+          scp -i /tmp/ssh_key -o StrictHostKeyChecking=no \
+            scripts/qdrant-migrate.py \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/scripts/qdrant-migrate.py
+
       - name: Run migrations on server
         uses: appleboy/ssh-action@v1
         with:
@@ -125,6 +135,29 @@ jobs:
           GHCR_OWNER: ${{ github.repository_owner }}
           MODULE: ${{ inputs.module }}
           DB_NAME: ${{ inputs.db_name }}
+
+      - name: Run Qdrant migrations on server
+        if: ${{ inputs.module == 'draftsim-parser' }}
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key_path: /tmp/ssh_key
+          envs: MODULE
+          script: |
+            set -a; source /opt/mtg-bro/docker/.$MODULE.env; set +a
+            cd /opt/mtg-bro/docker
+            GHCR_OWNER=unused docker compose -f docker-compose.prod.yml up -d qdrant
+            cd /opt/mtg-bro
+            QDRANT_URL="${QDRANT_URL:-http://127.0.0.1:6333}" \
+            QDRANT_COLLECTION="${QDRANT_COLLECTION:-draftsim_article_insights_v1}" \
+            QDRANT_VECTOR_SIZE="${QDRANT_VECTOR_SIZE:-1536}" \
+            QDRANT_DISTANCE="${QDRANT_DISTANCE:-Cosine}" \
+            AI_EMBEDDING_MODEL="${AI_EMBEDDING_MODEL:-text-embedding-3-small}" \
+            QDRANT_API_KEY="${QDRANT_API_KEY:-}" \
+            python3 scripts/qdrant-migrate.py
+        env:
+          MODULE: ${{ inputs.module }}
 
   deploy:
     needs: [build-and-push, run-migrations]

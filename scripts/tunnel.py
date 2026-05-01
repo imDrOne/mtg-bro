@@ -42,8 +42,11 @@ STYLE = Style([
 # remote_host is resolved from the SSH server's perspective.
 # Containers without host ports are reached via Docker DNS (container name).
 # postgres is bound to 127.0.0.1:5433 on the server host itself.
+# qdrant exposes HTTP on 6333 and gRPC on 6334 on the server host.
 SERVICES = [
     ("postgres",               5433, "127.0.0.1", 5433),
+    ("qdrant-http",            6333, "127.0.0.1", 6333),
+    ("qdrant-grpc",            6334, "127.0.0.1", 6334),
     ("collection-manager",     8080, "127.0.0.1", 8080),
     ("draftsim-parser",        8081, "127.0.0.1", 8081),
     ("wizard-stat-aggregator", 8082, "127.0.0.1", 8082),

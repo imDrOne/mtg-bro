@@ -65,7 +65,7 @@ services:
       ARTICLE_VECTOR_INDEX_ENABLED: ${ARTICLE_VECTOR_INDEX_ENABLED:-false}
       QDRANT_HOST: qdrant
       QDRANT_PORT: 6334
-      QDRANT_INITIALIZE_SCHEMA: ${QDRANT_INITIALIZE_SCHEMA:-true}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-draftsim_article_insights_v1}
     ports:
       - "8081:8080"
 

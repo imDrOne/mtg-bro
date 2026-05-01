@@ -10,7 +10,8 @@ spring:
       embedding: ${AI_EMBEDDING_PROVIDER:none}
     vectorstore:
       qdrant:
-        initialize-schema: ${QDRANT_INITIALIZE_SCHEMA:false}
+        collection-name: ${QDRANT_COLLECTION:draftsim_article_insights_v1}
+        initialize-schema: false
 
 infrastructure:
   llm:

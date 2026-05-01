@@ -21,9 +21,9 @@ spring:
         host: ${QDRANT_HOST:localhost}
         port: ${QDRANT_PORT:6334}
         api-key: ${QDRANT_API_KEY:}
-        collection-name: ${QDRANT_COLLECTION:draftsim_article_insights}
+        collection-name: ${QDRANT_COLLECTION:draftsim_article_insights_v1}
         use-tls: ${QDRANT_USE_TLS:false}
-        initialize-schema: ${QDRANT_INITIALIZE_SCHEMA:false}
+        initialize-schema: false
   security:
     oauth2:
       resourceserver:
