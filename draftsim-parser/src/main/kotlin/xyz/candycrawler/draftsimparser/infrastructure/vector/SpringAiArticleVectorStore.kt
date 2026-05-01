@@ -62,6 +62,6 @@ class SpringAiArticleVectorStore(
 private fun Any?.toLongOrNull(): Long? =
     when (this) {
         is Number -> this.toLong()
-        is String -> this.toLongOrNull()
+        is String -> runCatching { toLong() }.getOrNull()
         else -> null
     }
