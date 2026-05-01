@@ -14,6 +14,7 @@ class ArticleService(
     private val articleKeywordService: ArticleKeywordService,
     private val articleSemanticSearchService: ArticleSemanticSearchService,
     private val articleAnalysisPublisher: ArticleAnalysisPublisher,
+    private val articleVectorIndexService: ArticleVectorIndexService,
 ) {
 
     fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean?): ArticlePage =
@@ -44,6 +45,13 @@ class ArticleService(
     fun collectKeywords(ids: List<Long>): List<Article> {
         val articles = ids.map { id -> queryArticleRepository.findById(id) }
         articleKeywordService.collectAsync(ids)
+        return articles
+    }
+
+    fun reindexVectors(ids: List<Long>): List<Article> {
+        val articles = ids.map { id -> queryArticleRepository.findById(id) }
+        articleVectorIndexService.replaceIndexesAsync(articles)
+        articleSemanticSearchService.evictSearchCache()
         return articles
     }
 

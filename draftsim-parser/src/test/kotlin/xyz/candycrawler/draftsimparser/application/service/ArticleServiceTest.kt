@@ -19,12 +19,14 @@ class ArticleServiceTest {
     private val articleKeywordService = mock<ArticleKeywordService>()
     private val articleSemanticSearchService = mock<ArticleSemanticSearchService>()
     private val articleAnalysisPublisher = mock<ArticleAnalysisPublisher>()
+    private val articleVectorIndexService = mock<ArticleVectorIndexService>()
     private val service = ArticleService(
         queryArticleRepository = queryArticleRepository,
         articleRepository = articleRepository,
         articleKeywordService = articleKeywordService,
         articleSemanticSearchService = articleSemanticSearchService,
         articleAnalysisPublisher = articleAnalysisPublisher,
+        articleVectorIndexService = articleVectorIndexService,
     )
 
     @Test
@@ -47,6 +49,18 @@ class ArticleServiceTest {
 
         assertEquals(listOf(article), result)
         verify(articleKeywordService).collectAsync(eq(listOf(1)))
+    }
+
+    @Test
+    fun `reindexVectors returns current articles and starts async vector indexing`() {
+        val article = article(id = 1)
+        whenever(queryArticleRepository.findById(1)).thenReturn(article)
+
+        val result = service.reindexVectors(listOf(1))
+
+        assertEquals(listOf(article), result)
+        verify(articleVectorIndexService).replaceIndexesAsync(eq(listOf(article)))
+        verify(articleSemanticSearchService).evictSearchCache()
     }
 
     private fun article(id: Long) = Article(

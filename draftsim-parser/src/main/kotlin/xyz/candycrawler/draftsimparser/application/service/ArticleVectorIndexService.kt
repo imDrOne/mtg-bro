@@ -1,6 +1,17 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -15,9 +26,11 @@ class ArticleVectorIndexService(
     private val vectorStoreProvider: ObjectProvider<ArticleVectorStore>,
     private val objectMapper: ObjectMapper,
     @Value("\${infrastructure.vector-index.enabled}") private val enabled: Boolean,
-) {
+) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val semaphore = Semaphore(MAX_CONCURRENT_VECTOR_INDEXES)
 
     fun replaceIndex(article: Article) {
         if (!enabled) return
@@ -31,6 +44,24 @@ class ArticleVectorIndexService(
             vectorStore.replaceArticleDocuments(articleId, buildDocuments(article))
         }.onFailure { ex ->
             log.error("Article id={}: vector indexing failed", articleId, ex)
+        }
+    }
+
+    fun replaceIndexesAsync(articles: List<Article>) {
+        if (!enabled) return
+        val uniqueArticles = articles.distinctBy { it.id }
+        if (uniqueArticles.isEmpty()) return
+
+        scope.launch {
+            coroutineScope {
+                uniqueArticles.map { article ->
+                    async {
+                        semaphore.withPermit {
+                            replaceIndex(article)
+                        }
+                    }
+                }.awaitAll()
+            }
         }
     }
 
@@ -87,7 +118,13 @@ class ArticleVectorIndexService(
             put("archetypes", insight["archetypes"]?.stringValues().orEmpty())
             put("formats", insight["formats"]?.stringValues().orEmpty())
         }
+
+    override fun destroy() {
+        scope.cancel()
+    }
 }
+
+private const val MAX_CONCURRENT_VECTOR_INDEXES = 3
 
 private fun JsonNode.stringValues(): List<String> =
     if (isArray) mapNotNull { it.asString()?.takeIf(String::isNotBlank) } else emptyList()

@@ -4,13 +4,17 @@ import org.springframework.ai.document.Document
 import org.springframework.ai.vectorstore.SearchRequest
 import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorDocument
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorSearchMatch
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorStore
 
-@ConditionalOnBean(VectorStore::class)
+@ConditionalOnProperty(
+    prefix = "infrastructure.vector-index",
+    name = ["enabled"],
+    havingValue = "true",
+)
 @Component
 class SpringAiArticleVectorStore(
     private val vectorStore: VectorStore,

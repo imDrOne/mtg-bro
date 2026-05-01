@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.AnalyzeArticlesRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.CollectArticleKeywordsRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.GetArticlesByIdsRequest
+import xyz.candycrawler.draftsimparser.application.rest.dto.request.ReindexArticleVectorsRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.SemanticArticleSearchRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.UpdateArticleFavoriteRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.ArticleAnalysisResponse
@@ -77,6 +78,12 @@ class ArticleController(
     @ResponseStatus(HttpStatus.ACCEPTED)
     fun collectKeywords(@RequestBody request: CollectArticleKeywordsRequest): List<ArticleSummaryResponse> =
         articleService.collectKeywords(request.ids).map { it.toSummaryResponse() }
+
+    @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
+    @PostMapping("/vector-index")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun reindexVectors(@RequestBody request: ReindexArticleVectorsRequest): List<ArticleSummaryResponse> =
+        articleService.reindexVectors(request.ids).map { it.toSummaryResponse() }
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/by-ids")
