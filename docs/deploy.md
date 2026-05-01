@@ -109,13 +109,13 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 GitHub pipeline выполняет явную миграцию Qdrant автоматически при деплое `draftsim-parser`. Для ручного запуска или восстановления:
 
 ```bash
-cd /opt/mtg-bro
+cd /opt/mtg-bro/docker
 QDRANT_URL=http://127.0.0.1:6333 \
 QDRANT_COLLECTION=draftsim_article_insights_v1 \
 QDRANT_VECTOR_SIZE=1536 \
 QDRANT_DISTANCE=Cosine \
 AI_EMBEDDING_MODEL=text-embedding-3-small \
-python3 scripts/qdrant-migrate.py
+python3 qdrant-migrate.py
 ```
 
 #### `production-wizard-stat-aggregator`

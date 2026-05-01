@@ -102,12 +102,9 @@ jobs:
       - name: Copy Qdrant migration script to server
         if: ${{ inputs.module == 'draftsim-parser' }}
         run: |
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'mkdir -p /opt/mtg-bro/scripts'
           scp -i /tmp/ssh_key -o StrictHostKeyChecking=no \
             scripts/qdrant-migrate.py \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/scripts/qdrant-migrate.py
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/mtg-bro/docker/qdrant-migrate.py
 
       - name: Run migrations on server
         uses: appleboy/ssh-action@v1
@@ -155,7 +152,7 @@ jobs:
             QDRANT_DISTANCE="${QDRANT_DISTANCE:-Cosine}" \
             AI_EMBEDDING_MODEL="${AI_EMBEDDING_MODEL:-text-embedding-3-small}" \
             QDRANT_API_KEY="${QDRANT_API_KEY:-}" \
-            python3 scripts/qdrant-migrate.py
+            python3 qdrant-migrate.py
         env:
           MODULE: ${{ inputs.module }}
 
