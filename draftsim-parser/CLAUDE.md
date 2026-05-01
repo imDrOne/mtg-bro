@@ -58,6 +58,8 @@ Same hexagonal pattern as other Spring modules:
 | `QDRANT_COLLECTION` | `draftsim_article_insights` | No | Vector collection for article insights |
 | `QDRANT_INITIALIZE_SCHEMA` | `false` | No | Whether Spring AI should initialize vector schema |
 | `ARTICLE_VECTOR_INDEX_ENABLED` | `true` | No | Enable Qdrant indexing and semantic search |
+| `ARTICLE_VECTOR_SEARCH_CACHE_MAX_SIZE` | `500` | No | Max cached semantic search result sets |
+| `ARTICLE_VECTOR_SEARCH_CACHE_TTL` | `PT10M` | No | Semantic search cache TTL |
 | `ANALYSIS_AUTO_PUBLISH` | `false` | No | Auto-publish analysis results |
 
 ## Authentication

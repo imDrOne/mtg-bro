@@ -60,6 +60,9 @@ infrastructure:
     enabled: ${ARTICLE_VECTOR_INDEX_ENABLED:true}
     top-k: ${ARTICLE_VECTOR_SEARCH_TOP_K:8}
     similarity-threshold: ${ARTICLE_VECTOR_SEARCH_SIMILARITY_THRESHOLD:0.65}
+    search-cache:
+      max-size: ${ARTICLE_VECTOR_SEARCH_CACHE_MAX_SIZE:500}
+      ttl: ${ARTICLE_VECTOR_SEARCH_CACHE_TTL:PT10M}
   alerts:
     telegram:
       enabled: ${TELEGRAM_ALERTS_ENABLED:false}

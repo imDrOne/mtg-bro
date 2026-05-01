@@ -25,6 +25,8 @@ class ArticleSemanticSearchServiceTest {
         enabled = true,
         defaultTopK = 8,
         defaultSimilarityThreshold = 0.65,
+        searchCacheMaxSize = 500,
+        searchCacheTtl = java.time.Duration.ofMinutes(10),
     )
 
     @Test
@@ -56,6 +58,26 @@ class ArticleSemanticSearchServiceTest {
         assertEquals(0.65, vectorStore.similarityThreshold)
     }
 
+    @Test
+    fun `search normalizes query and reuses cached result for equivalent requests`() {
+        vectorStore.matches = listOf(
+            ArticleVectorSearchMatch(
+                articleId = 1,
+                score = 0.91,
+                content = "Station rewards tapping creatures.",
+                metadata = mapOf("insight_type" to "mechanic", "subject" to "Station"),
+            )
+        )
+        whenever(queryArticleRepository.findById(1)).thenReturn(article(1, favorite = true))
+
+        val first = service.search("  Tap   Mechanic ")
+        val second = service.search("tap mechanic")
+
+        assertEquals(first, second)
+        assertEquals("tap mechanic", vectorStore.query)
+        assertEquals(1, vectorStore.searchCalls)
+    }
+
     private fun article(id: Long, favorite: Boolean) = Article(
         id = id,
         externalId = id,
@@ -79,10 +101,12 @@ class ArticleSemanticSearchServiceTest {
         var query: String? = null
         var topK: Int? = null
         var similarityThreshold: Double? = null
+        var searchCalls: Int = 0
 
         override fun replaceArticleDocuments(articleId: Long, documents: List<ArticleVectorDocument>) = Unit
 
         override fun search(query: String, topK: Int, similarityThreshold: Double): List<ArticleVectorSearchMatch> {
+            searchCalls++
             this.query = query
             this.topK = topK
             this.similarityThreshold = similarityThreshold

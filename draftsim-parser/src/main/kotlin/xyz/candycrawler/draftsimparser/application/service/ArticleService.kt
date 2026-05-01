@@ -32,6 +32,7 @@ class ArticleService(
 
     fun updateFavorite(id: Long, favorite: Boolean): Article =
         articleRepository.update(id) { it.copy(favorite = favorite) }
+            .also { articleSemanticSearchService.evictSearchCache() }
 
     fun analyze(ids: List<Long>): List<Article> =
         ids.map { id ->

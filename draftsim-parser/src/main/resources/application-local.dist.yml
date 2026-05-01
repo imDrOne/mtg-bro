@@ -19,6 +19,9 @@ infrastructure:
     auto-publish: false
   vector-index:
     enabled: ${ARTICLE_VECTOR_INDEX_ENABLED:false}
+    search-cache:
+      max-size: ${ARTICLE_VECTOR_SEARCH_CACHE_MAX_SIZE:500}
+      ttl: ${ARTICLE_VECTOR_SEARCH_CACHE_TTL:PT10M}
   alerts:
     telegram:
       enabled: ${TELEGRAM_ALERTS_ENABLED:false}

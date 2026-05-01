@@ -1,5 +1,7 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
@@ -8,6 +10,8 @@ import xyz.candycrawler.draftsimparser.application.port.ArticleVectorSearchMatch
 import xyz.candycrawler.draftsimparser.application.port.ArticleVectorStore
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
+import java.time.Duration
+import java.util.Locale
 
 data class ArticleSemanticSearchResult(
     val article: Article,
@@ -30,9 +34,15 @@ class ArticleSemanticSearchService(
     @Value("\${infrastructure.vector-index.enabled}") private val enabled: Boolean,
     @Value("\${infrastructure.vector-index.top-k}") private val defaultTopK: Int,
     @Value("\${infrastructure.vector-index.similarity-threshold}") private val defaultSimilarityThreshold: Double,
+    @Value("\${infrastructure.vector-index.search-cache.max-size}") searchCacheMaxSize: Long,
+    @Value("\${infrastructure.vector-index.search-cache.ttl}") searchCacheTtl: Duration,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
+    private val searchCache: Cache<SearchCacheKey, List<ArticleSemanticSearchResult>> = Caffeine.newBuilder()
+        .maximumSize(searchCacheMaxSize)
+        .expireAfterWrite(searchCacheTtl)
+        .build()
 
     fun search(
         query: String,
@@ -40,17 +50,28 @@ class ArticleSemanticSearchService(
         similarityThreshold: Double? = null,
         favoriteOnly: Boolean? = true,
     ): List<ArticleSemanticSearchResult> {
-        if (!enabled || query.isBlank()) return emptyList()
+        val normalizedQuery = query.normalizeSemanticQuery()
+        if (!enabled || normalizedQuery.isBlank()) return emptyList()
         val vectorStore = vectorStoreProvider.getIfAvailable() ?: return emptyList()
+        val effectiveTopK = topK?.coerceIn(1, MAX_TOP_K) ?: defaultTopK
+        val effectiveSimilarityThreshold = similarityThreshold ?: defaultSimilarityThreshold
+        val cacheKey = SearchCacheKey(
+            query = normalizedQuery,
+            topK = effectiveTopK,
+            similarityThreshold = effectiveSimilarityThreshold,
+            favoriteOnly = favoriteOnly,
+        )
+
+        searchCache.getIfPresent(cacheKey)?.let { return it }
 
         val matches = runCatching {
             vectorStore.search(
-                query = query,
-                topK = topK?.coerceIn(1, MAX_TOP_K) ?: defaultTopK,
-                similarityThreshold = similarityThreshold ?: defaultSimilarityThreshold,
+                query = normalizedQuery,
+                topK = effectiveTopK,
+                similarityThreshold = effectiveSimilarityThreshold,
             )
         }.onFailure { ex ->
-            log.warn("Semantic article search failed for query='{}'", query, ex)
+            log.warn("Semantic article search failed for query='{}'", normalizedQuery, ex)
         }.getOrDefault(emptyList())
 
         return matches
@@ -67,12 +88,29 @@ class ArticleSemanticSearchService(
                 )
             }
             .sortedByDescending { it.score ?: 0.0 }
+            .also { searchCache.put(cacheKey, it) }
+    }
+
+    fun evictSearchCache() {
+        searchCache.invalidateAll()
     }
 
     companion object {
         private const val MAX_TOP_K = 25
     }
 }
+
+private data class SearchCacheKey(
+    val query: String,
+    val topK: Int,
+    val similarityThreshold: Double,
+    val favoriteOnly: Boolean?,
+)
+
+private fun String.normalizeSemanticQuery(): String =
+    trim()
+        .lowercase(Locale.US)
+        .replace(Regex("\\s+"), " ")
 
 private fun ArticleVectorSearchMatch.toSemanticMatch(): ArticleSemanticSearchMatch =
     ArticleSemanticSearchMatch(
