@@ -91,7 +91,18 @@ docker exec postgres psql -U <user> -d postgres -c "\l"
 | `DB_NAME` | `draftsim_parser_db` |
 | `DB_USERNAME` | Пользователь PostgreSQL |
 | `DB_PASSWORD` | Пароль PostgreSQL |
-| `ANTHROPIC_API_KEY` | API ключ Anthropic (Claude Haiku для анализа статей) |
+| `LLM_CLIENT` | `SPRING_AI` |
+| `AI_CHAT_PROVIDER` | `anthropic` |
+| `AI_CHAT_MODEL` | Например `claude-haiku-4-5-20251001` |
+| `ANTHROPIC_API_KEY` | API ключ Anthropic для анализа статей |
+| `AI_EMBEDDING_PROVIDER` | `openai` |
+| `AI_EMBEDDING_MODEL` | Например `text-embedding-3-small` |
+| `OPENAI_API_KEY` | API ключ OpenAI для embeddings |
+| `QDRANT_HOST` | `qdrant` |
+| `QDRANT_PORT` | `6334` |
+| `QDRANT_COLLECTION` | `draftsim_article_insights` |
+| `QDRANT_INITIALIZE_SCHEMA` | `true` при первом запуске/создании коллекции, затем можно `false` |
+| `ARTICLE_VECTOR_INDEX_ENABLED` | `true` |
 | `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` **(обязательно)** |
 
 #### `production-wizard-stat-aggregator`

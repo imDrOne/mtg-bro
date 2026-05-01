@@ -110,7 +110,7 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
 
     server.addTool(
         name = "search_draftsim_articles",
-        description = "Search favorited Draftsim.com articles about MTG draft strategy, set reviews, and limited format guides. Returns a lightweight list with id, title, slug and published date for browsing. Use get_draftsim_articles to fetch analyzed content for specific articles of interest.",
+        description = "Semantically search favorited Draftsim.com articles about MTG draft strategy, set reviews, mechanics, archetypes, and limited format guides. Returns relevant article IDs and matching insight snippets. Use get_draftsim_articles to fetch analyzed content for specific articles of interest.",
         inputSchema = searchDraftsimArticlesSchema(),
     ) { request ->
         checkAccess("search_draftsim_articles", toolAccessConfig)?.let { return@addTool it }

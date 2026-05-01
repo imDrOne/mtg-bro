@@ -4,14 +4,21 @@ spring:
     username: wizard_user
     password: wizard_pass
     driver-class-name: org.postgresql.Driver
+  ai:
+    model:
+      chat: ${AI_CHAT_PROVIDER:none}
+      embedding: ${AI_EMBEDDING_PROVIDER:none}
+    vectorstore:
+      qdrant:
+        initialize-schema: ${QDRANT_INITIALIZE_SCHEMA:false}
 
 infrastructure:
   llm:
     client: ${LLM_CLIENT:MOCK}
-    anthropic:
-      api-key: ${ANTHROPIC_API_KEY}
   analysis:
     auto-publish: false
+  vector-index:
+    enabled: ${ARTICLE_VECTOR_INDEX_ENABLED:false}
   alerts:
     telegram:
       enabled: ${TELEGRAM_ALERTS_ENABLED:false}

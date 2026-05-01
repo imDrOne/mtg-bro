@@ -5,23 +5,27 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import org.jsoup.Jsoup
+import xyz.candycrawler.draftsimparser.application.port.DraftsimArticleSearchResult
+import xyz.candycrawler.draftsimparser.application.port.DraftsimArticleSource
+import xyz.candycrawler.draftsimparser.application.port.DraftsimSourceArticle
 import xyz.candycrawler.draftsimparser.infrastructure.client.draftsim.dto.WpPostResponse
 
 @Component
 class DraftsimWpApiClient(
     @Qualifier("draftsimRestClient") private val draftsimRestClient: RestClient,
-) {
+) : DraftsimArticleSource {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun searchPosts(keyword: String, page: Int, perPage: Int = 10): WpSearchResult {
-        log.debug("Fetching WP posts: keyword={}, page={}, perPage={}", keyword, page, perPage)
+    override fun searchArticles(keyword: String, page: Int, pageSize: Int): DraftsimArticleSearchResult {
+        log.debug("Fetching WP posts: keyword={}, page={}, pageSize={}", keyword, page, pageSize)
 
         val response = draftsimRestClient.get()
             .uri { builder ->
                 builder.path("/wp-json/wp/v2/posts")
                     .queryParam("search", keyword)
-                    .queryParam("per_page", perPage)
+                    .queryParam("per_page", pageSize)
                     .queryParam("page", page)
                     .build()
             }
@@ -31,16 +35,28 @@ class DraftsimWpApiClient(
         val totalPages = response.headers.getFirst("X-WP-TotalPages")?.toIntOrNull() ?: 1
         val totalPosts = response.headers.getFirst("X-WP-Total")?.toIntOrNull() ?: 0
 
-        return WpSearchResult(
-            posts = response.body ?: emptyList(),
+        return DraftsimArticleSearchResult(
+            articles = response.body.orEmpty().map { it.toSourceArticle() },
             totalPages = totalPages,
-            totalPosts = totalPosts,
+            totalArticles = totalPosts,
         )
     }
 
-    data class WpSearchResult(
-        val posts: List<WpPostResponse>,
-        val totalPages: Int,
-        val totalPosts: Int,
-    )
+    private fun WpPostResponse.toSourceArticle(): DraftsimSourceArticle {
+        val textContent = Jsoup.parse(content.rendered)
+            .select("p")
+            .map { it.text() }
+            .filter { it.isNotBlank() }
+            .joinToString("\n\n")
+
+        return DraftsimSourceArticle(
+            externalId = id,
+            title = title.rendered,
+            slug = slug,
+            url = link,
+            htmlContent = content.rendered,
+            textContent = textContent,
+            publishedAt = date,
+        )
+    }
 }

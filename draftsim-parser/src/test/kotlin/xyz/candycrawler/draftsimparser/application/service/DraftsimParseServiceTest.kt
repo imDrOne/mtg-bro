@@ -7,12 +7,12 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.context.ApplicationEventPublisher
+import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
+import xyz.candycrawler.draftsimparser.application.port.DraftsimArticleSource
+import xyz.candycrawler.draftsimparser.application.port.DraftsimSourceArticle
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.parsetask.repository.ParseTaskRepository
-import xyz.candycrawler.draftsimparser.infrastructure.client.draftsim.DraftsimWpApiClient
-import xyz.candycrawler.draftsimparser.infrastructure.client.draftsim.dto.WpPostResponse
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -23,15 +23,15 @@ class DraftsimParseServiceTest {
 
     private val parseTaskRepository = mock<ParseTaskRepository>()
     private val articleRepository = mock<ArticleRepository>()
-    private val wpApiClient = mock<DraftsimWpApiClient>()
-    private val eventPublisher = mock<ApplicationEventPublisher>()
+    private val articleSource = mock<DraftsimArticleSource>()
+    private val articleAnalysisPublisher = mock<ArticleAnalysisPublisher>()
     private val parseAlertService = mock<ParseAlertService>()
     private val keywordExtractor = ArticleKeywordExtractor()
     private val service = DraftsimParseService(
         parseTaskRepository = parseTaskRepository,
         articleRepository = articleRepository,
-        wpApiClient = wpApiClient,
-        eventPublisher = eventPublisher,
+        articleSource = articleSource,
+        articleAnalysisPublisher = articleAnalysisPublisher,
         parseAlertService = parseAlertService,
         articleKeywordExtractor = keywordExtractor,
         autoPublish = false,
@@ -49,7 +49,7 @@ class DraftsimParseServiceTest {
         }
         val taskId = UUID.randomUUID()
 
-        val result = invokeProcessPost(taskId, post())
+        val result = invokeProcessArticle(taskId, sourceArticle())
 
         assertEquals("removal spell", result.keywords.first())
         assertTrue("draft" in result.keywords)
@@ -57,28 +57,34 @@ class DraftsimParseServiceTest {
         verify(articleRepository).update(eq(1), any())
     }
 
-    private fun invokeProcessPost(taskId: UUID, post: WpPostResponse): Article {
+    private fun invokeProcessArticle(taskId: UUID, article: DraftsimSourceArticle): Article {
         val method = DraftsimParseService::class.java.getDeclaredMethod(
-            "processPost",
+            "processArticle",
             UUID::class.java,
-            WpPostResponse::class.java,
+            DraftsimSourceArticle::class.java,
         )
         method.isAccessible = true
-        return method.invoke(service, taskId, post) as Article
+        return method.invoke(service, taskId, article) as Article
     }
 
-    private fun post() = WpPostResponse(
-        id = 100,
-        date = LocalDateTime.parse("2026-01-01T00:00:00"),
+    private fun sourceArticle() = DraftsimSourceArticle(
+        externalId = 100,
+        publishedAt = LocalDateTime.parse("2026-01-01T00:00:00"),
         slug = "draft-guide",
-        link = "https://draftsim.com/draft-guide",
-        title = WpPostResponse.WpRendered("Draft Guide"),
-        content = WpPostResponse.WpRendered(
+        url = "https://draftsim.com/draft-guide",
+        title = "Draft Guide",
+        htmlContent =
             """
             <p>The best removal spell is a removal spell.</p>
             <p>Removal wins draft games.</p>
             <p>Draft strategy rewards another removal spell.</p>
-            """.trimIndent()
-        ),
+            """.trimIndent(),
+        textContent = """
+            The best removal spell is a removal spell.
+
+            Removal wins draft games.
+
+            Draft strategy rewards another removal spell.
+        """.trimIndent(),
     )
 }

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import xyz.candycrawler.draftsimparser.application.port.AlertPublisher
 
 @Component
 class TelegramAlertClient(
@@ -12,11 +13,11 @@ class TelegramAlertClient(
     @Value("\${infrastructure.alerts.telegram.enabled:false}") private val enabled: Boolean,
     @Value("\${infrastructure.alerts.telegram.bot-token:}") private val botToken: String,
     @Value("\${infrastructure.alerts.telegram.chat-id:}") private val chatId: String,
-) {
+) : AlertPublisher {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun send(message: String) {
+    override fun send(message: String) {
         if (!enabled || botToken.isBlank() || chatId.isBlank()) {
             log.debug(
                 "Telegram alert skipped: enabled={}, tokenSet={}, chatIdSet={}",

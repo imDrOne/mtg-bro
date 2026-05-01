@@ -1,6 +1,29 @@
 spring:
   application:
     name: draftsim-parser
+  ai:
+    model:
+      chat: ${AI_CHAT_PROVIDER:anthropic}
+      embedding: ${AI_EMBEDDING_PROVIDER:openai}
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: ${AI_CHAT_MODEL:claude-haiku-4-5-20251001}
+          max-tokens: ${AI_CHAT_MAX_TOKENS:1024}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      embedding:
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-3-small}
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:localhost}
+        port: ${QDRANT_PORT:6334}
+        api-key: ${QDRANT_API_KEY:}
+        collection-name: ${QDRANT_COLLECTION:draftsim_article_insights}
+        use-tls: ${QDRANT_USE_TLS:false}
+        initialize-schema: ${QDRANT_INITIALIZE_SCHEMA:false}
   security:
     oauth2:
       resourceserver:
@@ -30,11 +53,13 @@ infrastructure:
       telegram:
         base-url: ${TELEGRAM_BASE_URL:https://api.telegram.org}
   llm:
-    client: ${LLM_CLIENT:CLAUDE}
-    anthropic:
-      api-key: ${ANTHROPIC_API_KEY:}
+    client: ${LLM_CLIENT:SPRING_AI}
   analysis:
     auto-publish: ${ANALYSIS_AUTO_PUBLISH:false}
+  vector-index:
+    enabled: ${ARTICLE_VECTOR_INDEX_ENABLED:true}
+    top-k: ${ARTICLE_VECTOR_SEARCH_TOP_K:8}
+    similarity-threshold: ${ARTICLE_VECTOR_SEARCH_SIMILARITY_THRESHOLD:0.65}
   alerts:
     telegram:
       enabled: ${TELEGRAM_ALERTS_ENABLED:false}

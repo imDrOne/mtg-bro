@@ -1,4 +1,4 @@
-package xyz.candycrawler.draftsimparser.infrastructure.client.anthropic
+package xyz.candycrawler.draftsimparser.infrastructure.client.mock
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component

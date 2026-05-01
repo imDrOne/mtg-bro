@@ -30,6 +30,7 @@ class ArticleAnalysisService(
     private val queryArticleRepository: QueryArticleRepository,
     private val promptBuilder: ArticleAnalysisPromptBuilder,
     private val objectMapper: ObjectMapper,
+    private val vectorIndexService: ArticleVectorIndexService,
 ) : ArticleAnalysisConsumer {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -57,9 +58,10 @@ class ArticleAnalysisService(
         runCatching {
             val classification = classify(article)
             if (classification.processingProfile == ProcessingProfile.IGNORE) {
-                articleRepository.update(message.articleId) {
+                val updated = articleRepository.update(message.articleId) {
                     it.copy(analyzedText = buildAnalysisJson(article, classification, emptyList()), analyzEndedAt = LocalDateTime.now())
                 }
+                vectorIndexService.replaceIndex(updated)
                 log.info("Article id={}: classified as ignore, skipping paragraph analysis", message.articleId)
                 return@runCatching
             }
@@ -79,9 +81,10 @@ class ArticleAnalysisService(
             val insights = results.mapNotNull { parseInsight(it) }
             val json = buildAnalysisJson(article, classification, insights)
 
-            articleRepository.update(message.articleId) {
+            val updated = articleRepository.update(message.articleId) {
                 it.copy(analyzedText = json, analyzEndedAt = LocalDateTime.now())
             }
+            vectorIndexService.replaceIndex(updated)
             log.info("Article id={}: analysis done, {} insight entries saved", message.articleId, insights.size)
         }.onFailure { ex ->
             log.error("Article id={}: analysis failed", message.articleId, ex)
