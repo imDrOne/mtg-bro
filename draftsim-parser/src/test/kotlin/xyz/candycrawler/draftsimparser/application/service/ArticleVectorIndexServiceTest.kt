@@ -55,6 +55,44 @@ class ArticleVectorIndexServiceTest {
         assertEquals(listOf("Station"), document.metadata["mechanics"])
     }
 
+    @Test
+    fun `buildDocuments skips non-object insights`() {
+        val documents = service.buildDocuments(
+            article(
+                analyzedText = """
+                    {
+                      "schema_version": 2,
+                      "article_type": "mechanic_guide",
+                      "processing_profile": "mechanic",
+                      "insights": [
+                        "skip me",
+                        [
+                          {
+                            "type": "mechanic",
+                            "subject": "Nested",
+                            "summary": "Nested arrays are not indexed by the vector layer."
+                          }
+                        ],
+                        {
+                          "type": "mechanic",
+                          "subject": "Station",
+                          "summary": "Station rewards tapping creatures.",
+                          "mechanics": ["Station"],
+                          "tags": ["mechanic"]
+                        },
+                        42
+                      ]
+                    }
+                """.trimIndent()
+            )
+        )
+
+        assertEquals(1, documents.size)
+        assertTrue("Subject: Station" in documents.single().content)
+        assertEquals(2, documents.single().metadata["insight_index"])
+        assertEquals("Station", documents.single().metadata["subject"])
+    }
+
     private fun article(analyzedText: String?) = Article(
         id = 1,
         externalId = 100,

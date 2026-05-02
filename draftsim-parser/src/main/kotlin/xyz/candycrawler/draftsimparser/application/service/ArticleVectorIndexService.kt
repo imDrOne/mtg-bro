@@ -75,6 +75,7 @@ class ArticleVectorIndexService(
 
         val insights = root["insights"]?.takeIf { it.isArray } ?: return emptyList()
         return insights.mapIndexedNotNull { index, insight ->
+            if (!insight.isObject) return@mapIndexedNotNull null
             val content = buildContent(article, insight).takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
             ArticleVectorDocument(
                 id = buildDocumentId(articleId, index),

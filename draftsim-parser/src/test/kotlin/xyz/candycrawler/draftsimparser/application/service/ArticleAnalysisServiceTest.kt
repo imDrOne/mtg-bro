@@ -111,6 +111,64 @@ class ArticleAnalysisServiceTest {
         assertEquals(0, json["insights"].size())
     }
 
+    @Test
+    fun `consume stores flat object insights when paragraph response is an array`() = runBlocking {
+        var storedArticle = article(textContent = "Station and exhaust reward activated abilities.", keywords = listOf("station"))
+        whenever(queryArticleRepository.findById(1)).thenReturn(storedArticle)
+        whenever(articleRepository.update(eq(1), any())).thenAnswer { invocation ->
+            val block = invocation.getArgument<(Article) -> Article>(1)
+            block(storedArticle).also { storedArticle = it }
+        }
+        llmClient.classificationResponse = """
+            {
+              "article_type": "mechanic_guide",
+              "processing_profile": "mechanic",
+              "reason": "Title and keywords describe mechanics",
+              "confidence": 0.9
+            }
+        """.trimIndent()
+        llmClient.analysisResponse = """
+            [
+              {
+                "type": "mechanic",
+                "subject": "Station",
+                "summary": "Station rewards tapping creatures.",
+                "deckbuilding_implications": [],
+                "related_cards": [],
+                "mechanics": ["Station"],
+                "archetypes": [],
+                "formats": ["Limited"],
+                "tags": ["mechanic"],
+                "confidence": 0.8
+              },
+              [
+                {
+                  "type": "mechanic",
+                  "subject": "Exhaust",
+                  "summary": "Exhaust is a one-shot activation.",
+                  "deckbuilding_implications": [],
+                  "related_cards": [],
+                  "mechanics": ["Exhaust"],
+                  "archetypes": [],
+                  "formats": ["Limited"],
+                  "tags": ["mechanic"],
+                  "confidence": 0.8
+                }
+              ],
+              "skip me"
+            ]
+        """.trimIndent()
+
+        service.consume(ArticleAnalysisMessage(1))
+
+        val analyzedText = assertNotNull(storedArticle.analyzedText)
+        val json = objectMapper.readTree(analyzedText)
+        assertEquals(2, json["insights"].size())
+        assertTrue(json["insights"].all { it.isObject })
+        assertEquals("Station", json["insights"][0]["subject"].asString())
+        assertEquals("Exhaust", json["insights"][1]["subject"].asString())
+    }
+
     private fun article(textContent: String?, keywords: List<String>) = Article(
         id = 1,
         externalId = 100,

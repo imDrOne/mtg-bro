@@ -13,7 +13,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -25,6 +24,21 @@ fun getDraftsimArticlesByIdSchema() = ToolSchema(
             put("items", buildJsonObject {
                 put("type", "integer")
             })
+        })
+        put("types", buildJsonObject {
+            put("type", "array")
+            put("description", "Optional insight.type filter, for example [\"archetype\", \"mechanic\", \"set_context\"].")
+            put("items", buildJsonObject {
+                put("type", "string")
+            })
+        })
+        put("page", buildJsonObject {
+            put("type", "integer")
+            put("description", "Insight page number per article (1-based, default 1).")
+        })
+        put("page_size", buildJsonObject {
+            put("type", "integer")
+            put("description", "Insights per page per article (default 50, max 100).")
         })
     },
     required = listOf("ids"),
@@ -39,6 +53,9 @@ suspend fun handleGetDraftsimArticlesById(context: ToolContext, request: io.mode
         if (ids.isEmpty()) {
             return CallToolResult(content = listOf(TextContent("Error: ids must not be empty")), isError = true)
         }
+        val types = request.arguments?.get("types").toNormalizedTypeSet()
+        val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+        val pageSize = request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 50
 
         val url = "${context.draftsimParserBaseUrl}/api/v1/articles/by-ids"
         val requestBody = buildJsonObject {
@@ -56,16 +73,7 @@ suspend fun handleGetDraftsimArticlesById(context: ToolContext, request: io.mode
             return CallToolResult(content = listOf(TextContent("No articles found for the given IDs")))
         }
 
-        val output = articles.joinToString("\n\n") { el ->
-            val article = el.jsonObject
-            val id = article["id"]?.jsonPrimitive?.content ?: "?"
-            val title = article["title"]?.jsonPrimitive?.content ?: "Untitled"
-            val analyzedText = article["analyzedText"]?.jsonPrimitive?.content
-            buildString {
-                appendLine("=== [$id] $title ===")
-                if (analyzedText != null) append(analyzedText) else append("No analysis available")
-            }
-        }
+        val output = formatDraftsimArticlesReport(articles, types, page, pageSize)
 
         CallToolResult(content = listOf(TextContent(output)))
     } catch (e: Exception) {

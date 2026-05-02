@@ -78,7 +78,7 @@ class ArticleAnalysisService(
                 }.awaitAll()
             }
 
-            val insights = results.mapNotNull { parseInsight(it) }
+            val insights = results.flatMap { parseInsights(it) }
             val json = buildAnalysisJson(article, classification, insights)
 
             val updated = articleRepository.update(message.articleId) {
@@ -112,11 +112,11 @@ class ArticleAnalysisService(
         }
     }
 
-    private fun parseInsight(response: String?): JsonNode? {
-        val json = response.cleanJsonResponse() ?: return null
+    private fun parseInsights(response: String?): List<JsonNode> {
+        val json = response.cleanJsonResponse() ?: return emptyList()
         return runCatching {
-            objectMapper.readTree(json).takeUnless { it.isNull }
-        }.getOrNull()
+            objectMapper.readTree(json).flattenInsightObjects()
+        }.getOrDefault(emptyList())
     }
 
     private fun buildAnalysisJson(
@@ -148,4 +148,11 @@ class ArticleAnalysisService(
             .trim()
             .takeIf { it.isNotBlank() && it != "null" }
     }
+
+    private fun JsonNode.flattenInsightObjects(): List<JsonNode> =
+        when {
+            isObject -> listOf(this)
+            isArray -> flatMap { it.flattenInsightObjects() }
+            else -> emptyList()
+        }
 }
