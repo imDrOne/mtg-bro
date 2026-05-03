@@ -31,6 +31,7 @@ import xyz.candycrawler.mcpserver.auth.UserRolesKey
 import xyz.candycrawler.mcpserver.auth.UserTokenElement
 import xyz.candycrawler.mcpserver.auth.UserTokenKey
 import xyz.candycrawler.mcpserver.auth.oauthMetadataRoutes
+import xyz.candycrawler.mcpserver.tools.draftsimSearchConfigFromEnv
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.exitProcess
 
@@ -41,8 +42,9 @@ fun main(args: Array<String>) {
     val draftsimParserBaseUrl = System.getenv("DRAFTSIM_PARSER_BASE_URL") ?: "http://localhost:8081"
     val transport = args.getOption("--transport") ?: System.getenv("MCP_TRANSPORT") ?: "stdio"
     val port = args.getOption("--port")?.toIntOrNull() ?: System.getenv("MCP_HTTP_PORT")?.toIntOrNull() ?: 3000
+    val draftsimSearchConfig = draftsimSearchConfigFromEnv()
 
-    val filteredServer = createServer(baseUrl, draftsimParserBaseUrl)
+    val filteredServer = createServer(baseUrl, draftsimParserBaseUrl, draftsimSearchConfig)
 
     when (transport) {
         "stdio" -> runBlocking {

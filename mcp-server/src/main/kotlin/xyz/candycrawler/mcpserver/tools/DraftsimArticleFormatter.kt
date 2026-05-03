@@ -65,11 +65,44 @@ internal fun formatDraftsimArticlesReport(
     }.trimEnd()
 }
 
+internal fun formatDraftsimArticleList(json: JsonObject): String? {
+    val articles = json["articles"]?.jsonArray ?: JsonArray(emptyList())
+    if (articles.isEmpty()) return null
+    val totalArticles = json["totalArticles"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+    val page = json["page"]?.jsonPrimitive?.content?.toIntOrNull() ?: 1
+    val pageSize = json["pageSize"]?.jsonPrimitive?.content?.toIntOrNull() ?: articles.size
+    val hasMore = json["hasMore"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
+
+    return buildString {
+        appendLine("Found ${articles.size} Draftsim articles (total: $totalArticles, page: $page, page_size: $pageSize, has_more: $hasMore)")
+        appendLine()
+        articles.forEach { el ->
+            val article = el.jsonObject
+            val id = article["id"]?.jsonPrimitive?.content ?: "?"
+            val title = article["title"]?.jsonPrimitive?.content ?: "Untitled"
+            val slug = article["slug"]?.jsonPrimitive?.content ?: ""
+            val url = article["url"]?.jsonPrimitive?.content ?: ""
+            val publishedAt = article["publishedAt"]?.jsonPrimitive?.contentOrNull?.take(10) ?: ""
+            val keywords = article["keywords"]?.jsonArray.orEmpty()
+                .mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
+                .joinToString()
+                .ifBlank { "-" }
+            val favorite = article["favorite"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
+            val analyzed = !article["analyzedText"]?.jsonPrimitive?.contentOrNull.isNullOrBlank()
+            appendLine("[id=$id] $title - $slug ($publishedAt)")
+            appendLine("  url: $url")
+            appendLine("  keywords: $keywords")
+            appendLine("  favorite: $favorite, analyzed: $analyzed")
+        }
+    }.trimEnd()
+}
+
 internal fun formatDraftsimSemanticSearchResponse(
     json: JsonObject,
     types: Set<String> = emptySet(),
     previewLimit: Int = 3,
     similarityThreshold: Double? = null,
+    semanticAttempts: Int? = null,
 ): String? {
     val results = json["results"]?.jsonArray ?: return null
     if (results.isEmpty()) return null
@@ -107,7 +140,10 @@ internal fun formatDraftsimSemanticSearchResponse(
         appendLine("Found ${lines.size} semantically relevant articles")
         appendLine("preview_limit: $safePreviewLimit")
         if (similarityThreshold != null) {
-            appendLine("similarity_threshold: ${String.format(Locale.US, "%.2f", similarityThreshold)}")
+            appendLine("similarity_threshold: ${formatSimilarityThreshold(similarityThreshold)}")
+        }
+        if (semanticAttempts != null) {
+            appendLine("semantic_attempts: $semanticAttempts")
         }
         if (types.isNotEmpty()) appendLine("types: ${types.joinToString()}")
         appendLine()
@@ -115,7 +151,11 @@ internal fun formatDraftsimSemanticSearchResponse(
     }.trimEnd()
 }
 
-internal fun formatDraftsimFallbackSearchResponse(json: JsonObject, query: String): String? {
+internal fun formatDraftsimFallbackSearchResponse(
+    json: JsonObject,
+    query: String,
+    exhaustedSimilarityThresholds: List<Double> = emptyList(),
+): String? {
     val articles = json["articles"]?.jsonArray ?: JsonArray(emptyList())
     if (articles.isEmpty()) return null
     val totalArticles = json["totalArticles"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
@@ -132,6 +172,9 @@ internal fun formatDraftsimFallbackSearchResponse(json: JsonObject, query: Strin
     return buildString {
         appendLine("Found ${articles.size} articles (total: $totalArticles, hasMore: $hasMore)")
         appendLine("fallback: keyword article search for '$query'")
+        if (exhaustedSimilarityThresholds.isNotEmpty()) {
+            appendLine("semantic_thresholds_exhausted: ${exhaustedSimilarityThresholds.joinToString { formatSimilarityThreshold(it) }}")
+        }
         appendLine()
         lines.forEach { appendLine(it) }
     }.trimEnd()
@@ -200,3 +243,6 @@ private fun JsonElement?.formatInsightValue(): String? =
 
 private fun String.collapseWhitespace(): String =
     replace(Regex("\\s+"), " ").trim()
+
+private fun formatSimilarityThreshold(value: Double): String =
+    String.format(Locale.US, "%.2f", value)

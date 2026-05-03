@@ -15,6 +15,10 @@ MCP (Model Context Protocol) server for deck building. Exposes tools so Claude (
 | `search_scryfall`            | Search Scryfall card database. Use Scryfall syntax: `f:standard`, `c:bg`, `t:creature`, etc.                                                              |
 | `get_card`                   | Get a single card from your library by set code and collector number.                                                                                     |
 | `list_scryfall_format_codes` | Returns format and color codes for both search tools.                                                                                                     |
+| `get_deckbuilding_guide`     | Returns the mtg-bro deckbuilding workflow guide for agents using this MCP server.                                                                         |
+| `list_draftsim_articles`     | Lists compact Draftsim article metadata for discovering article IDs.                                                                                      |
+| `search_draftsim_articles`   | Semantically searches favorited Draftsim article insights.                                                                                                |
+| `get_draftsim_articles`      | Fetches compact analyzed Draftsim insights by article ID.                                                                                                 |
 
 ## Cursor (stdio)
 
@@ -85,6 +89,7 @@ COLLECTION_MANAGER_BASE_URL=http://localhost:8080 \
 |--------|---------|-------------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | Base URL of collection-manager |
 | `DRAFTSIM_PARSER_BASE_URL` | `http://localhost:8081` | Base URL of draftsim-parser |
+| `DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS` | `0.80,0.65,0.50` | Ordered CSV thresholds for Draftsim semantic retry |
 | `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `MCP_HTTP_PORT` | `3000` | Port for HTTP transport |
 

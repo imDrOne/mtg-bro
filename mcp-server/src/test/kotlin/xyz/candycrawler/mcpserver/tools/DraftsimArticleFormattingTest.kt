@@ -77,6 +77,58 @@ class DraftsimArticleFormattingTest {
     }
 
     @Test
+    fun `list articles formats compact metadata without raw analyzedText`() {
+        val response = formatDraftsimArticleList(
+            Json.parseToJsonElement(
+                """
+                    {
+                      "articles": [
+                        {
+                          "id": 12,
+                          "title": "Limited Guide",
+                          "slug": "limited-guide",
+                          "url": "https://draftsim.com/limited-guide",
+                          "publishedAt": "2026-01-04T00:00:00",
+                          "keywords": ["limited", "draft"],
+                          "favorite": true,
+                          "analyzedText": "RAW ANALYSIS SHOULD NOT BE PRINTED"
+                        }
+                      ],
+                      "totalArticles": 42,
+                      "page": 2,
+                      "pageSize": 20,
+                      "hasMore": true
+                    }
+                """.trimIndent()
+            ).jsonObject
+        )
+
+        assertTrue(response != null)
+        assertTrue("Found 1 Draftsim articles (total: 42, page: 2, page_size: 20, has_more: true)" in response)
+        assertTrue("[id=12] Limited Guide - limited-guide (2026-01-04)" in response)
+        assertTrue("url: https://draftsim.com/limited-guide" in response)
+        assertTrue("keywords: limited, draft" in response)
+        assertTrue("favorite: true, analyzed: true" in response)
+        assertFalse("RAW ANALYSIS SHOULD NOT BE PRINTED" in response)
+    }
+
+    @Test
+    fun `list article options default favorite true and clamp page size`() {
+        val options = parseDraftsimArticleListOptions(
+            buildJsonObject {
+                put("q", " station ")
+                put("page", 0)
+                put("page_size", 500)
+            }
+        )
+
+        assertEquals("station", options.query)
+        assertEquals(1, options.page)
+        assertEquals(100, options.pageSize)
+        assertEquals(true, options.favorite)
+    }
+
+    @Test
     fun `semantic search response includes filtered preview matches with limit`() {
         val response = formatDraftsimSemanticSearchResponse(
             json = Json.parseToJsonElement(
@@ -119,11 +171,13 @@ class DraftsimArticleFormattingTest {
             types = setOf("mechanic"),
             previewLimit = 1,
             similarityThreshold = DRAFTSIM_SIMILARITY_MEDIUM,
+            semanticAttempts = 2,
         )
 
         assertTrue(response != null)
         assertTrue("[id=7] Set Guide - set-guide (2026-01-02) score=0.877" in response)
         assertTrue("similarity_threshold: 0.65" in response)
+        assertTrue("semantic_attempts: 2" in response)
         assertTrue("preview 1: subject=Station; type=mechanic" in response)
         assertTrue("excerpt=Station rewards tapping creatures. It is best with cheap bodies." in response)
         assertTrue("tags=mechanic, tap" in response)
@@ -243,11 +297,13 @@ class DraftsimArticleFormattingTest {
                 """.trimIndent()
             ).jsonObject,
             query = "station",
+            exhaustedSimilarityThresholds = DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS,
         )
 
         assertNull(semantic)
         assertTrue(fallback != null)
         assertTrue("fallback: keyword article search for 'station'" in fallback)
+        assertTrue("semantic_thresholds_exhausted: 0.80, 0.65, 0.50" in fallback)
         assertTrue("[id=3] Draft Guide - draft-guide (2026-01-01)" in fallback)
     }
 
@@ -257,20 +313,40 @@ class DraftsimArticleFormattingTest {
         val formattedThresholds = mutableListOf<Double>()
 
         val summary = findDraftsimSemanticSummary(
-            thresholds = DRAFTSIM_SIMILARITY_THRESHOLDS,
+            thresholds = DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS,
             search = { threshold ->
                 searchedThresholds += threshold
                 Json.parseToJsonElement("""{"results": []}""").jsonObject
             },
-            format = { _, threshold ->
+            format = { _, threshold, attempt ->
                 formattedThresholds += threshold
-                if (threshold == DRAFTSIM_SIMILARITY_MEDIUM) "semantic result at $threshold" else null
+                if (threshold == DRAFTSIM_SIMILARITY_MEDIUM) "semantic result at $threshold after $attempt attempts" else null
             },
         )
 
-        assertEquals("semantic result at 0.65", summary)
+        assertEquals("semantic result at 0.65 after 2 attempts", summary)
         assertEquals(listOf(DRAFTSIM_SIMILARITY_HIGH, DRAFTSIM_SIMILARITY_MEDIUM), searchedThresholds)
         assertEquals(listOf(DRAFTSIM_SIMILARITY_HIGH, DRAFTSIM_SIMILARITY_MEDIUM), formattedThresholds)
+    }
+
+    @Test
+    fun `semantic summary skips failed threshold search attempts`() = runBlocking {
+        val searchedThresholds = mutableListOf<Double>()
+
+        val summary = findDraftsimSemanticSummary(
+            thresholds = DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS,
+            search = { threshold ->
+                searchedThresholds += threshold
+                if (threshold == DRAFTSIM_SIMILARITY_HIGH) error("semantic search failed")
+                Json.parseToJsonElement("""{"results": []}""").jsonObject
+            },
+            format = { _, threshold, attempt ->
+                if (threshold == DRAFTSIM_SIMILARITY_MEDIUM) "semantic result after $attempt attempts" else null
+            },
+        )
+
+        assertEquals("semantic result after 2 attempts", summary)
+        assertEquals(listOf(DRAFTSIM_SIMILARITY_HIGH, DRAFTSIM_SIMILARITY_MEDIUM), searchedThresholds)
     }
 
     private fun articleArray(analyzedText: String) = buildJsonArray {

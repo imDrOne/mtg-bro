@@ -17,16 +17,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
-internal const val DRAFTSIM_SIMILARITY_LOW = 0.50
-internal const val DRAFTSIM_SIMILARITY_MEDIUM = 0.65
-internal const val DRAFTSIM_SIMILARITY_HIGH = 0.80
-
-internal val DRAFTSIM_SIMILARITY_THRESHOLDS = listOf(
-    DRAFTSIM_SIMILARITY_HIGH,
-    DRAFTSIM_SIMILARITY_MEDIUM,
-    DRAFTSIM_SIMILARITY_LOW,
-)
-
 fun searchDraftsimArticlesSchema() = ToolSchema(
     properties = buildJsonObject {
         put("query", buildJsonObject {
@@ -85,7 +75,11 @@ suspend fun handleSearchDraftsimArticles(
             parameter("favorite", true)
         }.body<String>()
 
-        val summary = formatDraftsimFallbackSearchResponse(Json.parseToJsonElement(response).jsonObject, query)
+        val summary = formatDraftsimFallbackSearchResponse(
+            json = Json.parseToJsonElement(response).jsonObject,
+            query = query,
+            exhaustedSimilarityThresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
+        )
             ?: return CallToolResult(content = listOf(TextContent("No articles found for query: $query")))
         CallToolResult(content = listOf(TextContent(summary)))
     } catch (e: Exception) {
@@ -104,7 +98,7 @@ private suspend fun searchSemanticArticles(
         val url = "${context.draftsimParserBaseUrl}/api/v1/articles/search/semantic"
         val topK = pageSize.coerceIn(1, 20)
         val summary = findDraftsimSemanticSummary(
-            thresholds = DRAFTSIM_SIMILARITY_THRESHOLDS,
+            thresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
             search = { threshold ->
                 val requestBody = buildJsonObject {
                     put("query", query)
@@ -118,8 +112,14 @@ private suspend fun searchSemanticArticles(
                 }.body<String>()
                 Json.parseToJsonElement(response).jsonObject
             },
-            format = { json, threshold ->
-                formatDraftsimSemanticSearchResponse(json, types, previewLimit, threshold)
+            format = { json, threshold, attempt ->
+                formatDraftsimSemanticSearchResponse(
+                    json = json,
+                    types = types,
+                    previewLimit = previewLimit,
+                    similarityThreshold = threshold,
+                    semanticAttempts = attempt,
+                )
             },
         ) ?: return null
         CallToolResult(
@@ -130,10 +130,11 @@ private suspend fun searchSemanticArticles(
 internal suspend fun findDraftsimSemanticSummary(
     thresholds: List<Double>,
     search: suspend (Double) -> JsonObject,
-    format: (JsonObject, Double) -> String?,
+    format: (JsonObject, Double, Int) -> String?,
 ): String? {
-    for (threshold in thresholds) {
-        val summary = format(search(threshold), threshold)
+    thresholds.forEachIndexed { index, threshold ->
+        val json = runCatching { search(threshold) }.getOrNull() ?: return@forEachIndexed
+        val summary = format(json, threshold, index + 1)
         if (summary != null) return summary
     }
     return null

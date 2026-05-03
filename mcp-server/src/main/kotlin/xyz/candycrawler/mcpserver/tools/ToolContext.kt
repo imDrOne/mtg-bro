@@ -6,4 +6,5 @@ data class ToolContext(
     val baseUrl: String,
     val draftsimParserBaseUrl: String,
     val httpClient: HttpClient,
+    val draftsimSearchConfig: DraftsimSearchConfig = DraftsimSearchConfig(),
 )

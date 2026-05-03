@@ -15,6 +15,7 @@ class ToolAccessConfigTest {
         assertTrue(config.hasAccess("search_scryfall", roles))
         assertTrue(config.hasAccess("get_card", roles))
         assertTrue(config.hasAccess("list_scryfall_format_codes", roles))
+        assertTrue(config.hasAccess("get_deckbuilding_guide", roles))
     }
 
     @Test
@@ -22,6 +23,7 @@ class ToolAccessConfigTest {
         val roles = listOf("FREE")
         assertFalse(config.hasAccess("analyze_tribal_depth", roles))
         assertFalse(config.hasAccess("get_collection_overview", roles))
+        assertFalse(config.hasAccess("list_draftsim_articles", roles))
         assertFalse(config.hasAccess("search_draftsim_articles", roles))
         assertFalse(config.hasAccess("get_draftsim_articles", roles))
         assertFalse(config.hasAccess("save_deck", roles))
@@ -32,6 +34,7 @@ class ToolAccessConfigTest {
         val roles = listOf("PRO")
         assertTrue(config.hasAccess("search_my_cards", roles))
         assertTrue(config.hasAccess("analyze_tribal_depth", roles))
+        assertTrue(config.hasAccess("list_draftsim_articles", roles))
         assertTrue(config.hasAccess("save_deck", roles))
     }
 

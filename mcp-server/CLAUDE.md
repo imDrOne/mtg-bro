@@ -48,7 +48,15 @@ server.addTool(
 
 Shared context passed to all handlers containing:
 - `baseUrl`: collection-manager base URL
+- `draftsimParserBaseUrl`: draftsim-parser base URL
 - `httpClient`: Ktor HTTP client for API calls
+- `draftsimSearchConfig`: Draftsim semantic search thresholds
+
+### Resources
+
+The server also exposes the deckbuilding workflow guide as a Markdown resource:
+- URI: `mtg-bro://guides/deckbuilding-skill.md`
+- Same content is available through `get_deckbuilding_guide` for clients that prefer tools.
 
 ### Transport Modes
 
@@ -91,6 +99,7 @@ If DCR doesn't work (fallback, manual configuration):
 |-------------------------------|-------------------------|----------------------------------------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | collection-manager API URL             |
 | `DRAFTSIM_PARSER_BASE_URL`    | `http://localhost:8081` | draftsim-parser API URL                |
+| `DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS` | `0.80,0.65,0.50` | Ordered CSV thresholds for Draftsim semantic retry |
 | `MCP_TRANSPORT`               | `stdio`                 | Transport mode                         |
 | `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport)  |
 | `AUTH_ISSUER_URI`             | _(none)_                | Auth-service public URL; enables OAuth |

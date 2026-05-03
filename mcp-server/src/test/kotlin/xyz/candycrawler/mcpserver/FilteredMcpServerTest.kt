@@ -17,12 +17,18 @@ class FilteredMcpServerTest {
     private fun makeServer(): FilteredMcpServer {
         val server = FilteredMcpServer(
             serverInfo = Implementation(name = "test", version = "0.0.1"),
-            options = ServerOptions(capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true))),
+            options = ServerOptions(
+                capabilities = ServerCapabilities(
+                    tools = ServerCapabilities.Tools(listChanged = true),
+                    resources = ServerCapabilities.Resources(listChanged = true),
+                )
+            ),
             toolAccessConfig = config,
         )
         listOf(
             "search_my_cards", "search_scryfall", "get_card", "list_scryfall_format_codes",
             "analyze_tribal_depth", "get_collection_overview",
+            "get_deckbuilding_guide", "list_draftsim_articles",
             "search_draftsim_articles", "get_draftsim_articles", "save_deck",
         ).forEach { name ->
             server.addTool(name = name, description = name) { _ -> error("stub") }
@@ -37,7 +43,7 @@ class FilteredMcpServerTest {
             server.visibleToolNames()
         }
         assertEquals(
-            setOf("search_my_cards", "search_scryfall", "get_card", "list_scryfall_format_codes"),
+            setOf("search_my_cards", "search_scryfall", "get_card", "list_scryfall_format_codes", "get_deckbuilding_guide"),
             visible.toSet(),
         )
     }
@@ -48,7 +54,7 @@ class FilteredMcpServerTest {
         val visible = withContext(UserRolesElement(listOf("PRO"))) {
             server.visibleToolNames()
         }
-        assertEquals(9, visible.size)
+        assertEquals(11, visible.size)
     }
 
     @Test
@@ -57,13 +63,13 @@ class FilteredMcpServerTest {
         val visible = withContext(UserRolesElement(listOf("ADMIN"))) {
             server.visibleToolNames()
         }
-        assertEquals(9, visible.size)
+        assertEquals(11, visible.size)
     }
 
     @Test
     fun `no auth context returns all tools (stdio mode)`() = runBlocking {
         val server = makeServer()
         val visible = server.visibleToolNames()
-        assertEquals(9, visible.size)
+        assertEquals(11, visible.size)
     }
 }

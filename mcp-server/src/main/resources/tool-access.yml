@@ -4,13 +4,16 @@ roles:
     - search_scryfall
     - get_card
     - list_scryfall_format_codes
+    - get_deckbuilding_guide
   PRO:
     - search_my_cards
     - search_scryfall
     - get_card
     - list_scryfall_format_codes
+    - get_deckbuilding_guide
     - analyze_tribal_depth
     - get_collection_overview
+    - list_draftsim_articles
     - search_draftsim_articles
     - get_draftsim_articles
     - save_deck

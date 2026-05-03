@@ -18,27 +18,37 @@ import xyz.candycrawler.mcpserver.auth.currentUserRoles
 import xyz.candycrawler.mcpserver.auth.currentUserToken
 import xyz.candycrawler.mcpserver.auth.hasAccess
 import xyz.candycrawler.mcpserver.auth.isAuthEnabled
+import xyz.candycrawler.mcpserver.tools.addDeckbuildingGuideResource
+import xyz.candycrawler.mcpserver.tools.DraftsimSearchConfig
 import xyz.candycrawler.mcpserver.tools.ToolContext
 import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
 import xyz.candycrawler.mcpserver.tools.getCardSchema
 import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
+import xyz.candycrawler.mcpserver.tools.getDeckbuildingGuideSchema
 import xyz.candycrawler.mcpserver.tools.getDraftsimArticlesByIdSchema
 import xyz.candycrawler.mcpserver.tools.handleAnalyzeTribalDepth
 import xyz.candycrawler.mcpserver.tools.handleGetCard
 import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
+import xyz.candycrawler.mcpserver.tools.handleGetDeckbuildingGuide
 import xyz.candycrawler.mcpserver.tools.handleGetDraftsimArticlesById
 import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
+import xyz.candycrawler.mcpserver.tools.handleListDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSaveDeck
 import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
 import xyz.candycrawler.mcpserver.tools.handleSearchScryfall
+import xyz.candycrawler.mcpserver.tools.listDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.listScryfallFormatCodesSchema
 import xyz.candycrawler.mcpserver.tools.saveDeckSchema
 import xyz.candycrawler.mcpserver.tools.searchDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
 
-fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpServer {
+fun createServer(
+    baseUrl: String,
+    draftsimParserBaseUrl: String,
+    draftsimSearchConfig: DraftsimSearchConfig = DraftsimSearchConfig(),
+): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
@@ -56,15 +66,21 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
         baseUrl = baseUrl,
         draftsimParserBaseUrl = draftsimParserBaseUrl,
         httpClient = httpClient,
+        draftsimSearchConfig = draftsimSearchConfig,
     )
 
     val server = FilteredMcpServer(
         serverInfo = Implementation(name = "mtg-bro", version = "1.0.0"),
         options = ServerOptions(
-            capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true)),
+            capabilities = ServerCapabilities(
+                tools = ServerCapabilities.Tools(listChanged = true),
+                resources = ServerCapabilities.Resources(listChanged = true),
+            ),
         ),
         toolAccessConfig = toolAccessConfig,
     )
+
+    server.addDeckbuildingGuideResource()
 
     server.addTool(
         name = "search_my_cards",
@@ -91,6 +107,12 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
     ) { handleListScryfallFormatCodes() }
 
     server.addTool(
+        name = "get_deckbuilding_guide",
+        description = "Returns the mtg-bro deckbuilding workflow guide for AI agents using this MCP server. Read this before building, tuning, or saving a Magic deck.",
+        inputSchema = getDeckbuildingGuideSchema(),
+    ) { request -> handleGetDeckbuildingGuide(request) }
+
+    server.addTool(
         name = "analyze_tribal_depth",
         description = "Analyze tribal depth for a given MTG creature type in your collection. Returns total card count, CMC distribution, role breakdown (creatures / kindred spells / tribal support cards), color spread, whether a lord or commander exists, and deck viability. Use this when the user asks about a specific tribe like Merfolk, Elf, Goblin, etc.",
         inputSchema = analyzeTribalDepthSchema(),
@@ -115,6 +137,15 @@ fun createServer(baseUrl: String, draftsimParserBaseUrl: String): FilteredMcpSer
     ) { request ->
         checkAccess("search_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
         handleSearchDraftsimArticles(context, request)
+    }
+
+    server.addTool(
+        name = "list_draftsim_articles",
+        description = "List compact Draftsim article metadata by optional keyword query. Returns article IDs, titles, slugs, URLs, published dates, keywords, favorite flags, and analyzed status. Use this to discover article IDs before get_draftsim_articles.",
+        inputSchema = listDraftsimArticlesSchema(),
+    ) { request ->
+        checkAccess("list_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
+        handleListDraftsimArticles(context, request)
     }
 
     server.addTool(
