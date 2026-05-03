@@ -21,7 +21,7 @@ fun getCollectionOverviewSchema() = ToolSchema(
 suspend fun handleGetCollectionOverview(
     context: ToolContext,
     @Suppress("UNUSED_PARAMETER") request: CallToolRequest,
-): CallToolResult = try {
+): CallToolResult = runCatching {
     val url = "${context.baseUrl}/api/v1/collection/overview"
     val response = context.httpClient.get(url).body<String>()
 
@@ -66,6 +66,6 @@ suspend fun handleGetCollectionOverview(
     }
 
     CallToolResult(content = listOf(TextContent(summary)))
-} catch (e: Exception) {
+}.getOrElse { e ->
     CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }

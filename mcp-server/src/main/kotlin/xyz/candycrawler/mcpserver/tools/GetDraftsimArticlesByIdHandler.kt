@@ -68,7 +68,7 @@ fun getDraftsimArticlesByIdSchema() = ToolSchema(
 suspend fun handleGetDraftsimArticlesById(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
-): CallToolResult = try {
+): CallToolResult = runCatching {
     val idsArray = request.arguments?.get("ids")?.jsonArray
 
     if (idsArray == null) {
@@ -102,6 +102,6 @@ suspend fun handleGetDraftsimArticlesById(
             }
         }
     }
-} catch (e: Exception) {
+}.getOrElse { e ->
     CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }

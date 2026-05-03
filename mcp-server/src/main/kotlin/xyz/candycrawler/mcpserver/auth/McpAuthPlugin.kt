@@ -1,13 +1,17 @@
 package xyz.candycrawler.mcpserver.auth
 
+import com.auth0.jwk.JwkException
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTVerificationException
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.request.path
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.security.interfaces.RSAPublicKey
@@ -50,13 +54,26 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
             val roles = decodedJwt.getClaim("roles").asList(String::class.java) ?: emptyList()
             call.attributes.put(UserRolesKey, roles)
             call.attributes.put(UserTokenKey, token)
-        } catch (e: Exception) {
-            log.debug("Rejected invalid MCP bearer token", e)
-            call.response.header(
-                "WWW-Authenticate",
-                """Bearer error="invalid_token", resource_metadata="$resourceMetadataUrl"""",
-            )
-            call.respond(HttpStatusCode.Unauthorized)
+        } catch (e: JWTVerificationException) {
+            rejectInvalidBearerToken(call, resourceMetadataUrl, log, e)
+        } catch (e: JwkException) {
+            rejectInvalidBearerToken(call, resourceMetadataUrl, log, e)
+        } catch (e: ClassCastException) {
+            rejectInvalidBearerToken(call, resourceMetadataUrl, log, e)
         }
     }
+}
+
+private suspend fun rejectInvalidBearerToken(
+    call: ApplicationCall,
+    resourceMetadataUrl: String,
+    log: Logger,
+    cause: Throwable,
+) {
+    log.debug("Rejected invalid MCP bearer token", cause)
+    call.response.header(
+        "WWW-Authenticate",
+        """Bearer error="invalid_token", resource_metadata="$resourceMetadataUrl"""",
+    )
+    call.respond(HttpStatusCode.Unauthorized)
 }

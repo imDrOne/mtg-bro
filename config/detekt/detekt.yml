@@ -7,10 +7,6 @@ complexity:
     allowedFunctionsPerFile: 20
     allowedFunctionsPerClass: 20
 
-exceptions:
-  TooGenericExceptionCaught:
-    active: false
-
 style:
   MagicNumber:
     active: false

@@ -57,7 +57,7 @@ internal data class DraftsimArticleListOptions(
 )
 
 suspend fun handleListDraftsimArticles(context: ToolContext, request: CallToolRequest): CallToolResult {
-    return try {
+    return runCatching {
         val options = parseDraftsimArticleListOptions(request.arguments)
 
         val response = context.httpClient.get("${context.draftsimParserBaseUrl}/api/v1/articles") {
@@ -70,7 +70,7 @@ suspend fun handleListDraftsimArticles(context: ToolContext, request: CallToolRe
         val summary = formatDraftsimArticleList(Json.parseToJsonElement(response).jsonObject)
             ?: return CallToolResult(content = listOf(TextContent("No Draftsim articles found")))
         CallToolResult(content = listOf(TextContent(summary)))
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
 }

@@ -51,7 +51,7 @@ suspend fun handleSearchScryfall(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
 ): CallToolResult {
-    return try {
+    return runCatching {
         val query = request.arguments?.get("query")?.jsonPrimitive?.content
             ?: return CallToolResult(content = listOf(TextContent("Error: query is required")), isError = true)
         val unique = request.arguments?.get("unique")?.jsonPrimitive?.content
@@ -86,7 +86,7 @@ suspend fun handleSearchScryfall(
             if (data.size > 50) appendLine("... (showing first 50)")
         }
         CallToolResult(content = listOf(TextContent(summary)))
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
 }

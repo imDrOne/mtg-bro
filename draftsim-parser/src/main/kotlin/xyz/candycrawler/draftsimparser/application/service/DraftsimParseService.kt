@@ -56,10 +56,10 @@ class DraftsimParseService(
         val taskId = task.id!!
 
         scope.launch {
-            try {
+            runCatching {
                 parseAlertService.parsingStarted(taskId, keyword)
                 runParseTask(taskId, keyword)
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 log.error("Parse task {} failed", taskId, e)
                 runCatching {
                     parseTaskRepository.update(taskId) {

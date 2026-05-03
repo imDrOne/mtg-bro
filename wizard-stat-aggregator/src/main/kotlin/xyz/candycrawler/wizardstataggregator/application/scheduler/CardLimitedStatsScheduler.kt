@@ -33,9 +33,9 @@ class CardLimitedStatsScheduler(
 
         runBlocking {
             activeSets.forEach { trackedSet ->
-                try {
+                runCatching {
                     collectionService.collectAll(trackedSet.setCode)
-                } catch (e: Exception) {
+                }.onFailure { e ->
                     log.error(
                         "Failed scheduled card limited stats collection for set={}: {}",
                         trackedSet.setCode,

@@ -37,7 +37,7 @@ fun getCardSchema() = ToolSchema(
 suspend fun handleGetCard(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
-): CallToolResult = try {
+): CallToolResult = runCatching {
     val setCode = request.arguments?.get("set_code")?.jsonPrimitive?.content
     val collectorNumber = request.arguments?.get("collector_number")?.jsonPrimitive?.content
 
@@ -68,7 +68,7 @@ suspend fun handleGetCard(
             }
         }
     }
-} catch (e: Exception) {
+}.getOrElse { e ->
     CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }
 

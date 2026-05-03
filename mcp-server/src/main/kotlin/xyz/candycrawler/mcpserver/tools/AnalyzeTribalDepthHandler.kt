@@ -32,7 +32,7 @@ fun analyzeTribalDepthSchema() = ToolSchema(
 )
 
 suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequest): CallToolResult {
-    return try {
+    return runCatching {
         val tribe = request.arguments?.get("tribe")?.jsonPrimitive?.content
             ?: return CallToolResult(
                 content = listOf(TextContent("Error: 'tribe' parameter is required")),
@@ -85,7 +85,7 @@ suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequ
         }
 
         CallToolResult(content = listOf(TextContent(summary)))
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
 }

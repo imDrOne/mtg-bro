@@ -74,7 +74,7 @@ fun searchDraftsimArticlesSchema() = ToolSchema(
 suspend fun handleSearchDraftsimArticles(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
-): CallToolResult = try {
+): CallToolResult = runCatching {
     val query = request.arguments?.get("query")?.jsonPrimitive?.content
 
     if (query == null) {
@@ -92,7 +92,7 @@ suspend fun handleSearchDraftsimArticles(
         searchSemanticArticles(context, query, pageSize, types, previewLimit)
             ?: searchDraftsimArticlesFallback(context, query, page, pageSize)
     }
-} catch (e: Exception) {
+}.getOrElse { e ->
     CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }
 

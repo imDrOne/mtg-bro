@@ -115,7 +115,7 @@ fun saveDeckSchema() = ToolSchema(
     required = listOf("name", "format", "mainboard"),
 )
 
-suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): CallToolResult = try {
+suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): CallToolResult = runCatching {
     val args = request.arguments
 
     if (args == null) {
@@ -138,7 +138,7 @@ suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): Call
             else -> saveDeck(context, args, name, format)
         }
     }
-} catch (e: Exception) {
+}.getOrElse { e ->
     CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }
 

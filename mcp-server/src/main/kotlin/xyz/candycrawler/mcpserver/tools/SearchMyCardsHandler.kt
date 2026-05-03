@@ -96,7 +96,7 @@ suspend fun handleSearchMyCards(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
 ): CallToolResult {
-    return try {
+    return runCatching {
         val q = request.arguments?.get("q")?.jsonPrimitive?.content
         val set = request.arguments?.get("set")?.jsonPrimitive?.content
         val colors = request.arguments?.get("colors")?.jsonPrimitive?.content
@@ -174,7 +174,7 @@ suspend fun handleSearchMyCards(
             lines.forEach { appendLine(it) }
         }
         CallToolResult(content = listOf(TextContent(summary)))
-    } catch (e: Exception) {
+    }.getOrElse { e ->
         CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
 }
