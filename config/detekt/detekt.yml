@@ -18,5 +18,3 @@ style:
     active: false
   ReturnCount:
     active: false
-  ThrowsCount:
-    active: false

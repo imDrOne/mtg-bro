@@ -27,32 +27,19 @@ class AuthenticationService(
     private val secureRandom = SecureRandom()
 
     fun login(email: String, rawPassword: String): AuthSession {
-        val user = userRepository.findByEmail(email)
-            ?: throw UserInvalidException("invalid credentials")
-        if (!user.enabled) throw UserInvalidException("invalid credentials")
-        if (!passwordEncoder.matches(rawPassword, user.passwordHash)) {
-            throw UserInvalidException("invalid credentials")
-        }
+        val user = findEnabledUserForLogin(email)
+        validatePassword(rawPassword, user)
         return issueSession(user, Instant.now())
     }
 
     fun refresh(rawRefreshToken: String): AuthSession {
         val now = Instant.now()
         val hash = sha256Hex(rawRefreshToken)
-        val stored = refreshTokenRepository.findByTokenHash(hash)
-            ?: throw RefreshTokenInvalidException("refresh token not recognized")
+        val stored = findStoredRefreshToken(hash)
 
-        if (stored.revokedAt != null) {
-            // Reuse of a revoked token: cascade revoke all tokens for this user (theft detection).
-            refreshTokenRepository.revokeAllForUser(stored.userId, now)
-            throw RefreshTokenInvalidException("refresh token already used")
-        }
-        if (!stored.isActive(now)) {
-            throw RefreshTokenInvalidException("refresh token expired")
-        }
+        validateRefreshToken(stored, now)
 
-        val user = userRepository.findById(stored.userId)
-            ?: throw UserInvalidException("user not found")
+        val user = findRefreshUser(stored)
 
         val newSession = issueSession(user, now)
         refreshTokenRepository.revoke(stored.id!!, replacedById = newSession.refreshTokenId, revokedAt = now)
@@ -66,6 +53,36 @@ class AuthenticationService(
             refreshTokenRepository.revoke(stored.id!!, replacedById = null, revokedAt = Instant.now())
         }
     }
+
+    private fun findEnabledUserForLogin(email: String): User {
+        val user = userRepository.findByEmail(email)
+            ?: throw UserInvalidException("invalid credentials")
+        if (!user.enabled) throw UserInvalidException("invalid credentials")
+        return user
+    }
+
+    private fun validatePassword(rawPassword: String, user: User) {
+        if (!passwordEncoder.matches(rawPassword, user.passwordHash)) {
+            throw UserInvalidException("invalid credentials")
+        }
+    }
+
+    private fun findStoredRefreshToken(hash: String): RefreshToken = refreshTokenRepository.findByTokenHash(hash)
+        ?: throw RefreshTokenInvalidException("refresh token not recognized")
+
+    private fun validateRefreshToken(stored: RefreshToken, now: Instant) {
+        if (stored.revokedAt != null) {
+            // Reuse of a revoked token: cascade revoke all tokens for this user (theft detection).
+            refreshTokenRepository.revokeAllForUser(stored.userId, now)
+            throw RefreshTokenInvalidException("refresh token already used")
+        }
+        if (!stored.isActive(now)) {
+            throw RefreshTokenInvalidException("refresh token expired")
+        }
+    }
+
+    private fun findRefreshUser(stored: RefreshToken): User = userRepository.findById(stored.userId)
+        ?: throw UserInvalidException("user not found")
 
     private fun issueSession(user: User, now: Instant): AuthSession {
         val accessToken = accessTokenIssuer.issue(user, now)

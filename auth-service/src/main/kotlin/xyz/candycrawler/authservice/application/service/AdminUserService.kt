@@ -24,17 +24,11 @@ class AdminUserService(
 
     @Transactional
     fun createAdminUser(email: String, username: String, rawPassword: String): User {
-        if (rawPassword.length < 8) throw UserInvalidException("password must be at least 8 characters")
-
         val normalizedEmail = email.lowercase().trim()
         val trimmedUsername = username.trim()
 
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw UserInvalidException("email is already taken")
-        }
-        if (userRepository.existsByUsername(trimmedUsername)) {
-            throw UserInvalidException("username is already taken")
-        }
+        validatePassword(rawPassword)
+        validateUniqueUser(normalizedEmail, trimmedUsername)
 
         val user = User(
             id = null,
@@ -48,6 +42,19 @@ class AdminUserService(
         val saved = userRepository.save(user)
         userRoleRepository.assignRole(requireNotNull(saved.id), UserRole.ADMIN)
         return saved
+    }
+
+    private fun validatePassword(rawPassword: String) {
+        if (rawPassword.length < 8) throw UserInvalidException("password must be at least 8 characters")
+    }
+
+    private fun validateUniqueUser(normalizedEmail: String, trimmedUsername: String) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw UserInvalidException("email is already taken")
+        }
+        if (userRepository.existsByUsername(trimmedUsername)) {
+            throw UserInvalidException("username is already taken")
+        }
     }
 
     @Transactional
