@@ -68,40 +68,40 @@ fun getDraftsimArticlesByIdSchema() = ToolSchema(
 suspend fun handleGetDraftsimArticlesById(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
-): CallToolResult {
-    return try {
-        val idsArray = request.arguments?.get("ids")?.jsonArray
-            ?: return CallToolResult(content = listOf(TextContent("Error: ids parameter is required")), isError = true)
+): CallToolResult = try {
+    val idsArray = request.arguments?.get("ids")?.jsonArray
 
+    if (idsArray == null) {
+        CallToolResult(content = listOf(TextContent("Error: ids parameter is required")), isError = true)
+    } else {
         val ids = idsArray.map { it.jsonPrimitive.content.toLong() }
         if (ids.isEmpty()) {
-            return CallToolResult(content = listOf(TextContent("Error: ids must not be empty")), isError = true)
+            CallToolResult(content = listOf(TextContent("Error: ids must not be empty")), isError = true)
+        } else {
+            val types = request.arguments?.get("types").toNormalizedTypeSet()
+            val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+            val pageSize =
+                request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 50
+
+            val url = "${context.draftsimParserBaseUrl}/api/v1/articles/by-ids"
+            val requestBody = buildJsonObject {
+                put("ids", JsonArray(ids.map { JsonPrimitive(it) }))
+            }
+
+            val response = context.httpClient.post(url) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody.toString())
+            }.body<String>()
+
+            val articles = Json.parseToJsonElement(response).jsonArray
+            if (articles.isEmpty()) {
+                CallToolResult(content = listOf(TextContent("No articles found for the given IDs")))
+            } else {
+                val output = formatDraftsimArticlesReport(articles, types, page, pageSize)
+                CallToolResult(content = listOf(TextContent(output)))
+            }
         }
-        val types = request.arguments?.get("types").toNormalizedTypeSet()
-        val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize =
-            request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 50
-
-        val url = "${context.draftsimParserBaseUrl}/api/v1/articles/by-ids"
-        val requestBody = buildJsonObject {
-            put("ids", JsonArray(ids.map { JsonPrimitive(it) }))
-        }
-
-        val response = context.httpClient.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(requestBody.toString())
-        }.body<String>()
-
-        val articles = Json.parseToJsonElement(response).jsonArray
-
-        if (articles.isEmpty()) {
-            return CallToolResult(content = listOf(TextContent("No articles found for the given IDs")))
-        }
-
-        val output = formatDraftsimArticlesReport(articles, types, page, pageSize)
-
-        CallToolResult(content = listOf(TextContent(output)))
-    } catch (e: Exception) {
-        CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
+} catch (e: Exception) {
+    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
 }

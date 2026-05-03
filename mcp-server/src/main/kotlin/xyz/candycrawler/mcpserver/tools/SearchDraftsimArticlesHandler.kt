@@ -74,38 +74,52 @@ fun searchDraftsimArticlesSchema() = ToolSchema(
 suspend fun handleSearchDraftsimArticles(
     context: ToolContext,
     request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
-): CallToolResult {
-    return try {
-        val query = request.arguments?.get("query")?.jsonPrimitive?.content
-            ?: return CallToolResult(
-                content = listOf(TextContent("Error: query parameter is required")),
-                isError = true,
-            )
+): CallToolResult = try {
+    val query = request.arguments?.get("query")?.jsonPrimitive?.content
+
+    if (query == null) {
+        CallToolResult(
+            content = listOf(TextContent("Error: query parameter is required")),
+            isError = true,
+        )
+    } else {
         val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull() ?: 1
         val pageSize = request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull() ?: 10
         val types = request.arguments?.get("types").toNormalizedTypeSet()
         val previewLimit =
             request.arguments?.get("preview_limit")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 5) ?: 3
 
-        searchSemanticArticles(context, query, pageSize, types, previewLimit)?.let { return it }
+        searchSemanticArticles(context, query, pageSize, types, previewLimit)
+            ?: searchDraftsimArticlesFallback(context, query, page, pageSize)
+    }
+} catch (e: Exception) {
+    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+}
 
-        val url = "${context.draftsimParserBaseUrl}/api/v1/articles"
-        val response = context.httpClient.get(url) {
-            parameter("q", query)
-            parameter("page", page)
-            parameter("pageSize", pageSize.coerceIn(1, 20))
-            parameter("favorite", true)
-        }.body<String>()
+private suspend fun searchDraftsimArticlesFallback(
+    context: ToolContext,
+    query: String,
+    page: Int,
+    pageSize: Int,
+): CallToolResult {
+    val url = "${context.draftsimParserBaseUrl}/api/v1/articles"
+    val response = context.httpClient.get(url) {
+        parameter("q", query)
+        parameter("page", page)
+        parameter("pageSize", pageSize.coerceIn(1, 20))
+        parameter("favorite", true)
+    }.body<String>()
 
-        val summary = formatDraftsimFallbackSearchResponse(
-            json = Json.parseToJsonElement(response).jsonObject,
-            query = query,
-            exhaustedSimilarityThresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
-        )
-            ?: return CallToolResult(content = listOf(TextContent("No articles found for query: $query")))
+    val summary = formatDraftsimFallbackSearchResponse(
+        json = Json.parseToJsonElement(response).jsonObject,
+        query = query,
+        exhaustedSimilarityThresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
+    )
+
+    return if (summary == null) {
+        CallToolResult(content = listOf(TextContent("No articles found for query: $query")))
+    } else {
         CallToolResult(content = listOf(TextContent(summary)))
-    } catch (e: Exception) {
-        CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
     }
 }
 

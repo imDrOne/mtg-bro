@@ -109,52 +109,78 @@ internal fun formatDraftsimSemanticSearchResponse(
     similarityThreshold: Double? = null,
     semanticAttempts: Int? = null,
 ): String? {
-    val results = json["results"]?.jsonArray ?: return null
-    if (results.isEmpty()) return null
+    val results = json["results"]?.jsonArray
 
-    val safePreviewLimit = previewLimit.coerceIn(1, 5)
-    val lines = results.mapNotNull { el ->
-        val result = el.jsonObject
-        val article = result["article"]?.jsonObject ?: buildJsonObject { }
-        val previews = result["matches"]?.jsonArray.orEmpty()
-            .mapNotNull { it as? JsonObject }
-            .filter { match -> types.isEmpty() || match["insightType"].normalizedType() in types }
-            .take(safePreviewLimit)
-            .mapIndexed { index, match -> formatPreviewMatch(index + 1, match) }
+    return if (results.isNullOrEmpty()) {
+        null
+    } else {
+        val safePreviewLimit = previewLimit.coerceIn(1, 5)
+        val lines = results.mapNotNull { el ->
+            val result = el.jsonObject
+            val article = result["article"]?.jsonObject ?: buildJsonObject { }
+            val previews = result["matches"]?.jsonArray.orEmpty()
+                .mapNotNull { it as? JsonObject }
+                .filter { match -> types.isEmpty() || match["insightType"].normalizedType() in types }
+                .take(safePreviewLimit)
+                .mapIndexed { index, match -> formatPreviewMatch(index + 1, match) }
 
-        if (types.isNotEmpty() && previews.isEmpty()) return@mapNotNull null
-
-        val id = article["id"]?.jsonPrimitive?.content ?: "?"
-        val title = article["title"]?.jsonPrimitive?.content ?: "Untitled"
-        val slug = article["slug"]?.jsonPrimitive?.content ?: ""
-        val publishedAt = article["publishedAt"]?.jsonPrimitive?.contentOrNull?.take(10) ?: ""
-        val score = result["score"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
-
-        buildString {
-            append("[id=$id] $title - $slug ($publishedAt)")
-            if (score != null) append(" score=${String.format(Locale.US, "%.3f", score)}")
-            previews.forEach { preview ->
-                appendLine()
-                append(preview)
+            if (types.isNotEmpty() && previews.isEmpty()) {
+                null
+            } else {
+                formatSemanticArticleLine(result, article, previews)
             }
         }
+
+        lines
+            .takeUnless { it.isEmpty() }
+            ?.let {
+                buildSemanticSearchSummary(
+                    lines = it,
+                    safePreviewLimit = safePreviewLimit,
+                    types = types,
+                    similarityThreshold = similarityThreshold,
+                    semanticAttempts = semanticAttempts,
+                )
+            }
     }
-    if (lines.isEmpty()) return null
+}
+
+private fun formatSemanticArticleLine(result: JsonObject, article: JsonObject, previews: List<String>): String {
+    val id = article["id"]?.jsonPrimitive?.content ?: "?"
+    val title = article["title"]?.jsonPrimitive?.content ?: "Untitled"
+    val slug = article["slug"]?.jsonPrimitive?.content ?: ""
+    val publishedAt = article["publishedAt"]?.jsonPrimitive?.contentOrNull?.take(10) ?: ""
+    val score = result["score"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
 
     return buildString {
-        appendLine("Found ${lines.size} semantically relevant articles")
-        appendLine("preview_limit: $safePreviewLimit")
-        if (similarityThreshold != null) {
-            appendLine("similarity_threshold: ${formatSimilarityThreshold(similarityThreshold)}")
+        append("[id=$id] $title - $slug ($publishedAt)")
+        if (score != null) append(" score=${String.format(Locale.US, "%.3f", score)}")
+        previews.forEach { preview ->
+            appendLine()
+            append(preview)
         }
-        if (semanticAttempts != null) {
-            appendLine("semantic_attempts: $semanticAttempts")
-        }
-        if (types.isNotEmpty()) appendLine("types: ${types.joinToString()}")
-        appendLine()
-        lines.forEach { appendLine(it) }
-    }.trimEnd()
+    }
 }
+
+private fun buildSemanticSearchSummary(
+    lines: List<String>,
+    safePreviewLimit: Int,
+    types: Set<String>,
+    similarityThreshold: Double?,
+    semanticAttempts: Int?,
+): String = buildString {
+    appendLine("Found ${lines.size} semantically relevant articles")
+    appendLine("preview_limit: $safePreviewLimit")
+    if (similarityThreshold != null) {
+        appendLine("similarity_threshold: ${formatSimilarityThreshold(similarityThreshold)}")
+    }
+    if (semanticAttempts != null) {
+        appendLine("semantic_attempts: $semanticAttempts")
+    }
+    if (types.isNotEmpty()) appendLine("types: ${types.joinToString()}")
+    appendLine()
+    lines.forEach { appendLine(it) }
+}.trimEnd()
 
 internal fun formatDraftsimFallbackSearchResponse(
     json: JsonObject,

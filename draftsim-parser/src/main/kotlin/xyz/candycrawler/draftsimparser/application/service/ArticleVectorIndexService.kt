@@ -35,17 +35,18 @@ class ArticleVectorIndexService(
     private val semaphore = Semaphore(MAX_CONCURRENT_VECTOR_INDEXES)
 
     fun replaceIndex(article: Article) {
-        if (!enabled) return
-        val articleId = article.id ?: return
-        val vectorStore = vectorStoreProvider.getIfAvailable() ?: run {
-            log.info("Article id={}: vector index is enabled but no ArticleVectorStore is available", articleId)
-            return
-        }
-
-        runCatching {
-            vectorStore.replaceArticleDocuments(articleId, buildDocuments(article))
-        }.onFailure { ex ->
-            log.error("Article id={}: vector indexing failed", articleId, ex)
+        val articleId = article.id
+        if (enabled && articleId != null) {
+            val vectorStore = vectorStoreProvider.getIfAvailable()
+            if (vectorStore == null) {
+                log.info("Article id={}: vector index is enabled but no ArticleVectorStore is available", articleId)
+            } else {
+                runCatching {
+                    vectorStore.replaceArticleDocuments(articleId, buildDocuments(article))
+                }.onFailure { ex ->
+                    log.error("Article id={}: vector indexing failed", articleId, ex)
+                }
+            }
         }
     }
 
@@ -68,20 +69,31 @@ class ArticleVectorIndexService(
     }
 
     internal fun buildDocuments(article: Article): List<ArticleVectorDocument> {
-        val articleId = article.id ?: return emptyList()
-        val analyzedText = article.analyzedText ?: return emptyList()
-        val root = runCatching { objectMapper.readTree(analyzedText) }.getOrNull() ?: return emptyList()
-        if (root["schema_version"]?.asInt() != 2) return emptyList()
+        val articleId = article.id
+        val analyzedText = article.analyzedText
+        val root = analyzedText?.let { runCatching { objectMapper.readTree(it) }.getOrNull() }
+        val insights = root
+            ?.takeIf { it["schema_version"]?.asInt() == ARTICLE_SCHEMA_VERSION }
+            ?.get("insights")
+            ?.takeIf { it.isArray }
 
-        val insights = root["insights"]?.takeIf { it.isArray } ?: return emptyList()
-        return insights.mapIndexedNotNull { index, insight ->
-            if (!insight.isObject) return@mapIndexedNotNull null
-            val content = buildContent(article, insight).takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
-            ArticleVectorDocument(
-                id = buildDocumentId(articleId, index),
-                content = content,
-                metadata = buildMetadata(article, root, insight, index),
-            )
+        return if (articleId == null || insights == null) {
+            emptyList()
+        } else {
+            insights.mapIndexedNotNull { index, insight ->
+                val content = insight
+                    .takeIf { it.isObject }
+                    ?.let { buildContent(article, it) }
+                    ?.takeIf { it.isNotBlank() }
+
+                content?.let {
+                    ArticleVectorDocument(
+                        id = buildDocumentId(articleId, index),
+                        content = it,
+                        metadata = buildMetadata(article, root, insight, index),
+                    )
+                }
+            }
         }
     }
 
@@ -127,6 +139,7 @@ class ArticleVectorIndexService(
 }
 
 private const val MAX_CONCURRENT_VECTOR_INDEXES = 3
+private const val ARTICLE_SCHEMA_VERSION = 2
 
 private fun buildDocumentId(articleId: Long, insightIndex: Int): String = UUID.nameUUIDFromBytes(
     "draftsim-article-$articleId-insight-$insightIndex".toByteArray(StandardCharsets.UTF_8),

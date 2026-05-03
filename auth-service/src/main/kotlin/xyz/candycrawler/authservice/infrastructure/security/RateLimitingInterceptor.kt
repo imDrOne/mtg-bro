@@ -52,17 +52,21 @@ class RateLimitingInterceptor(
             path == "/connect/register" ->
                 dcrProxyManager.builder().build(ip) { dcrConfig() }
 
-            else -> return true
+            else -> null
         }
 
-        if (bucket.tryConsume(1)) {
-            return true
-        }
+        return when {
+            bucket == null -> true
 
-        response.status = HttpStatus.TOO_MANY_REQUESTS.value()
-        response.contentType = MediaType.APPLICATION_JSON_VALUE
-        objectMapper.writeValue(response.writer, mapOf("error" to "Too many requests"))
-        return false
+            bucket.tryConsume(1) -> true
+
+            else -> {
+                response.status = HttpStatus.TOO_MANY_REQUESTS.value()
+                response.contentType = MediaType.APPLICATION_JSON_VALUE
+                objectMapper.writeValue(response.writer, mapOf("error" to "Too many requests"))
+                false
+            }
+        }
     }
 
     private fun registrationConfig(): BucketConfiguration = BucketConfiguration.builder()

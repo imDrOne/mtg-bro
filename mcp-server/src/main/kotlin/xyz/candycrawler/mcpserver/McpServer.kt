@@ -185,11 +185,13 @@ fun createServer(
 }
 
 internal suspend fun checkAccess(toolName: String, config: ToolAccessConfigData): CallToolResult? {
-    if (!isAuthEnabled()) return null
     val roles = currentUserRoles()
-    if (config.hasAccess(toolName, roles)) return null
-    return CallToolResult(
-        content = listOf(TextContent("Access denied: tool '$toolName' requires PRO subscription")),
-        isError = true,
-    )
+    return if (!isAuthEnabled() || config.hasAccess(toolName, roles)) {
+        null
+    } else {
+        CallToolResult(
+            content = listOf(TextContent("Access denied: tool '$toolName' requires PRO subscription")),
+            isError = true,
+        )
+    }
 }

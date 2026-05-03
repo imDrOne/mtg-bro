@@ -16,5 +16,3 @@ exceptions:
 style:
   MagicNumber:
     active: false
-  ReturnCount:
-    active: false

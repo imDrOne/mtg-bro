@@ -7,33 +7,37 @@ import kotlin.math.min
 class ArticleKeywordExtractor {
 
     fun extract(text: String?, limit: Int = DEFAULT_LIMIT): List<String> {
-        if (text.isNullOrBlank() || limit <= 0) return emptyList()
-
-        val tokens = TOKEN_REGEX.findAll(removeWordPressReplacementMarker(text).lowercase())
-            .map { it.value.trim('\'') }
-            .filter { it.length >= MIN_TOKEN_LENGTH && it !in STOP_WORDS }
-            .toList()
-
-        if (tokens.isEmpty()) return emptyList()
-
-        val scores = linkedMapOf<String, Double>()
-        tokens.groupingBy { it }.eachCount().forEach { (token, count) ->
-            scores[token] = score(count, token.length, isPhrase = false)
+        val tokens = if (text.isNullOrBlank() || limit <= 0) {
+            emptyList()
+        } else {
+            TOKEN_REGEX.findAll(removeWordPressReplacementMarker(text).lowercase())
+                .map { it.value.trim('\'') }
+                .filter { it.length >= MIN_TOKEN_LENGTH && it !in STOP_WORDS }
+                .toList()
         }
-        tokens.windowed(size = 2).forEach { pair ->
-            if (pair[0] != pair[1]) {
-                val phrase = "${pair[0]} ${pair[1]}"
-                scores[phrase] = (scores[phrase] ?: 0.0) + score(1, phrase.length, isPhrase = true)
+
+        return if (tokens.isEmpty()) {
+            emptyList()
+        } else {
+            val scores = linkedMapOf<String, Double>()
+            tokens.groupingBy { it }.eachCount().forEach { (token, count) ->
+                scores[token] = score(count, token.length, isPhrase = false)
             }
-        }
+            tokens.windowed(size = 2).forEach { pair ->
+                if (pair[0] != pair[1]) {
+                    val phrase = "${pair[0]} ${pair[1]}"
+                    scores[phrase] = (scores[phrase] ?: 0.0) + score(1, phrase.length, isPhrase = true)
+                }
+            }
 
-        return scores.entries
-            .sortedWith(
-                compareByDescending<Map.Entry<String, Double>> { it.value }
-                    .thenBy { it.key },
-            )
-            .take(min(limit, scores.size))
-            .map { it.key }
+            scores.entries
+                .sortedWith(
+                    compareByDescending<Map.Entry<String, Double>> { it.value }
+                        .thenBy { it.key },
+                )
+                .take(min(limit, scores.size))
+                .map { it.key }
+        }
     }
 
     private fun score(count: Int, length: Int, isPhrase: Boolean): Double {

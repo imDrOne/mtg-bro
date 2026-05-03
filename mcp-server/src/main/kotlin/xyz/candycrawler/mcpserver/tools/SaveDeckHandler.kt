@@ -10,6 +10,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -114,90 +115,116 @@ fun saveDeckSchema() = ToolSchema(
     required = listOf("name", "format", "mainboard"),
 )
 
-suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): CallToolResult {
-    return try {
-        val args = request.arguments
-            ?: return CallToolResult(content = listOf(TextContent("Error: no arguments provided")), isError = true)
+suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): CallToolResult = try {
+    val args = request.arguments
 
+    if (args == null) {
+        CallToolResult(content = listOf(TextContent("Error: no arguments provided")), isError = true)
+    } else {
         val name = args["name"]?.jsonPrimitive?.content
-            ?: return CallToolResult(content = listOf(TextContent("Error: 'name' is required")), isError = true)
         val format = args["format"]?.jsonPrimitive?.content
-            ?: return CallToolResult(content = listOf(TextContent("Error: 'format' is required")), isError = true)
-        val comment = args["comment"]?.jsonPrimitive?.content
 
-        fun parseEntries(key: String) = buildJsonArray {
-            args[key]?.jsonArray?.forEach { el ->
-                val obj = el.jsonObject
-                val setCode = obj["setCode"]?.jsonPrimitive?.content ?: ""
-                val collectorNumber = obj["collectorNumber"]?.jsonPrimitive?.content ?: ""
-                val quantity = obj["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-                add(
-                    buildJsonObject {
-                        put("setCode", JsonPrimitive(setCode))
-                        put("collectorNumber", JsonPrimitive(collectorNumber))
-                        put("quantity", JsonPrimitive(quantity))
-                    },
-                )
-            }
+        when {
+            name == null -> CallToolResult(
+                content = listOf(TextContent("Error: 'name' is required")),
+                isError = true,
+            )
+
+            format == null -> CallToolResult(
+                content = listOf(TextContent("Error: 'format' is required")),
+                isError = true,
+            )
+
+            else -> saveDeck(context, args, name, format)
         }
+    }
+} catch (e: Exception) {
+    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+}
 
-        val body = buildJsonObject {
-            put("name", name)
-            put("format", format)
-            if (comment != null) put("comment", comment)
-            put("mainboard", parseEntries("mainboard"))
-            put("sideboard", parseEntries("sideboard"))
-        }
+private suspend fun saveDeck(
+    context: ToolContext,
+    args: Map<String, JsonElement>,
+    name: String,
+    format: String,
+): CallToolResult {
+    val comment = args["comment"]?.jsonPrimitive?.content
 
-        val response = context.httpClient.post("${context.baseUrl}/api/v1/decks") {
-            contentType(ContentType.Application.Json)
-            setBody(body.toString())
-        }
+    val body = buildJsonObject {
+        put("name", name)
+        put("format", format)
+        if (comment != null) put("comment", comment)
+        put("mainboard", parseEntries(args, "mainboard"))
+        put("sideboard", parseEntries(args, "sideboard"))
+    }
 
-        val responseText = response.bodyAsText()
+    val response = context.httpClient.post("${context.baseUrl}/api/v1/decks") {
+        contentType(ContentType.Application.Json)
+        setBody(body.toString())
+    }
 
-        if (response.status.value == 422) {
+    val responseText = response.bodyAsText()
+
+    return when {
+        response.status.value == 422 -> {
             val errorMessage = runCatching {
                 Json.parseToJsonElement(responseText).jsonObject["message"]?.jsonPrimitive?.content
             }.getOrNull() ?: responseText
-            return CallToolResult(
+            CallToolResult(
                 content = listOf(TextContent("Validation failed: $errorMessage")),
                 isError = true,
             )
         }
 
-        if (!response.status.value.toString().startsWith("2")) {
-            return CallToolResult(
+        !response.status.value.toString().startsWith("2") ->
+            CallToolResult(
                 content = listOf(TextContent("Error ${response.status.value}: $responseText")),
                 isError = true,
             )
-        }
 
-        val deck = Json.parseToJsonElement(responseText).jsonObject
-        val deckId = deck["id"]?.jsonPrimitive?.content ?: "?"
-        val deckName = deck["name"]?.jsonPrimitive?.content ?: name
-        val deckFormat = deck["format"]?.jsonPrimitive?.content ?: format
-        val colors = deck["colorIdentity"]?.jsonArray
-            ?.joinToString("") { it.jsonPrimitive.content }
-            ?.ifEmpty { "colorless" }
-            ?: "colorless"
-        val mainboardCount = deck["mainboard"]?.jsonArray
-            ?.sumOf { it.jsonObject["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0 }
-            ?: 0
-        val sideboardCount = deck["sideboard"]?.jsonArray
-            ?.sumOf { it.jsonObject["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0 }
-            ?: 0
-
-        CallToolResult(
-            content = listOf(
-                TextContent(
-                    "Deck saved successfully!\n" +
-                        "ID: $deckId | Name: $deckName | Format: $deckFormat | Colors: $colors\n" +
-                        "Mainboard: $mainboardCount cards | Sideboard: $sideboardCount cards",
-                ),
-            ),
-        )
-    } catch (e: Exception) {
-        CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+        else -> formatSavedDeck(responseText, name, format)
     }
+}
+
+private fun parseEntries(args: Map<String, JsonElement>, key: String) = buildJsonArray {
+    args[key]?.jsonArray?.forEach { el ->
+        val obj = el.jsonObject
+        val setCode = obj["setCode"]?.jsonPrimitive?.content ?: ""
+        val collectorNumber = obj["collectorNumber"]?.jsonPrimitive?.content ?: ""
+        val quantity = obj["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+        add(
+            buildJsonObject {
+                put("setCode", JsonPrimitive(setCode))
+                put("collectorNumber", JsonPrimitive(collectorNumber))
+                put("quantity", JsonPrimitive(quantity))
+            },
+        )
+    }
+}
+
+private fun formatSavedDeck(responseText: String, name: String, format: String): CallToolResult {
+    val deck = Json.parseToJsonElement(responseText).jsonObject
+    val deckId = deck["id"]?.jsonPrimitive?.content ?: "?"
+    val deckName = deck["name"]?.jsonPrimitive?.content ?: name
+    val deckFormat = deck["format"]?.jsonPrimitive?.content ?: format
+    val colors = deck["colorIdentity"]?.jsonArray
+        ?.joinToString("") { it.jsonPrimitive.content }
+        ?.ifEmpty { "colorless" }
+        ?: "colorless"
+    val mainboardCount = deck["mainboard"]?.jsonArray
+        ?.sumOf { it.jsonObject["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0 }
+        ?: 0
+    val sideboardCount = deck["sideboard"]?.jsonArray
+        ?.sumOf { it.jsonObject["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0 }
+        ?: 0
+
+    return CallToolResult(
+        content = listOf(
+            TextContent(
+                "Deck saved successfully!\n" +
+                    "ID: $deckId | Name: $deckName | Format: $deckFormat | Colors: $colors\n" +
+                    "Mainboard: $mainboardCount cards | Sideboard: $sideboardCount cards",
+            ),
+        ),
+    )
 }

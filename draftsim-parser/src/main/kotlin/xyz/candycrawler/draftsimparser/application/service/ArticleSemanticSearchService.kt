@@ -51,44 +51,49 @@ class ArticleSemanticSearchService(
         favoriteOnly: Boolean? = true,
     ): List<ArticleSemanticSearchResult> {
         val normalizedQuery = query.normalizeSemanticQuery()
-        if (!enabled || normalizedQuery.isBlank()) return emptyList()
-        val vectorStore = vectorStoreProvider.getIfAvailable() ?: return emptyList()
-        val effectiveTopK = topK?.coerceIn(1, MAX_TOP_K) ?: defaultTopK
-        val effectiveSimilarityThreshold = similarityThreshold ?: defaultSimilarityThreshold
-        val cacheKey = SearchCacheKey(
-            query = normalizedQuery,
-            topK = effectiveTopK,
-            similarityThreshold = effectiveSimilarityThreshold,
-            favoriteOnly = favoriteOnly,
-        )
+        val vectorStore = vectorStoreProvider.getIfAvailable()
 
-        searchCache.getIfPresent(cacheKey)?.let { return it }
-
-        val matches = runCatching {
-            vectorStore.search(
+        return if (!enabled || normalizedQuery.isBlank() || vectorStore == null) {
+            emptyList()
+        } else {
+            val effectiveTopK = topK?.coerceIn(1, MAX_TOP_K) ?: defaultTopK
+            val effectiveSimilarityThreshold = similarityThreshold ?: defaultSimilarityThreshold
+            val cacheKey = SearchCacheKey(
                 query = normalizedQuery,
                 topK = effectiveTopK,
                 similarityThreshold = effectiveSimilarityThreshold,
+                favoriteOnly = favoriteOnly,
             )
-        }.onFailure { ex ->
-            log.warn("Semantic article search failed for query='{}'", normalizedQuery, ex)
-        }.getOrDefault(emptyList())
 
-        return matches
-            .groupBy { it.articleId }
-            .mapNotNull { (articleId, articleMatches) ->
-                val article = runCatching { queryArticleRepository.findById(articleId) }.getOrNull()
-                    ?: return@mapNotNull null
-                if (favoriteOnly == true && !article.favorite) return@mapNotNull null
+            searchCache.getIfPresent(cacheKey) ?: run {
+                val matches = runCatching {
+                    vectorStore.search(
+                        query = normalizedQuery,
+                        topK = effectiveTopK,
+                        similarityThreshold = effectiveSimilarityThreshold,
+                    )
+                }.onFailure { ex ->
+                    log.warn("Semantic article search failed for query='{}'", normalizedQuery, ex)
+                }.getOrDefault(emptyList())
 
-                ArticleSemanticSearchResult(
-                    article = article,
-                    score = articleMatches.mapNotNull { it.score }.maxOrNull(),
-                    matches = articleMatches.map { it.toSemanticMatch() },
-                )
+                matches
+                    .groupBy { it.articleId }
+                    .mapNotNull { (articleId, articleMatches) ->
+                        val article = runCatching { queryArticleRepository.findById(articleId) }.getOrNull()
+                        if (article == null || (favoriteOnly == true && !article.favorite)) {
+                            null
+                        } else {
+                            ArticleSemanticSearchResult(
+                                article = article,
+                                score = articleMatches.mapNotNull { it.score }.maxOrNull(),
+                                matches = articleMatches.map { it.toSemanticMatch() },
+                            )
+                        }
+                    }
+                    .sortedByDescending { it.score ?: 0.0 }
+                    .also { searchCache.put(cacheKey, it) }
             }
-            .sortedByDescending { it.score ?: 0.0 }
-            .also { searchCache.put(cacheKey, it) }
+        }
     }
 
     fun evictSearchCache() {

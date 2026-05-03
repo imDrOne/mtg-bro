@@ -27,10 +27,14 @@ import xyz.candycrawler.collectionmanager.domain.card.model.CardWithCollection
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 
 private fun parseColorFilter(input: String?): List<String>? {
-    if (input.isNullOrBlank()) return null
-    val normalized = input.lowercase().replace(",", "").replace(" ", "")
-    if (normalized.isEmpty()) return null
-    return normalized.map { it.toString().uppercase() }.distinct()
+    val normalized = input
+        ?.takeUnless { it.isBlank() }
+        ?.lowercase()
+        ?.replace(",", "")
+        ?.replace(" ", "")
+        ?.takeUnless { it.isEmpty() }
+
+    return normalized?.map { it.toString().uppercase() }?.distinct()
 }
 
 @Tag(name = "Card Search", description = "Search cards in the local library")

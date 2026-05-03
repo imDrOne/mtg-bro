@@ -26,20 +26,20 @@ class TrustedProxyValidator(@Value("\${auth.trusted-proxy-cidr}") cidr: String) 
     private fun isInCidr(address: InetAddress): Boolean {
         val networkBytes = networkAddress.address
         val addressBytes = address.address
-        if (networkBytes.size != addressBytes.size) return false
-
         val fullBytes = prefixLength / 8
+
+        return networkBytes.size == addressBytes.size &&
+            (0 until fullBytes).all { networkBytes[it] == addressBytes[it] } &&
+            hasMatchingRemainingBits(networkBytes, addressBytes, fullBytes)
+    }
+
+    private fun hasMatchingRemainingBits(networkBytes: ByteArray, addressBytes: ByteArray, fullBytes: Int): Boolean {
         val remainingBits = prefixLength % 8
-
-        for (i in 0 until fullBytes) {
-            if (networkBytes[i] != addressBytes[i]) return false
-        }
-
-        if (remainingBits > 0 && fullBytes < networkBytes.size) {
+        return if (remainingBits > 0 && fullBytes < networkBytes.size) {
             val mask = (0xFF shl (8 - remainingBits)) and 0xFF
-            if ((networkBytes[fullBytes].toInt() and mask) != (addressBytes[fullBytes].toInt() and mask)) return false
+            (networkBytes[fullBytes].toInt() and mask) == (addressBytes[fullBytes].toInt() and mask)
+        } else {
+            true
         }
-
-        return true
     }
 }
