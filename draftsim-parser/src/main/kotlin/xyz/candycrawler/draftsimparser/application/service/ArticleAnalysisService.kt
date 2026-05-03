@@ -94,7 +94,7 @@ class ArticleAnalysisService(
         }.onFailure { ex ->
             log.error("Article id={}: analysis failed", message.articleId, ex)
             articleRepository.update(message.articleId) {
-                it.copy(errorMsg = ex.message?.take(1000), analyzEndedAt = LocalDateTime.now())
+                it.copy(errorMsg = ex.message?.take(ERROR_MESSAGE_MAX_LENGTH), analyzEndedAt = LocalDateTime.now())
             }
         }
     }
@@ -157,5 +157,9 @@ class ArticleAnalysisService(
         isObject -> listOf(this)
         isArray -> flatMap { it.flattenInsightObjects() }
         else -> emptyList()
+    }
+
+    private companion object {
+        const val ERROR_MESSAGE_MAX_LENGTH = 1000
     }
 }

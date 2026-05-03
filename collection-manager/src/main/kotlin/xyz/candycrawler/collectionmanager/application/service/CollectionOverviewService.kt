@@ -64,7 +64,7 @@ class CollectionOverviewService(private val queryCardRepository: QueryCardReposi
             }
         return tribeCards.entries
             .sortedByDescending { it.value.size }
-            .take(10)
+            .take(TOP_TRIBES_LIMIT)
             .map { (tribe, tribeCardList) ->
                 TopTribeResponse(
                     name = tribe,
@@ -89,4 +89,8 @@ class CollectionOverviewService(private val queryCardRepository: QueryCardReposi
         .entries
         .sortedByDescending { it.value }
         .associate { it.toPair() }
+
+    private companion object {
+        const val TOP_TRIBES_LIMIT = 10
+    }
 }

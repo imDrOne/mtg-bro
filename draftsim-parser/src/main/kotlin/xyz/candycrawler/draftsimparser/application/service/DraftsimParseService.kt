@@ -65,7 +65,7 @@ class DraftsimParseService(
                     parseTaskRepository.update(taskId) {
                         it.copy(
                             status = ParseTaskStatus.FAILED,
-                            errorMessage = e.message?.take(1000),
+                            errorMessage = e.message?.take(ERROR_MESSAGE_MAX_LENGTH),
                             updatedAt = LocalDateTime.now(),
                         )
                     }
@@ -177,5 +177,6 @@ class DraftsimParseService(
     companion object {
         private const val MAX_PARALLEL_ARTICLES = 5
         private const val CHUNK_SIZE = 5
+        private const val ERROR_MESSAGE_MAX_LENGTH = 1000
     }
 }

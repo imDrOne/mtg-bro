@@ -6,7 +6,3 @@ complexity:
   TooManyFunctions:
     allowedFunctionsPerFile: 20
     allowedFunctionsPerClass: 20
-
-style:
-  MagicNumber:
-    active: false

@@ -79,6 +79,10 @@ internal fun parseDraftsimArticleListOptions(arguments: JsonObject?): DraftsimAr
     DraftsimArticleListOptions(
         query = arguments?.get("q")?.jsonPrimitive?.contentOrNull?.trim()?.takeIf(String::isNotBlank),
         page = arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull()?.coerceAtLeast(1) ?: 1,
-        pageSize = arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 20,
+        pageSize = arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()
+            ?.coerceIn(1, MAX_PAGE_SIZE) ?: DEFAULT_PAGE_SIZE,
         favorite = arguments?.get("favorite")?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
     )
+
+private const val DEFAULT_PAGE_SIZE = 20
+private const val MAX_PAGE_SIZE = 100

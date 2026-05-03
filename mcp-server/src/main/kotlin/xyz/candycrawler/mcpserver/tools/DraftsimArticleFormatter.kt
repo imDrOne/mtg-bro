@@ -270,11 +270,13 @@ private fun JsonElement?.formatInsightValue(): String? = when (this) {
         .takeIf { it.isNotEmpty() }
         ?.joinToString("; ")
 
-    is JsonObject -> toString().collapseWhitespace().take(300).takeIf(String::isNotBlank)
+    is JsonObject -> toString().collapseWhitespace().take(MAX_FORMATTED_JSON_VALUE_LENGTH).takeIf(String::isNotBlank)
 
     else -> null
 }
 
 private fun String.collapseWhitespace(): String = replace(Regex("\\s+"), " ").trim()
+
+private const val MAX_FORMATTED_JSON_VALUE_LENGTH = 300
 
 private fun formatSimilarityThreshold(value: Double): String = String.format(Locale.US, "%.2f", value)

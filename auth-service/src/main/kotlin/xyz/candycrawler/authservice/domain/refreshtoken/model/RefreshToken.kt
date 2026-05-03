@@ -15,9 +15,15 @@ class RefreshToken(
     init {
         if (userId <= 0) throw RefreshTokenInvalidException("userId must be positive")
         if (tokenHash.isBlank()) throw RefreshTokenInvalidException("tokenHash must not be blank")
-        if (tokenHash.length != 64) throw RefreshTokenInvalidException("tokenHash must be SHA-256 hex (64 chars)")
+        if (tokenHash.length != SHA256_HEX_LENGTH) {
+            throw RefreshTokenInvalidException("tokenHash must be SHA-256 hex ($SHA256_HEX_LENGTH chars)")
+        }
         if (!expiresAt.isAfter(issuedAt)) throw RefreshTokenInvalidException("expiresAt must be after issuedAt")
     }
 
     fun isActive(now: Instant): Boolean = revokedAt == null && now.isBefore(expiresAt)
+
+    private companion object {
+        const val SHA256_HEX_LENGTH = 64
+    }
 }

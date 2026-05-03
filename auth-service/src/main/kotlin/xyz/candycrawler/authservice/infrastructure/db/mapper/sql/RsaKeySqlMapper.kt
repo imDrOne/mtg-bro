@@ -42,7 +42,7 @@ class RsaKeySqlMapper(
 
     private fun generate(): RSAKey {
         val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-        keyPairGenerator.initialize(2048)
+        keyPairGenerator.initialize(RSA_KEY_SIZE_BITS)
         val keyPair = keyPairGenerator.generateKeyPair()
         return RSAKey.Builder(keyPair.public as RSAPublicKey)
             .privateKey(keyPair.private as RSAPrivateKey)
@@ -79,5 +79,9 @@ class RsaKeySqlMapper(
             .privateKey(privateKey)
             .keyID(record.keyId)
             .build()
+    }
+
+    private companion object {
+        const val RSA_KEY_SIZE_BITS = 2048
     }
 }

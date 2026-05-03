@@ -166,7 +166,7 @@ private suspend fun saveDeck(
     val responseText = response.bodyAsText()
 
     return when {
-        response.status.value == 422 -> {
+        response.status.value == UNPROCESSABLE_ENTITY_STATUS -> {
             val errorMessage = runCatching {
                 Json.parseToJsonElement(responseText).jsonObject["message"]?.jsonPrimitive?.content
             }.getOrNull() ?: responseText
@@ -185,6 +185,8 @@ private suspend fun saveDeck(
         else -> formatSavedDeck(responseText, name, format)
     }
 }
+
+private const val UNPROCESSABLE_ENTITY_STATUS = 422
 
 private fun parseEntries(args: Map<String, JsonElement>, key: String) = buildJsonArray {
     args[key]?.jsonArray?.forEach { el ->

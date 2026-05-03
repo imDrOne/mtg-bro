@@ -14,8 +14,14 @@ data class TrackedLimitedStatSet(
         fun invalid(reason: String): Nothing = throw InvalidTrackedLimitedStatSetException(reason)
 
         if (setCode.isBlank()) invalid("setCode must not be blank")
-        if (setCode.length > 10) invalid("setCode must not be longer than 10 characters")
+        if (setCode.length > MAX_SET_CODE_LENGTH) {
+            invalid("setCode must not be longer than $MAX_SET_CODE_LENGTH characters")
+        }
     }
 
     fun isActive(today: LocalDate): Boolean = !watchUntil.isBefore(today)
+
+    private companion object {
+        const val MAX_SET_CODE_LENGTH = 10
+    }
 }

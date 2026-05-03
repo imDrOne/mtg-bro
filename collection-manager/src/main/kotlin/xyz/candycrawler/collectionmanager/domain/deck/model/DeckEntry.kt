@@ -12,6 +12,12 @@ class DeckEntry(
     init {
         if (cardId <= 0) throw InvalidDeckException("cardId must be positive")
         if (quantity <= 0) throw InvalidDeckException("quantity must be positive")
-        if (quantity > 4) throw InvalidDeckException("quantity must not exceed 4 for any single card")
+        if (quantity > MAX_COPIES_PER_CARD) {
+            throw InvalidDeckException("quantity must not exceed $MAX_COPIES_PER_CARD for any single card")
+        }
+    }
+
+    private companion object {
+        const val MAX_COPIES_PER_CARD = 4
     }
 }

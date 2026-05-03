@@ -45,7 +45,9 @@ class AdminUserService(
     }
 
     private fun validatePassword(rawPassword: String) {
-        if (rawPassword.length < 8) throw UserInvalidException("password must be at least 8 characters")
+        if (rawPassword.length < MIN_PASSWORD_LENGTH) {
+            throw UserInvalidException("password must be at least $MIN_PASSWORD_LENGTH characters")
+        }
     }
 
     private fun validateUniqueUser(normalizedEmail: String, trimmedUsername: String) {
@@ -77,4 +79,8 @@ class AdminUserService(
 
     @Transactional(readOnly = true)
     fun listUsers(filter: UserFilter, page: PageRequest): PageResponse<User> = userRepository.findAll(filter, page)
+
+    private companion object {
+        const val MIN_PASSWORD_LENGTH = 8
+    }
 }

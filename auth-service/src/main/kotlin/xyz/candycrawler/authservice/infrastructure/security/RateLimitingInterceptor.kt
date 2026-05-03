@@ -72,8 +72,8 @@ class RateLimitingInterceptor(
     private fun registrationConfig(): BucketConfiguration = BucketConfiguration.builder()
         .addLimit(
             Bandwidth.builder()
-                .capacity(5)
-                .refillIntervally(5, Duration.ofMinutes(10))
+                .capacity(REGISTRATION_CAPACITY)
+                .refillIntervally(REGISTRATION_REFILL_TOKENS, Duration.ofMinutes(REGISTRATION_REFILL_MINUTES))
                 .build(),
         )
         .build()
@@ -81,8 +81,8 @@ class RateLimitingInterceptor(
     private fun loginConfig(): BucketConfiguration = BucketConfiguration.builder()
         .addLimit(
             Bandwidth.builder()
-                .capacity(10)
-                .refillIntervally(10, Duration.ofMinutes(5))
+                .capacity(LOGIN_CAPACITY)
+                .refillIntervally(LOGIN_REFILL_TOKENS, Duration.ofMinutes(LOGIN_REFILL_MINUTES))
                 .build(),
         )
         .build()
@@ -90,8 +90,8 @@ class RateLimitingInterceptor(
     private fun dcrConfig(): BucketConfiguration = BucketConfiguration.builder()
         .addLimit(
             Bandwidth.builder()
-                .capacity(10)
-                .refillIntervally(10, Duration.ofMinutes(10))
+                .capacity(DCR_CAPACITY)
+                .refillIntervally(DCR_REFILL_TOKENS, Duration.ofMinutes(DCR_REFILL_MINUTES))
                 .build(),
         )
         .build()
@@ -103,5 +103,17 @@ class RateLimitingInterceptor(
         } else {
             request.remoteAddr
         }
+    }
+
+    private companion object {
+        const val REGISTRATION_CAPACITY = 5L
+        const val REGISTRATION_REFILL_TOKENS = 5L
+        const val REGISTRATION_REFILL_MINUTES = 10L
+        const val LOGIN_CAPACITY = 10L
+        const val LOGIN_REFILL_TOKENS = 10L
+        const val LOGIN_REFILL_MINUTES = 5L
+        const val DCR_CAPACITY = 10L
+        const val DCR_REFILL_TOKENS = 10L
+        const val DCR_REFILL_MINUTES = 10L
     }
 }
