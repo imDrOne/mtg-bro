@@ -52,10 +52,12 @@ class MoxfieldFileParser : CollectionFileParser {
         for (ch in line) {
             when {
                 ch == '"' -> inQuotes = !inQuotes
+
                 ch == ',' && !inQuotes -> {
                     result.add(current.toString().trim())
                     current.clear()
                 }
+
                 else -> current.append(ch)
             }
         }

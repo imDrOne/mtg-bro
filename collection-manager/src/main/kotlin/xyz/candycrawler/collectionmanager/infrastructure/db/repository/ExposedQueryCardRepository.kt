@@ -8,10 +8,8 @@ import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.CardRecordToC
 import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.CardSqlMapper
 
 @Repository
-class ExposedQueryCardRepository(
-    private val sqlMapper: CardSqlMapper,
-    private val toDomain: CardRecordToCardMapper,
-) : QueryCardRepository {
+class ExposedQueryCardRepository(private val sqlMapper: CardSqlMapper, private val toDomain: CardRecordToCardMapper) :
+    QueryCardRepository {
 
     @Transactional(readOnly = true)
     override fun findAllInCollection(userId: Long): List<Card> =

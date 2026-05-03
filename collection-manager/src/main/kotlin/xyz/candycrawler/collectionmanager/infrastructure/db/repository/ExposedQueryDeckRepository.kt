@@ -9,20 +9,17 @@ import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.DeckSqlMa
 
 @Repository
 @Transactional(readOnly = true)
-class ExposedQueryDeckRepository(
-    private val sqlMapper: DeckSqlMapper,
-) : QueryDeckRepository {
+class ExposedQueryDeckRepository(private val sqlMapper: DeckSqlMapper) : QueryDeckRepository {
 
-    override fun findHeaders(userId: Long): List<DeckHeader> =
-        sqlMapper.selectAllByUser(userId).map { record ->
-            DeckHeader(
-                id = record.id!!,
-                name = record.name,
-                format = DeckFormat.valueOf(record.format),
-                colorIdentity = record.colorIdentity,
-                comment = record.comment,
-                createdAt = record.createdAt,
-                updatedAt = record.updatedAt,
-            )
-        }
+    override fun findHeaders(userId: Long): List<DeckHeader> = sqlMapper.selectAllByUser(userId).map { record ->
+        DeckHeader(
+            id = record.id!!,
+            name = record.name,
+            format = DeckFormat.valueOf(record.format),
+            colorIdentity = record.colorIdentity,
+            comment = record.comment,
+            createdAt = record.createdAt,
+            updatedAt = record.updatedAt,
+        )
+    }
 }

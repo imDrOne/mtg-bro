@@ -28,19 +28,17 @@ class ArticleService(
     ): List<ArticleSemanticSearchResult> =
         articleSemanticSearchService.search(query, topK, similarityThreshold, favoriteOnly)
 
-    fun findById(id: Long): Article =
-        queryArticleRepository.findById(id)
+    fun findById(id: Long): Article = queryArticleRepository.findById(id)
 
     fun updateFavorite(id: Long, favorite: Boolean): Article =
         articleRepository.update(id) { it.copy(favorite = favorite) }
             .also { articleSemanticSearchService.evictSearchCache() }
 
-    fun analyze(ids: List<Long>): List<Article> =
-        ids.map { id ->
-            val article = queryArticleRepository.findById(id)
-            articleAnalysisPublisher.publish(id)
-            article
-        }
+    fun analyze(ids: List<Long>): List<Article> = ids.map { id ->
+        val article = queryArticleRepository.findById(id)
+        articleAnalysisPublisher.publish(id)
+        article
+    }
 
     fun collectKeywords(ids: List<Long>): List<Article> {
         val articles = ids.map { id -> queryArticleRepository.findById(id) }
@@ -55,6 +53,5 @@ class ArticleService(
         return articles
     }
 
-    fun findByIds(ids: List<Long>): List<Article> =
-        ids.map { id -> queryArticleRepository.findById(id) }
+    fun findByIds(ids: List<Long>): List<Article> = ids.map { id -> queryArticleRepository.findById(id) }
 }

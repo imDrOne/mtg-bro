@@ -19,6 +19,5 @@ class RefreshToken(
         if (!expiresAt.isAfter(issuedAt)) throw RefreshTokenInvalidException("expiresAt must be after issuedAt")
     }
 
-    fun isActive(now: Instant): Boolean =
-        revokedAt == null && now.isBefore(expiresAt)
+    fun isActive(now: Instant): Boolean = revokedAt == null && now.isBefore(expiresAt)
 }

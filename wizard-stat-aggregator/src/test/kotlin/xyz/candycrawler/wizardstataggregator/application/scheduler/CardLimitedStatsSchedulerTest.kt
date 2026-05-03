@@ -41,7 +41,7 @@ class CardLimitedStatsSchedulerTest {
             listOf(
                 TrackedLimitedStatSet("BLB", LocalDate.of(2026, 5, 1)),
                 TrackedLimitedStatSet("DMU", LocalDate.of(2026, 5, 1)),
-            )
+            ),
         )
 
         scheduler.collect()
@@ -56,7 +56,7 @@ class CardLimitedStatsSchedulerTest {
             listOf(
                 TrackedLimitedStatSet("BLB", LocalDate.of(2026, 5, 1)),
                 TrackedLimitedStatSet("DMU", LocalDate.of(2026, 5, 1)),
-            )
+            ),
         )
         willThrow(RuntimeException("boom")).given(collectionService).collectAll("BLB")
 
@@ -65,4 +65,3 @@ class CardLimitedStatsSchedulerTest {
         then(collectionService).should().collectAll("DMU")
     }
 }
-

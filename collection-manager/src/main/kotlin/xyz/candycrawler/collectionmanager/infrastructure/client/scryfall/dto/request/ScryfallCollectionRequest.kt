@@ -2,9 +2,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.re
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class ScryfallCollectionRequest(
-    val identifiers: List<CardIdentifier>,
-)
+data class ScryfallCollectionRequest(val identifiers: List<CardIdentifier>)
 
 data class CardIdentifier(
     @JsonProperty("set")

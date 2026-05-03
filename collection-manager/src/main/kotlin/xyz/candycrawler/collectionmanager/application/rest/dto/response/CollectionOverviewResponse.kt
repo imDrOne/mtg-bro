@@ -7,9 +7,5 @@ data class CollectionOverviewResponse(
     val topTribes: List<TopTribeResponse>,
     val byRarity: Map<String, Int>,
 ) {
-    data class TopTribeResponse(
-        val name: String,
-        val count: Int,
-        val colors: String,
-    )
+    data class TopTribeResponse(val name: String, val count: Int, val colors: String)
 }

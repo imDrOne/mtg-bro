@@ -18,33 +18,57 @@ import kotlinx.serialization.json.put
 
 fun getDraftsimArticlesByIdSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("ids", buildJsonObject {
-            put("type", "array")
-            put("description", "List of article IDs to fetch analyzed content for.")
-            put("items", buildJsonObject {
+        put(
+            "ids",
+            buildJsonObject {
+                put("type", "array")
+                put("description", "List of article IDs to fetch analyzed content for.")
+                put(
+                    "items",
+                    buildJsonObject {
+                        put("type", "integer")
+                    },
+                )
+            },
+        )
+        put(
+            "types",
+            buildJsonObject {
+                put("type", "array")
+                put(
+                    "description",
+                    "Optional insight.type filter, for example [\"archetype\", \"mechanic\", \"set_context\"].",
+                )
+                put(
+                    "items",
+                    buildJsonObject {
+                        put("type", "string")
+                    },
+                )
+            },
+        )
+        put(
+            "page",
+            buildJsonObject {
                 put("type", "integer")
-            })
-        })
-        put("types", buildJsonObject {
-            put("type", "array")
-            put("description", "Optional insight.type filter, for example [\"archetype\", \"mechanic\", \"set_context\"].")
-            put("items", buildJsonObject {
-                put("type", "string")
-            })
-        })
-        put("page", buildJsonObject {
-            put("type", "integer")
-            put("description", "Insight page number per article (1-based, default 1).")
-        })
-        put("page_size", buildJsonObject {
-            put("type", "integer")
-            put("description", "Insights per page per article (default 50, max 100).")
-        })
+                put("description", "Insight page number per article (1-based, default 1).")
+            },
+        )
+        put(
+            "page_size",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Insights per page per article (default 50, max 100).")
+            },
+        )
     },
     required = listOf("ids"),
 )
 
-suspend fun handleGetDraftsimArticlesById(context: ToolContext, request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest): CallToolResult {
+suspend fun handleGetDraftsimArticlesById(
+    context: ToolContext,
+    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
+): CallToolResult {
     return try {
         val idsArray = request.arguments?.get("ids")?.jsonArray
             ?: return CallToolResult(content = listOf(TextContent("Error: ids parameter is required")), isError = true)
@@ -55,7 +79,8 @@ suspend fun handleGetDraftsimArticlesById(context: ToolContext, request: io.mode
         }
         val types = request.arguments?.get("types").toNormalizedTypeSet()
         val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull()?.coerceAtLeast(1) ?: 1
-        val pageSize = request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 50
+        val pageSize =
+            request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(1, 100) ?: 50
 
         val url = "${context.draftsimParserBaseUrl}/api/v1/articles/by-ids"
         val requestBody = buildJsonObject {

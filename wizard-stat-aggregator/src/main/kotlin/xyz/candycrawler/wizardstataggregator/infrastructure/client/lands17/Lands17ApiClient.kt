@@ -15,16 +15,16 @@ interface Lands17ApiClient {
         @RequestParam("expansion", required = true) setCode: String,
         @RequestParam(
             "start_date",
-            required = true
+            required = true,
         ) @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: LocalDate = Year.now().atDay(1),
         @RequestParam(
             "end_date",
-            required = true
-        ) @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: LocalDate = LocalDate.now()
+            required = true,
+        ) @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: LocalDate = LocalDate.now(),
     ): List<CardStatsResponse>
 
     enum class MatchType(val value: String) {
         QUICK_DRAFT("QuickDraft"),
-        SEALED("Sealed")
+        SEALED("Sealed"),
     }
 }

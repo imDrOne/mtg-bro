@@ -10,9 +10,7 @@ import java.sql.Timestamp
 import java.time.Instant
 
 @Component
-class RefreshTokenSqlMapper(
-    private val jdbc: NamedParameterJdbcTemplate,
-) {
+class RefreshTokenSqlMapper(private val jdbc: NamedParameterJdbcTemplate) {
 
     internal fun insert(record: RefreshTokenRecord): RefreshTokenRecord {
         val sql = """
@@ -68,14 +66,13 @@ class RefreshTokenSqlMapper(
         )
     }
 
-    private fun map(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int): RefreshTokenRecord =
-        RefreshTokenRecord(
-            id = rs.getLong("id"),
-            userId = rs.getLong("user_id"),
-            tokenHash = rs.getString("token_hash"),
-            issuedAt = rs.getTimestamp("issued_at").toInstant(),
-            expiresAt = rs.getTimestamp("expires_at").toInstant(),
-            revokedAt = rs.getTimestamp("revoked_at")?.toInstant(),
-            replacedById = rs.getObject("replaced_by_id") as Long?,
-        )
+    private fun map(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int): RefreshTokenRecord = RefreshTokenRecord(
+        id = rs.getLong("id"),
+        userId = rs.getLong("user_id"),
+        tokenHash = rs.getString("token_hash"),
+        issuedAt = rs.getTimestamp("issued_at").toInstant(),
+        expiresAt = rs.getTimestamp("expires_at").toInstant(),
+        revokedAt = rs.getTimestamp("revoked_at")?.toInstant(),
+        replacedById = rs.getObject("replaced_by_id") as Long?,
+    )
 }

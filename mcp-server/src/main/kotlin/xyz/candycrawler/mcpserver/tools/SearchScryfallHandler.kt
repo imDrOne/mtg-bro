@@ -15,27 +15,42 @@ import kotlinx.serialization.json.put
 
 fun searchScryfallSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("query", buildJsonObject {
-            put("type", "string")
-            put("description", "Scryfall search query (required)")
-        })
-        put("unique", buildJsonObject {
-            put("type", "string")
-            put("description", "cards, art, or prints")
-        })
-        put("order", buildJsonObject {
-            put("type", "string")
-            put("description", "name, set, released, rarity, usd, cmc, etc.")
-        })
-        put("page", buildJsonObject {
-            put("type", "integer")
-            put("description", "Page number")
-        })
+        put(
+            "query",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Scryfall search query (required)")
+            },
+        )
+        put(
+            "unique",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "cards, art, or prints")
+            },
+        )
+        put(
+            "order",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "name, set, released, rarity, usd, cmc, etc.")
+            },
+        )
+        put(
+            "page",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Page number")
+            },
+        )
     },
     required = listOf("query"),
 )
 
-suspend fun handleSearchScryfall(context: ToolContext, request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest): CallToolResult {
+suspend fun handleSearchScryfall(
+    context: ToolContext,
+    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
+): CallToolResult {
     return try {
         val query = request.arguments?.get("query")?.jsonPrimitive?.content
             ?: return CallToolResult(content = listOf(TextContent("Error: query is required")), isError = true)

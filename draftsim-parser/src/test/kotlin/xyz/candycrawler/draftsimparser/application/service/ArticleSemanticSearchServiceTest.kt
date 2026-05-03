@@ -66,7 +66,7 @@ class ArticleSemanticSearchServiceTest {
                 score = 0.91,
                 content = "Station rewards tapping creatures.",
                 metadata = mapOf("insight_type" to "mechanic", "subject" to "Station"),
-            )
+            ),
         )
         whenever(queryArticleRepository.findById(1)).thenReturn(article(1, favorite = true))
 

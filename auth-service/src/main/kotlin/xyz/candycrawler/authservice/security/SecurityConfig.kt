@@ -1,6 +1,5 @@
 package xyz.candycrawler.authservice.security
 
-import tools.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
@@ -18,13 +17,12 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.AuthenticationFailureHandler
 import org.springframework.security.web.authentication.HttpStatusEntryPoint
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
+import tools.jackson.databind.ObjectMapper
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-class SecurityConfig(
-    private val objectMapper: ObjectMapper,
-) {
+class SecurityConfig(private val objectMapper: ObjectMapper) {
 
     @Bean
     @Order(2)
@@ -38,8 +36,11 @@ class SecurityConfig(
                     .requestMatchers("/actuator/health").permitAll()
                     .requestMatchers("/connect/logout").permitAll()
                     .requestMatchers(
-                        "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
-                        "/api-docs", "/api-docs/**"
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/webjars/**",
+                        "/api-docs",
+                        "/api-docs/**",
                     ).permitAll()
                     .anyRequest().authenticated()
             }
@@ -74,10 +75,13 @@ class SecurityConfig(
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
-    fun jsonAuthenticationFailureHandler(): AuthenticationFailureHandler =
-        AuthenticationFailureHandler { _: HttpServletRequest, response: HttpServletResponse, _: AuthenticationException ->
-            response.status = HttpStatus.UNAUTHORIZED.value()
-            response.contentType = MediaType.APPLICATION_JSON_VALUE
-            objectMapper.writeValue(response.writer, mapOf("error" to "Invalid credentials"))
-        }
+    fun jsonAuthenticationFailureHandler(): AuthenticationFailureHandler = AuthenticationFailureHandler {
+            _: HttpServletRequest,
+            response: HttpServletResponse,
+            _: AuthenticationException,
+        ->
+        response.status = HttpStatus.UNAUTHORIZED.value()
+        response.contentType = MediaType.APPLICATION_JSON_VALUE
+        objectMapper.writeValue(response.writer, mapOf("error" to "Invalid credentials"))
+    }
 }

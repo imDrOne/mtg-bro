@@ -1,0 +1,30 @@
+complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 40
+  LongMethod:
+    allowedLines: 120
+  TooManyFunctions:
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 20
+
+exceptions:
+  SwallowedException:
+    active: false
+  TooGenericExceptionCaught:
+    active: false
+
+naming:
+  MatchingDeclarationName:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    active: false
+  ThrowsCount:
+    active: false
+  UtilityClassWithPublicConstructor:
+    active: false

@@ -42,19 +42,23 @@ class CollectionImportController(
         """,
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            content = [Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                schema = Schema(implementation = TcgPlayerImportRequest::class),
-            )],
+            content = [
+                Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = Schema(implementation = TcgPlayerImportRequest::class),
+                ),
+            ],
         ),
         responses = [
             ApiResponse(
                 responseCode = "200",
                 description = "Import completed successfully",
-                content = [Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = Schema(implementation = ImportResultResponse::class),
-                )],
+                content = [
+                    Content(
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = ImportResultResponse::class),
+                    ),
+                ],
             ),
         ],
     )
@@ -77,19 +81,23 @@ class CollectionImportController(
         """,
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            content = [Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                schema = Schema(implementation = MoxfieldImportRequest::class),
-            )],
+            content = [
+                Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = Schema(implementation = MoxfieldImportRequest::class),
+                ),
+            ],
         ),
         responses = [
             ApiResponse(
                 responseCode = "200",
                 description = "Import completed successfully",
-                content = [Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = Schema(implementation = ImportResultResponse::class),
-                )],
+                content = [
+                    Content(
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = ImportResultResponse::class),
+                    ),
+                ],
             ),
         ],
     )

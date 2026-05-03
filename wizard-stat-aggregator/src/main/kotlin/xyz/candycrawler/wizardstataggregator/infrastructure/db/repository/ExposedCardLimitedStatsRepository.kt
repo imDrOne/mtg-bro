@@ -10,9 +10,8 @@ import xyz.candycrawler.wizardstataggregator.infrastructure.db.mapper.CardLimite
 
 @Repository
 @Transactional
-class ExposedCardLimitedStatsRepository(
-    private val sqlMapper: CardLimitedStatsSqlMapper,
-) : CardLimitedStatsRepository {
+class ExposedCardLimitedStatsRepository(private val sqlMapper: CardLimitedStatsSqlMapper) :
+    CardLimitedStatsRepository {
 
     override fun saveAll(cardStats: List<CardLimitedStats>) {
         sqlMapper.upsertBatch(cardStats.map { it.toRecord() })
@@ -26,7 +25,9 @@ class ExposedCardLimitedStatsRepository(
 
     override fun findByMtgaIdAndMatchType(mtgaId: Int, setCode: String, matchType: String): CardLimitedStats? =
         sqlMapper.selectByMtgaIdAndMatchType(mtgaId, setCode, matchType)?.toDomain()
-            ?: throw CardLimitedStatsNotFoundException("with mtgaId=$mtgaId, setCode=$setCode and matchType=$matchType not found")
+            ?: throw CardLimitedStatsNotFoundException(
+                "with mtgaId=$mtgaId, setCode=$setCode and matchType=$matchType not found",
+            )
 
     private fun CardLimitedStats.toRecord(): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = id,

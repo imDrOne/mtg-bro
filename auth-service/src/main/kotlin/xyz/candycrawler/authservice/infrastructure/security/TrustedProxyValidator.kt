@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component
 import java.net.InetAddress
 
 @Component
-class TrustedProxyValidator(
-    @Value("\${auth.trusted-proxy-cidr}") cidr: String,
-) {
+class TrustedProxyValidator(@Value("\${auth.trusted-proxy-cidr}") cidr: String) {
 
     private val networkAddress: InetAddress
     private val prefixLength: Int
@@ -18,13 +16,11 @@ class TrustedProxyValidator(
         prefixLength = parts[1].toInt()
     }
 
-    fun isTrusted(remoteAddr: String): Boolean {
-        return try {
-            val remote = InetAddress.getByName(remoteAddr)
-            isInCidr(remote)
-        } catch (_: Exception) {
-            false
-        }
+    fun isTrusted(remoteAddr: String): Boolean = try {
+        val remote = InetAddress.getByName(remoteAddr)
+        isInCidr(remote)
+    } catch (_: Exception) {
+        false
     }
 
     private fun isInCidr(address: InetAddress): Boolean {

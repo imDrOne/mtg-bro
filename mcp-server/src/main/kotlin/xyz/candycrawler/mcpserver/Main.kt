@@ -51,10 +51,11 @@ fun main(args: Array<String>) {
             filteredServer.createSession(
                 StdioServerTransport(
                     inputStream = System.`in`.asSource().buffered(),
-                    outputStream = System.out.asSink().buffered()
-                )
+                    outputStream = System.out.asSink().buffered(),
+                ),
             )
         }
+
         "http" -> {
             val authIssuerUri = System.getenv("AUTH_ISSUER_URI")
             val mcpBaseUrl = System.getenv("MCP_BASE_URL")
@@ -125,6 +126,7 @@ fun main(args: Array<String>) {
                 }
             }.start(wait = true)
         }
+
         else -> {
             System.err.println("Unknown transport: $transport. Use stdio or http.")
             exitProcess(1)

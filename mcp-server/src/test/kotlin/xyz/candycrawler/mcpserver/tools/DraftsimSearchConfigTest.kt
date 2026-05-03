@@ -14,7 +14,8 @@ class DraftsimSearchConfigTest {
 
     @Test
     fun `parseDraftsimSimilarityThresholds drops duplicates and invalid values`() {
-        val thresholds = parseDraftsimSimilarityThresholds("0.9, nope, 1.5, 0.7, 0.9, -0.1", DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS)
+        val thresholds =
+            parseDraftsimSimilarityThresholds("0.9, nope, 1.5, 0.7, 0.9, -0.1", DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS)
 
         assertEquals(listOf(0.9, 0.7), thresholds)
     }

@@ -16,44 +16,81 @@ import kotlinx.serialization.json.put
 
 fun searchMyCardsSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("q", buildJsonObject {
-            put("type", "string")
-            put(
-                "description", """Free-text search. Matches against card name, type line (e.g. "merfolk", "instant", "legendary"), and oracle text (e.g. "draw a card", "flying"). Case-insensitive substring match. Examples: "merfolk" → all cards with Merfolk in type line or text; "draw a card" → all cards mentioning draw in oracle text; "legendary creature" → all legendary creatures. Note: q also matches type_line; combine with type= for type-only filtering."""
-            )
-        })
-        put("set", buildJsonObject {
-            put("type", "string")
-            put("description", """Set code, e.g. "neo", "dmu", "fdn".""")
-        })
-        put("colors", buildJsonObject {
-            put("type", "string")
-            put("description", """Filter by mana colors in card cost: w,u,b,r,g. Cards must contain ALL these colors. Example: "wu" → cards with white AND blue in their colors.""")
-        })
-        put("color_identity", buildJsonObject {
-            put("type", "string")
-            put("description", """Filter by color identity (includes all mana symbols on the card, not just cost). Example: "wu" → cards playable in a WU commander deck.""")
-        })
-        put("type", buildJsonObject {
-            put("type", "string")
-            put("description", """Filter by card type (case-insensitive substring match on type line). Example: "creature", "instant", "enchantment". Use this for type-only filtering; q= also matches type_line but additionally searches name and oracle text.""")
-        })
-        put("rarity", buildJsonObject {
-            put("type", "string")
-            put("description", "Exact match: common, uncommon, rare, mythic")
-        })
-        put("page", buildJsonObject {
-            put("type", "integer")
-            put("description", "Page number (1-based)")
-        })
-        put("page_size", buildJsonObject {
-            put("type", "integer")
-            put("description", "Items per page (max 175)")
-        })
+        put(
+            "q",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    """Free-text search. Matches against card name, type line (e.g. "merfolk", "instant", "legendary"), and oracle text (e.g. "draw a card", "flying"). Case-insensitive substring match. Examples: "merfolk" → all cards with Merfolk in type line or text; "draw a card" → all cards mentioning draw in oracle text; "legendary creature" → all legendary creatures. Note: q also matches type_line; combine with type= for type-only filtering.""",
+                )
+            },
+        )
+        put(
+            "set",
+            buildJsonObject {
+                put("type", "string")
+                put("description", """Set code, e.g. "neo", "dmu", "fdn".""")
+            },
+        )
+        put(
+            "colors",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    """Filter by mana colors in card cost: w,u,b,r,g. Cards must contain ALL these colors. Example: "wu" → cards with white AND blue in their colors.""",
+                )
+            },
+        )
+        put(
+            "color_identity",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    """Filter by color identity (includes all mana symbols on the card, not just cost). Example: "wu" → cards playable in a WU commander deck.""",
+                )
+            },
+        )
+        put(
+            "type",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    """Filter by card type (case-insensitive substring match on type line). Example: "creature", "instant", "enchantment". Use this for type-only filtering; q= also matches type_line but additionally searches name and oracle text.""",
+                )
+            },
+        )
+        put(
+            "rarity",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Exact match: common, uncommon, rare, mythic")
+            },
+        )
+        put(
+            "page",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Page number (1-based)")
+            },
+        )
+        put(
+            "page_size",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Items per page (max 175)")
+            },
+        )
     },
 )
 
-suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest): CallToolResult {
+suspend fun handleSearchMyCards(
+    context: ToolContext,
+    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
+): CallToolResult {
     return try {
         val q = request.arguments?.get("q")?.jsonPrimitive?.content
         val set = request.arguments?.get("set")?.jsonPrimitive?.content
@@ -78,7 +115,11 @@ suspend fun handleSearchMyCards(context: ToolContext, request: io.modelcontextpr
 
         if (response.isBlank()) {
             return CallToolResult(
-                content = listOf(TextContent("Error: collection-manager returned empty response. Token may be missing user_id claim — re-authenticate and retry.")),
+                content = listOf(
+                    TextContent(
+                        "Error: collection-manager returned empty response. Token may be missing user_id claim — re-authenticate and retry.",
+                    ),
+                ),
                 isError = true,
             )
         }

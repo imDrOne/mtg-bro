@@ -23,8 +23,8 @@ class SpringAiArticleVectorStoreTest {
                     .text("Repartee mechanic details")
                     .metadata(SpringAiArticleVectorStore.ARTICLE_ID, "1155")
                     .score(0.91)
-                    .build()
-            )
+                    .build(),
+            ),
         )
 
         val result = articleVectorStore.search("repartee", topK = 8, similarityThreshold = 0.65)

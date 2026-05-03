@@ -12,4 +12,3 @@ object TrackedLimitedStatSetsTable : Table("tracked_limited_stat_sets") {
 
     override val primaryKey = PrimaryKey(setCode, name = "pk_tracked_limited_stat_sets")
 }
-

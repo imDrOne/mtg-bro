@@ -85,21 +85,20 @@ class ArticleVectorIndexService(
         }
     }
 
-    private fun buildContent(article: Article, insight: JsonNode): String =
-        listOfNotNull(
-            "Article: ${article.title}",
-            insight["subject"]?.asString()?.takeIf { it.isNotBlank() }?.let { "Subject: $it" },
-            insight["type"]?.asString()?.takeIf { it.isNotBlank() }?.let { "Type: $it" },
-            insight["summary"]?.asString()?.takeIf { it.isNotBlank() },
-            insight["deckbuilding_implications"]?.stringValues()?.takeIf { it.isNotEmpty() }
-                ?.joinToString(prefix = "Deckbuilding implications: "),
-            insight["related_cards"]?.stringValues()?.takeIf { it.isNotEmpty() }
-                ?.joinToString(prefix = "Related cards: "),
-            insight["mechanics"]?.stringValues()?.takeIf { it.isNotEmpty() }
-                ?.joinToString(prefix = "Mechanics: "),
-            insight["archetypes"]?.stringValues()?.takeIf { it.isNotEmpty() }
-                ?.joinToString(prefix = "Archetypes: "),
-        ).joinToString("\n")
+    private fun buildContent(article: Article, insight: JsonNode): String = listOfNotNull(
+        "Article: ${article.title}",
+        insight["subject"]?.asString()?.takeIf { it.isNotBlank() }?.let { "Subject: $it" },
+        insight["type"]?.asString()?.takeIf { it.isNotBlank() }?.let { "Type: $it" },
+        insight["summary"]?.asString()?.takeIf { it.isNotBlank() },
+        insight["deckbuilding_implications"]?.stringValues()?.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "Deckbuilding implications: "),
+        insight["related_cards"]?.stringValues()?.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "Related cards: "),
+        insight["mechanics"]?.stringValues()?.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "Mechanics: "),
+        insight["archetypes"]?.stringValues()?.takeIf { it.isNotEmpty() }
+            ?.joinToString(prefix = "Archetypes: "),
+    ).joinToString("\n")
 
     private fun buildMetadata(article: Article, root: JsonNode, insight: JsonNode, index: Int): Map<String, Any> =
         buildMap {
@@ -129,10 +128,9 @@ class ArticleVectorIndexService(
 
 private const val MAX_CONCURRENT_VECTOR_INDEXES = 3
 
-private fun buildDocumentId(articleId: Long, insightIndex: Int): String =
-    UUID.nameUUIDFromBytes(
-        "draftsim-article-$articleId-insight-$insightIndex".toByteArray(StandardCharsets.UTF_8)
-    ).toString()
+private fun buildDocumentId(articleId: Long, insightIndex: Int): String = UUID.nameUUIDFromBytes(
+    "draftsim-article-$articleId-insight-$insightIndex".toByteArray(StandardCharsets.UTF_8),
+).toString()
 
 private fun JsonNode.stringValues(): List<String> =
     if (isArray) mapNotNull { it.asString()?.takeIf(String::isNotBlank) } else emptyList()

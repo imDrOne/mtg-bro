@@ -20,21 +20,39 @@ data class CardSearchCriteria(
 }
 
 enum class CardSortOrder {
-    NAME, SET, RELEASED, RARITY, COLOR, USD, EUR, CMC, POWER, TOUGHNESS, ARTIST;
+    NAME,
+    SET,
+    RELEASED,
+    RARITY,
+    COLOR,
+    USD,
+    EUR,
+    CMC,
+    POWER,
+    TOUGHNESS,
+    ARTIST,
+    ;
 
     companion object {
-        fun fromString(value: String?): CardSortOrder =
-            if (value == null) NAME
-            else entries.find { it.name.equals(value, ignoreCase = true) } ?: NAME
+        fun fromString(value: String?): CardSortOrder = if (value == null) {
+            NAME
+        } else {
+            entries.find { it.name.equals(value, ignoreCase = true) } ?: NAME
+        }
     }
 }
 
 enum class SortDirection {
-    AUTO, ASC, DESC;
+    AUTO,
+    ASC,
+    DESC,
+    ;
 
     companion object {
-        fun fromString(value: String?): SortDirection =
-            if (value == null) AUTO
-            else entries.find { it.name.equals(value, ignoreCase = true) } ?: AUTO
+        fun fromString(value: String?): SortDirection = if (value == null) {
+            AUTO
+        } else {
+            entries.find { it.name.equals(value, ignoreCase = true) } ?: AUTO
+        }
     }
 }

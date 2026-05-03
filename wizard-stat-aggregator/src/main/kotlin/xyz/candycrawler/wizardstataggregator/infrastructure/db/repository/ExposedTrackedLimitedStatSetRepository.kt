@@ -10,15 +10,13 @@ import java.time.LocalDate
 
 @Repository
 @Transactional
-class ExposedTrackedLimitedStatSetRepository(
-    private val sqlMapper: TrackedLimitedStatSetSqlMapper,
-) : TrackedLimitedStatSetRepository {
+class ExposedTrackedLimitedStatSetRepository(private val sqlMapper: TrackedLimitedStatSetSqlMapper) :
+    TrackedLimitedStatSetRepository {
 
     override fun save(trackedSet: TrackedLimitedStatSet): TrackedLimitedStatSet =
         sqlMapper.upsert(trackedSet.toRecord()).toDomain()
 
-    override fun findAll(): List<TrackedLimitedStatSet> =
-        sqlMapper.selectAll().map { it.toDomain() }
+    override fun findAll(): List<TrackedLimitedStatSet> = sqlMapper.selectAll().map { it.toDomain() }
 
     override fun findActive(today: LocalDate): List<TrackedLimitedStatSet> =
         sqlMapper.selectActive(today).map { it.toDomain() }
@@ -27,20 +25,17 @@ class ExposedTrackedLimitedStatSetRepository(
         sqlMapper.deleteBySetCode(setCode)
     }
 
-    private fun TrackedLimitedStatSet.toRecord(): TrackedLimitedStatSetRecord =
-        TrackedLimitedStatSetRecord(
-            setCode = setCode,
-            watchUntil = watchUntil,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-        )
+    private fun TrackedLimitedStatSet.toRecord(): TrackedLimitedStatSetRecord = TrackedLimitedStatSetRecord(
+        setCode = setCode,
+        watchUntil = watchUntil,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
-    private fun TrackedLimitedStatSetRecord.toDomain(): TrackedLimitedStatSet =
-        TrackedLimitedStatSet(
-            setCode = setCode,
-            watchUntil = watchUntil,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
-        )
+    private fun TrackedLimitedStatSetRecord.toDomain(): TrackedLimitedStatSet = TrackedLimitedStatSet(
+        setCode = setCode,
+        watchUntil = watchUntil,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 }
-

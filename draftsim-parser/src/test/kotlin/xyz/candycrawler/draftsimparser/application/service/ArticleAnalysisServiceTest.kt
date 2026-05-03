@@ -113,7 +113,8 @@ class ArticleAnalysisServiceTest {
 
     @Test
     fun `consume stores flat object insights when paragraph response is an array`() = runBlocking {
-        var storedArticle = article(textContent = "Station and exhaust reward activated abilities.", keywords = listOf("station"))
+        var storedArticle =
+            article(textContent = "Station and exhaust reward activated abilities.", keywords = listOf("station"))
         whenever(queryArticleRepository.findById(1)).thenReturn(storedArticle)
         whenever(articleRepository.update(eq(1), any())).thenAnswer { invocation ->
             val block = invocation.getArgument<(Article) -> Article>(1)

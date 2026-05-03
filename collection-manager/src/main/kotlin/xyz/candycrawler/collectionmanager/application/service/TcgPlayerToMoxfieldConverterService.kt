@@ -37,22 +37,15 @@ class TcgPlayerToMoxfieldConverterService {
         )
     }
 
-    private fun List<Row>.mergeByKey(): List<String> =
-        groupBy { it.setCode to it.collectorNumber }
-            .map { (_, group) ->
-                val first = group.first()
-                val totalQuantity = group.sumOf { it.quantity }
-                first.copy(quantity = totalQuantity).toCsvLine()
-            }
+    private fun List<Row>.mergeByKey(): List<String> = groupBy { it.setCode to it.collectorNumber }
+        .map { (_, group) ->
+            val first = group.first()
+            val totalQuantity = group.sumOf { it.quantity }
+            first.copy(quantity = totalQuantity).toCsvLine()
+        }
 
-    private data class Row(
-        val quantity: Int,
-        val name: String,
-        val setCode: String,
-        val collectorNumber: String,
-    ) {
-        fun toCsvLine(): String =
-            "${quantity},${escapeCsv(name)},${setCode},Near Mint,English,,${collectorNumber}"
+    private data class Row(val quantity: Int, val name: String, val setCode: String, val collectorNumber: String) {
+        fun toCsvLine(): String = "$quantity,${escapeCsv(name)},$setCode,Near Mint,English,,$collectorNumber"
     }
 
     companion object {

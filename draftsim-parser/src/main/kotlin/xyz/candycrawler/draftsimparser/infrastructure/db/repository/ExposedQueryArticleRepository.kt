@@ -17,9 +17,8 @@ class ExposedQueryArticleRepository(
     private val toDomain: ArticleRecordToArticleMapper,
 ) : QueryArticleRepository {
 
-    override fun findById(id: Long): Article =
-        sqlMapper.selectById(id)?.let(toDomain::apply)
-            ?: throw ArticleNotFoundException(id)
+    override fun findById(id: Long): Article = sqlMapper.selectById(id)?.let(toDomain::apply)
+        ?: throw ArticleNotFoundException(id)
 
     override fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean?): ArticlePage {
         val offset = ((page - 1) * pageSize).toLong()
@@ -34,6 +33,5 @@ class ExposedQueryArticleRepository(
         )
     }
 
-    override fun findByTaskId(taskId: UUID): List<Article> =
-        sqlMapper.findByTaskId(taskId).map(toDomain::apply)
+    override fun findByTaskId(taskId: UUID): List<Article> = sqlMapper.findByTaskId(taskId).map(toDomain::apply)
 }

@@ -8,8 +8,4 @@ data class SaveDeckRequest(
     val sideboard: List<DeckEntryRequest> = emptyList(),
 )
 
-data class DeckEntryRequest(
-    val setCode: String,
-    val collectorNumber: String,
-    val quantity: Int,
-)
+data class DeckEntryRequest(val setCode: String, val collectorNumber: String, val quantity: Int)

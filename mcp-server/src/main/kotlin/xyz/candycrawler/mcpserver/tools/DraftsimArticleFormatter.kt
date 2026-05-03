@@ -38,7 +38,9 @@ internal fun formatDraftsimArticlesReport(
         appendLine("keywords: ${keywords.joinToString().ifBlank { "-" }}")
         appendLine("article_type: ${analysis?.get("article_type")?.jsonPrimitive?.contentOrNull ?: "-"}")
         appendLine("processing_profile: ${analysis?.get("processing_profile")?.jsonPrimitive?.contentOrNull ?: "-"}")
-        appendLine("pagination: total=${normalizedInsights.size}, page=$safePage, page_size=$safePageSize, has_more=$hasMore")
+        appendLine(
+            "pagination: total=${normalizedInsights.size}, page=$safePage, page_size=$safePageSize, has_more=$hasMore",
+        )
 
         if (analysis == null) {
             appendLine("No analysis available")
@@ -74,7 +76,9 @@ internal fun formatDraftsimArticleList(json: JsonObject): String? {
     val hasMore = json["hasMore"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
 
     return buildString {
-        appendLine("Found ${articles.size} Draftsim articles (total: $totalArticles, page: $page, page_size: $pageSize, has_more: $hasMore)")
+        appendLine(
+            "Found ${articles.size} Draftsim articles (total: $totalArticles, page: $page, page_size: $pageSize, has_more: $hasMore)",
+        )
         appendLine()
         articles.forEach { el ->
             val article = el.jsonObject
@@ -173,24 +177,26 @@ internal fun formatDraftsimFallbackSearchResponse(
         appendLine("Found ${articles.size} articles (total: $totalArticles, hasMore: $hasMore)")
         appendLine("fallback: keyword article search for '$query'")
         if (exhaustedSimilarityThresholds.isNotEmpty()) {
-            appendLine("semantic_thresholds_exhausted: ${exhaustedSimilarityThresholds.joinToString { formatSimilarityThreshold(it) }}")
+            appendLine(
+                "semantic_thresholds_exhausted: ${exhaustedSimilarityThresholds.joinToString {
+                    formatSimilarityThreshold(it)
+                }}",
+            )
         }
         appendLine()
         lines.forEach { appendLine(it) }
     }.trimEnd()
 }
 
-internal fun JsonElement?.toNormalizedTypeSet(): Set<String> =
-    (this as? JsonArray).orEmpty()
-        .mapNotNull { it.normalizedType() }
-        .toSet()
+internal fun JsonElement?.toNormalizedTypeSet(): Set<String> = (this as? JsonArray).orEmpty()
+    .mapNotNull { it.normalizedType() }
+    .toSet()
 
-private fun normalizeInsightObjects(element: JsonElement?): List<JsonObject> =
-    when (element) {
-        is JsonObject -> listOf(element)
-        is JsonArray -> element.flatMap { normalizeInsightObjects(it) }
-        else -> emptyList()
-    }
+private fun normalizeInsightObjects(element: JsonElement?): List<JsonObject> = when (element) {
+    is JsonObject -> listOf(element)
+    is JsonArray -> element.flatMap { normalizeInsightObjects(it) }
+    else -> emptyList()
+}
 
 private val INSIGHT_HEADER_FIELDS = setOf("type", "subject")
 private val INSIGHT_FIELD_ORDER = listOf(
@@ -225,24 +231,23 @@ private fun formatPreviewMatch(index: Int, match: JsonObject): String {
     return "  preview $index: subject=$subject; type=$insightType; excerpt=$excerpt; tags=$tags"
 }
 
-private fun JsonElement?.normalizedType(): String? =
-    (this as? JsonPrimitive)?.contentOrNull
-        ?.trim()
-        ?.lowercase()
-        ?.takeIf(String::isNotBlank)
+private fun JsonElement?.normalizedType(): String? = (this as? JsonPrimitive)?.contentOrNull
+    ?.trim()
+    ?.lowercase()
+    ?.takeIf(String::isNotBlank)
 
-private fun JsonElement?.formatInsightValue(): String? =
-    when (this) {
-        is JsonPrimitive -> contentOrNull?.collapseWhitespace()?.takeIf(String::isNotBlank)
-        is JsonArray -> mapNotNull { it.formatInsightValue() }
-            .takeIf { it.isNotEmpty() }
-            ?.joinToString("; ")
-        is JsonObject -> toString().collapseWhitespace().take(300).takeIf(String::isNotBlank)
-        else -> null
-    }
+private fun JsonElement?.formatInsightValue(): String? = when (this) {
+    is JsonPrimitive -> contentOrNull?.collapseWhitespace()?.takeIf(String::isNotBlank)
 
-private fun String.collapseWhitespace(): String =
-    replace(Regex("\\s+"), " ").trim()
+    is JsonArray -> mapNotNull { it.formatInsightValue() }
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString("; ")
 
-private fun formatSimilarityThreshold(value: Double): String =
-    String.format(Locale.US, "%.2f", value)
+    is JsonObject -> toString().collapseWhitespace().take(300).takeIf(String::isNotBlank)
+
+    else -> null
+}
+
+private fun String.collapseWhitespace(): String = replace(Regex("\\s+"), " ").trim()
+
+private fun formatSimilarityThreshold(value: Double): String = String.format(Locale.US, "%.2f", value)

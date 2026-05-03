@@ -21,7 +21,7 @@ internal fun draftsimSearchConfigFromEnv(getenv: (String) -> String? = System::g
     if (!rawThresholds.isNullOrBlank() && !rawThresholds.hasValidSimilarityThreshold()) {
         System.err.println(
             "Warning: $DRAFTSIM_SIMILARITY_THRESHOLDS_ENV has no valid thresholds; " +
-                "using defaults ${DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS.joinToString(",")}"
+                "using defaults ${DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS.joinToString(",")}",
         )
     }
     return DraftsimSearchConfig(semanticSimilarityThresholds = thresholds)
@@ -39,8 +39,7 @@ internal fun parseDraftsimSimilarityThresholds(raw: String?, default: List<Doubl
     return thresholds.ifEmpty { default }
 }
 
-private fun String.hasValidSimilarityThreshold(): Boolean =
-    split(",").any { token ->
-        val value = token.trim().toDoubleOrNull() ?: return@any false
-        value in 0.0..1.0
-    }
+private fun String.hasValidSimilarityThreshold(): Boolean = split(",").any { token ->
+    val value = token.trim().toDoubleOrNull() ?: return@any false
+    value in 0.0..1.0
+}

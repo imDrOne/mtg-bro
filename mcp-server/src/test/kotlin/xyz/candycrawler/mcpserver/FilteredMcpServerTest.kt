@@ -21,7 +21,7 @@ class FilteredMcpServerTest {
                 capabilities = ServerCapabilities(
                     tools = ServerCapabilities.Tools(listChanged = true),
                     resources = ServerCapabilities.Resources(listChanged = true),
-                )
+                ),
             ),
             toolAccessConfig = config,
         )
@@ -43,7 +43,13 @@ class FilteredMcpServerTest {
             server.visibleToolNames()
         }
         assertEquals(
-            setOf("search_my_cards", "search_scryfall", "get_card", "list_scryfall_format_codes", "get_deckbuilding_guide"),
+            setOf(
+                "search_my_cards",
+                "search_scryfall",
+                "get_card",
+                "list_scryfall_format_codes",
+                "get_deckbuilding_guide",
+            ),
             visible.toSet(),
         )
     }

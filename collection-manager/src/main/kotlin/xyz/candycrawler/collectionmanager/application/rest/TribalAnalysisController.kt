@@ -21,10 +21,7 @@ class TribalAnalysisController(private val tribalAnalysisService: TribalAnalysis
     @PreAuthorize("hasAuthority('PERM_api:cards:tribal')")
     @Operation(summary = "Analyze tribal depth for a given creature type")
     @GetMapping("/{tribe}")
-    fun analyze(
-        @AuthenticationPrincipal jwt: Jwt,
-        @PathVariable tribe: String,
-    ): TribalStatsResponse {
+    fun analyze(@AuthenticationPrincipal jwt: Jwt, @PathVariable tribe: String): TribalStatsResponse {
         val stats = tribalAnalysisService.analyze(jwt.userId(), tribe)
         return TribalStatsResponse(
             tribe = stats.tribe,

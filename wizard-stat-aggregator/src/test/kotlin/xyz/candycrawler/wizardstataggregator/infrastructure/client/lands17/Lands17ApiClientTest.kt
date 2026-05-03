@@ -6,15 +6,14 @@ import xyz.candycrawler.wizardstataggregator.lib.AbstractIntegrationTest
 import xyz.candycrawler.wizardstataggregator.lib.LocalOnly
 
 @LocalOnly
-class Lands17ApiClientTest @Autowired constructor(
-    private val apiClient: Lands17ApiClient
-) : AbstractIntegrationTest() {
+class Lands17ApiClientTest @Autowired constructor(private val apiClient: Lands17ApiClient) : AbstractIntegrationTest() {
 
     @Test
     fun getStatistic() {
         val result = apiClient.getStatistic(
             setCode = "ECL",
-            matchType = Lands17ApiClient.MatchType.QUICK_DRAFT.value)
+            matchType = Lands17ApiClient.MatchType.QUICK_DRAFT.value,
+        )
         logger.debug(result.toString())
     }
 }

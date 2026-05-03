@@ -35,7 +35,7 @@ class TelegramAlertClient(
                         "chat_id" to chatId,
                         "text" to message,
                         "disable_web_page_preview" to true,
-                    )
+                    ),
                 )
                 .retrieve()
                 .toBodilessEntity()

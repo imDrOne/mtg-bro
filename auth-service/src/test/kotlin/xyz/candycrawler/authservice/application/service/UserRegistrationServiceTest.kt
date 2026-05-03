@@ -24,8 +24,12 @@ class UserRegistrationServiceTest {
     private val service = UserRegistrationService(userRepository, userRoleRepository, passwordEncoder)
 
     private fun savedUser(email: String, username: String, hash: String) = User(
-        id = 1L, email = email, username = username, passwordHash = hash,
-        enabled = true, createdAt = Instant.now(),
+        id = 1L,
+        email = email,
+        username = username,
+        passwordHash = hash,
+        enabled = true,
+        createdAt = Instant.now(),
     )
 
     @Test

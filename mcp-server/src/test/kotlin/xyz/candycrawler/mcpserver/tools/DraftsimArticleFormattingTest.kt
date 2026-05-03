@@ -37,7 +37,7 @@ class DraftsimArticleFormattingTest {
                         42
                       ]
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ),
             types = setOf("mechanic"),
             page = 2,
@@ -67,7 +67,7 @@ class DraftsimArticleFormattingTest {
                         {"type": "mechanic", "subject": "Station", "summary": "Compact summary."}
                       ]
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ),
         )
 
@@ -99,8 +99,8 @@ class DraftsimArticleFormattingTest {
                       "pageSize": 20,
                       "hasMore": true
                     }
-                """.trimIndent()
-            ).jsonObject
+                """.trimIndent(),
+            ).jsonObject,
         )
 
         assertTrue(response != null)
@@ -119,7 +119,7 @@ class DraftsimArticleFormattingTest {
                 put("q", " station ")
                 put("page", 0)
                 put("page_size", 500)
-            }
+            },
         )
 
         assertEquals("station", options.query)
@@ -166,7 +166,7 @@ class DraftsimArticleFormattingTest {
                         }
                       ]
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ).jsonObject,
             types = setOf("mechanic"),
             previewLimit = 1,
@@ -212,7 +212,7 @@ class DraftsimArticleFormattingTest {
                         }
                       ]
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ).jsonObject,
             types = setOf("mechanic"),
         )
@@ -263,7 +263,7 @@ class DraftsimArticleFormattingTest {
                         }
                       ]
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ).jsonObject,
             types = setOf("mechanic"),
         )
@@ -277,7 +277,7 @@ class DraftsimArticleFormattingTest {
     @Test
     fun `empty semantic response allows fallback keyword article search`() {
         val semantic = formatDraftsimSemanticSearchResponse(
-            Json.parseToJsonElement("""{"results": []}""").jsonObject
+            Json.parseToJsonElement("""{"results": []}""").jsonObject,
         )
         val fallback = formatDraftsimFallbackSearchResponse(
             json = Json.parseToJsonElement(
@@ -294,7 +294,7 @@ class DraftsimArticleFormattingTest {
                       "totalArticles": 1,
                       "hasMore": false
                     }
-                """.trimIndent()
+                """.trimIndent(),
             ).jsonObject,
             query = "station",
             exhaustedSimilarityThresholds = DEFAULT_DRAFTSIM_SIMILARITY_THRESHOLDS,
@@ -320,7 +320,13 @@ class DraftsimArticleFormattingTest {
             },
             format = { _, threshold, attempt ->
                 formattedThresholds += threshold
-                if (threshold == DRAFTSIM_SIMILARITY_MEDIUM) "semantic result at $threshold after $attempt attempts" else null
+                if (threshold ==
+                    DRAFTSIM_SIMILARITY_MEDIUM
+                ) {
+                    "semantic result at $threshold after $attempt attempts"
+                } else {
+                    null
+                }
             },
         )
 
@@ -354,12 +360,15 @@ class DraftsimArticleFormattingTest {
             buildJsonObject {
                 put("id", 1)
                 put("title", "New Set Mechanics Guide")
-                put("keywords", buildJsonArray {
-                    add("station")
-                    add("limited")
-                })
+                put(
+                    "keywords",
+                    buildJsonArray {
+                        add("station")
+                        add("limited")
+                    },
+                )
                 put("analyzedText", analyzedText)
-            }
+            },
         )
     }
 }

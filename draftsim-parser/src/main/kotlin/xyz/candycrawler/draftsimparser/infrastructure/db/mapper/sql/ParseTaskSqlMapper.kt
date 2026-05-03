@@ -32,11 +32,10 @@ class ParseTaskSqlMapper {
         return record.copy(id = UUID.fromString(newId.toString()))
     }
 
-    internal fun selectById(id: UUID): ParseTaskRecord? =
-        ParseTasksTable.selectAll()
-            .where { ParseTasksTable.id eq Uuid.parse(id.toString()) }
-            .map { it.toRecord() }
-            .singleOrNull()
+    internal fun selectById(id: UUID): ParseTaskRecord? = ParseTasksTable.selectAll()
+        .where { ParseTasksTable.id eq Uuid.parse(id.toString()) }
+        .map { it.toRecord() }
+        .singleOrNull()
 
     internal fun update(record: ParseTaskRecord) {
         ParseTasksTable.update(where = { ParseTasksTable.id eq Uuid.parse(record.id.toString()) }) { row ->

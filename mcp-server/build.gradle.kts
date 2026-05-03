@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.serialization") version "2.1.21"
     application
     id("jib-module")
+    id("quality-module")
 }
 
 group = "xyz.candy-crawler"

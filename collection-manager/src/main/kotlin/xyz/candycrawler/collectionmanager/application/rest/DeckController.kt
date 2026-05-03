@@ -28,22 +28,17 @@ import xyz.candycrawler.collectionmanager.domain.deck.model.DeckHeader
 @Tag(name = "Decks", description = "Deck building and management")
 @RestController
 @RequestMapping("/api/v1/decks")
-class DeckController(
-    private val deckService: DeckService,
-) {
+class DeckController(private val deckService: DeckService) {
 
     @PreAuthorize("hasAuthority('PERM_api:decks:write')")
     @Operation(summary = "Save a deck")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun saveDeck(
-        @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody request: SaveDeckRequest,
-    ): DeckDetailResponse {
+    fun saveDeck(@AuthenticationPrincipal jwt: Jwt, @RequestBody request: SaveDeckRequest): DeckDetailResponse {
         val format = runCatching { DeckFormat.valueOf(request.format.uppercase()) }
             .getOrElse {
                 throw InvalidDeckException(
-                    "Unknown format: ${request.format}. Allowed values: ${DeckFormat.entries.joinToString { it.name }}"
+                    "Unknown format: ${request.format}. Allowed values: ${DeckFormat.entries.joinToString { it.name }}",
                 )
             }
 
@@ -67,10 +62,8 @@ class DeckController(
     @PreAuthorize("hasAuthority('PERM_api:decks:read')")
     @Operation(summary = "Get a deck by ID with all entries")
     @GetMapping("/{id}")
-    fun getDeck(
-        @AuthenticationPrincipal jwt: Jwt,
-        @PathVariable id: Long,
-    ): DeckDetailResponse = deckService.findById(jwt.userId(), id).toDetailResponse()
+    fun getDeck(@AuthenticationPrincipal jwt: Jwt, @PathVariable id: Long): DeckDetailResponse =
+        deckService.findById(jwt.userId(), id).toDetailResponse()
 
     private fun DeckHeader.toHeaderResponse() = DeckHeaderResponse(
         id = id,

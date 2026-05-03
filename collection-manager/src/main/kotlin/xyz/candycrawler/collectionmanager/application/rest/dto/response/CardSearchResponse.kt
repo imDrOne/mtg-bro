@@ -41,10 +41,7 @@ data class CardResponse(
     val collection: CardCollectionInfo?,
 )
 
-data class CardCollectionInfo(
-    val quantityNonFoil: Int,
-    val quantityFoil: Int,
-) {
+data class CardCollectionInfo(val quantityNonFoil: Int, val quantityFoil: Int) {
     val totalQuantity: Int get() = quantityNonFoil + quantityFoil
 }
 
@@ -57,9 +54,4 @@ data class CardImageUris(
     val borderCrop: String?,
 )
 
-data class CardPrices(
-    val usd: String?,
-    val usdFoil: String?,
-    val eur: String?,
-    val eurFoil: String?,
-)
+data class CardPrices(val usd: String?, val usdFoil: String?, val eur: String?, val eurFoil: String?)

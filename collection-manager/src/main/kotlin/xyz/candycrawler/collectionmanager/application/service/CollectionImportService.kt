@@ -48,23 +48,19 @@ class CollectionImportService(
         return ImportResult(importedCount = importedCount, notFound = notFound)
     }
 
-    private suspend fun fetchFromScryfall(
-        keys: Set<Pair<String, String>>,
-    ): List<ScryfallCollectionResponse> = coroutineScope {
-        keys.chunked(SCRYFALL_BATCH_SIZE).map { batch ->
-            async(Dispatchers.IO) {
-                val request = ScryfallCollectionRequest(
-                    identifiers = batch.map { CardIdentifier(set = it.first, collectorNumber = it.second) }
-                )
-                scryfallApiClient.fetchCollection(request)
-            }
-        }.awaitAll()
-    }
+    private suspend fun fetchFromScryfall(keys: Set<Pair<String, String>>): List<ScryfallCollectionResponse> =
+        coroutineScope {
+            keys.chunked(SCRYFALL_BATCH_SIZE).map { batch ->
+                async(Dispatchers.IO) {
+                    val request = ScryfallCollectionRequest(
+                        identifiers = batch.map { CardIdentifier(set = it.first, collectorNumber = it.second) },
+                    )
+                    scryfallApiClient.fetchCollection(request)
+                }
+            }.awaitAll()
+        }
 
-    data class ImportResult(
-        val importedCount: Int,
-        val notFound: List<CardIdentifier>,
-    )
+    data class ImportResult(val importedCount: Int, val notFound: List<CardIdentifier>)
 
     companion object {
         private const val SCRYFALL_BATCH_SIZE = 75

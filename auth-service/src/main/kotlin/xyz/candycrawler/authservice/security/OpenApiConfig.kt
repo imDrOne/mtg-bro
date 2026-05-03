@@ -16,7 +16,7 @@ class OpenApiConfig {
             Info()
                 .title("Auth Service API")
                 .description("Authentication and token management. Use POST /api/v1/auth/login to obtain a JWT.")
-                .version("1.0.0")
+                .version("1.0.0"),
         )
         .components(
             Components()
@@ -26,7 +26,7 @@ class OpenApiConfig {
                         .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
                         .bearerFormat("JWT")
-                        .description("JWT access token from POST /api/v1/auth/login")
+                        .description("JWT access token from POST /api/v1/auth/login"),
                 )
                 .addSecuritySchemes(
                     "refresh-cookie",
@@ -34,7 +34,9 @@ class OpenApiConfig {
                         .type(SecurityScheme.Type.APIKEY)
                         .`in`(SecurityScheme.In.COOKIE)
                         .name("refresh_token")
-                        .description("Refresh token cookie — set automatically on login, used by POST /api/v1/auth/refresh and /logout")
-                )
+                        .description(
+                            "Refresh token cookie — set automatically on login, used by POST /api/v1/auth/refresh and /logout",
+                        ),
+                ),
         )
 }

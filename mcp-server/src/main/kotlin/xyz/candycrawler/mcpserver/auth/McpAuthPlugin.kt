@@ -37,7 +37,7 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             call.response.header(
                 "WWW-Authenticate",
-                """Bearer resource_metadata="$resourceMetadataUrl", scope="$scopes""""
+                """Bearer resource_metadata="$resourceMetadataUrl", scope="$scopes"""",
             )
             call.respond(HttpStatusCode.Unauthorized)
             return@onCall
@@ -58,7 +58,7 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
         } catch (e: Exception) {
             call.response.header(
                 "WWW-Authenticate",
-                """Bearer error="invalid_token", resource_metadata="$resourceMetadataUrl""""
+                """Bearer error="invalid_token", resource_metadata="$resourceMetadataUrl"""",
             )
             call.respond(HttpStatusCode.Unauthorized)
         }

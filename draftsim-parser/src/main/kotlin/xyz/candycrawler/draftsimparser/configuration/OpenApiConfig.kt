@@ -17,7 +17,7 @@ class OpenApiConfig {
             Info()
                 .title("Draftsim Parser API")
                 .description("REST API for Draftsim article parsing and analysis")
-                .version("1.0.0")
+                .version("1.0.0"),
         )
         .components(
             Components().addSecuritySchemes(
@@ -26,8 +26,8 @@ class OpenApiConfig {
                     .type(SecurityScheme.Type.HTTP)
                     .scheme("bearer")
                     .bearerFormat("JWT")
-                    .description("JWT access token from auth-service POST /api/v1/auth/login")
-            )
+                    .description("JWT access token from auth-service POST /api/v1/auth/login"),
+            ),
         )
         .addSecurityItem(SecurityRequirement().addList("bearer-jwt"))
 }

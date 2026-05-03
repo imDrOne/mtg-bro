@@ -9,4 +9,3 @@ interface TrackedLimitedStatSetRepository {
     fun findActive(today: LocalDate): List<TrackedLimitedStatSet>
     fun deleteBySetCode(setCode: String)
 }
-

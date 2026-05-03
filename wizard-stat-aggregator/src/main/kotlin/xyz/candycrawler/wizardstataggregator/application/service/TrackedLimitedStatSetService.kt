@@ -6,17 +6,14 @@ import xyz.candycrawler.wizardstataggregator.domain.stat.limited.repository.Trac
 import java.time.LocalDate
 
 @Service
-class TrackedLimitedStatSetService(
-    private val repository: TrackedLimitedStatSetRepository,
-) {
+class TrackedLimitedStatSetService(private val repository: TrackedLimitedStatSetRepository) {
 
     fun upsert(setCode: String, watchUntil: LocalDate): TrackedLimitedStatSet =
         repository.save(TrackedLimitedStatSet(normalizeSetCode(setCode), watchUntil))
 
     fun findAll(): List<TrackedLimitedStatSet> = repository.findAll()
 
-    fun findActive(today: LocalDate = LocalDate.now()): List<TrackedLimitedStatSet> =
-        repository.findActive(today)
+    fun findActive(today: LocalDate = LocalDate.now()): List<TrackedLimitedStatSet> = repository.findActive(today)
 
     fun delete(setCode: String) {
         repository.deleteBySetCode(normalizeSetCode(setCode))

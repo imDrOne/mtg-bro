@@ -34,7 +34,7 @@ class TribalAnalysisService(
 
         val tribalSupport = cards.filter { card ->
             !card.typeLine.lowercase().contains(tribeLower) &&
-            card.oracleText?.lowercase()?.contains(tribeLower) == true
+                card.oracleText?.lowercase()?.contains(tribeLower) == true
         }
 
         val byCmc = cards
@@ -54,7 +54,10 @@ class TribalAnalysisService(
             .mapValues { it.value.size }
 
         val hasCommander = cards.any { card ->
-            card.typeLine.lowercase().let { it.contains("legendary") && it.contains("creature") && it.contains(tribeLower) }
+            card.typeLine.lowercase().let {
+                it.contains("legendary") && it.contains("creature") &&
+                    it.contains(tribeLower)
+            }
         }
 
         val hasLord = cards.any { card ->

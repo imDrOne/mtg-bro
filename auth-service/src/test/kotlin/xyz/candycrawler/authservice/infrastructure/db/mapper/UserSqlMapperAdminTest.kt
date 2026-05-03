@@ -18,10 +18,9 @@ class UserSqlMapperAdminTest : AbstractIntegrationTest() {
     @Autowired
     lateinit var userSqlMapper: UserSqlMapper
 
-    private fun insertUser(email: String, username: String, enabled: Boolean = true): UserRecord =
-        userSqlMapper.insert(
-            UserRecord(null, email, username, "\$2a\$10\$hash", enabled, Instant.now())
-        )
+    private fun insertUser(email: String, username: String, enabled: Boolean = true): UserRecord = userSqlMapper.insert(
+        UserRecord(null, email, username, "\$2a\$10\$hash", enabled, Instant.now()),
+    )
 
     @Test
     fun `update changes enabled flag and persists`() {

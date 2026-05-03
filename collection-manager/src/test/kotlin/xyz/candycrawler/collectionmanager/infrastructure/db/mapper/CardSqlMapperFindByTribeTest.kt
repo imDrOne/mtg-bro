@@ -110,10 +110,7 @@ class CardSqlMapperFindByTribeTest(
         assertTrue(support.id in ids)
     }
 
-    private fun saveCard(
-        typeLine: String = "Creature — Merfolk",
-        oracleText: String? = null,
-    ): CardRecord {
+    private fun saveCard(typeLine: String = "Creature — Merfolk", oracleText: String? = null): CardRecord {
         val record = buildRecord(typeLine = typeLine, oracleText = oracleText)
         return cardSqlMapper.upsertBatch(listOf(record)).single()
     }
@@ -137,42 +134,40 @@ class CardSqlMapperFindByTribeTest(
 
     private var collectorCounter = 0
 
-    private fun buildRecord(
-        typeLine: String = "Creature — Merfolk",
-        oracleText: String? = null,
-    ): CardRecord = CardRecord(
-        id = null,
-        scryfallId = UUID.randomUUID(),
-        oracleId = UUID.randomUUID(),
-        name = "Test Card",
-        lang = "en",
-        layout = "normal",
-        manaCost = "{U}",
-        cmc = 2.0,
-        typeLine = typeLine,
-        oracleText = oracleText,
-        colors = listOf("U"),
-        colorIdentity = listOf("U"),
-        keywords = emptyList(),
-        power = "1",
-        toughness = "1",
-        loyalty = null,
-        setCode = "tst",
-        setName = "Test Set",
-        collectorNumber = (++collectorCounter).toString(),
-        rarity = "common",
-        releasedAt = LocalDate.of(2024, 1, 1),
-        imageUriSmall = null,
-        imageUriNormal = null,
-        imageUriLarge = null,
-        imageUriPng = null,
-        imageUriArtCrop = null,
-        imageUriBorderCrop = null,
-        priceUsd = null,
-        priceUsdFoil = null,
-        priceEur = null,
-        priceEurFoil = null,
-        flavorText = null,
-        artist = null,
-    )
+    private fun buildRecord(typeLine: String = "Creature — Merfolk", oracleText: String? = null): CardRecord =
+        CardRecord(
+            id = null,
+            scryfallId = UUID.randomUUID(),
+            oracleId = UUID.randomUUID(),
+            name = "Test Card",
+            lang = "en",
+            layout = "normal",
+            manaCost = "{U}",
+            cmc = 2.0,
+            typeLine = typeLine,
+            oracleText = oracleText,
+            colors = listOf("U"),
+            colorIdentity = listOf("U"),
+            keywords = emptyList(),
+            power = "1",
+            toughness = "1",
+            loyalty = null,
+            setCode = "tst",
+            setName = "Test Set",
+            collectorNumber = (++collectorCounter).toString(),
+            rarity = "common",
+            releasedAt = LocalDate.of(2024, 1, 1),
+            imageUriSmall = null,
+            imageUriNormal = null,
+            imageUriLarge = null,
+            imageUriPng = null,
+            imageUriArtCrop = null,
+            imageUriBorderCrop = null,
+            priceUsd = null,
+            priceUsdFoil = null,
+            priceEur = null,
+            priceEurFoil = null,
+            flavorText = null,
+            artist = null,
+        )
 }

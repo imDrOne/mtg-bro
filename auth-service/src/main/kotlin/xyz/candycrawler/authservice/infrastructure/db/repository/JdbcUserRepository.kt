@@ -21,24 +21,19 @@ class JdbcUserRepository(
     private val toDomain: UserRecordToUserMapper,
 ) : UserRepository {
 
-    override fun save(user: User): User =
-        sqlMapper.insert(toRecord.map(user)).let(toDomain::map)
+    override fun save(user: User): User = sqlMapper.insert(toRecord.map(user)).let(toDomain::map)
 
     @Transactional(readOnly = true)
-    override fun findById(id: Long): User? =
-        sqlMapper.selectById(id)?.let(toDomain::map)
+    override fun findById(id: Long): User? = sqlMapper.selectById(id)?.let(toDomain::map)
 
     @Transactional(readOnly = true)
-    override fun findByEmail(email: String): User? =
-        sqlMapper.selectByEmail(email)?.let(toDomain::map)
+    override fun findByEmail(email: String): User? = sqlMapper.selectByEmail(email)?.let(toDomain::map)
 
     @Transactional(readOnly = true)
-    override fun existsByEmail(email: String): Boolean =
-        sqlMapper.existsByEmail(email)
+    override fun existsByEmail(email: String): Boolean = sqlMapper.existsByEmail(email)
 
     @Transactional(readOnly = true)
-    override fun existsByUsername(username: String): Boolean =
-        sqlMapper.existsByUsername(username)
+    override fun existsByUsername(username: String): Boolean = sqlMapper.existsByUsername(username)
 
     override fun update(id: Long, block: (User) -> User): User {
         val existing = sqlMapper.selectById(id)?.let(toDomain::map)

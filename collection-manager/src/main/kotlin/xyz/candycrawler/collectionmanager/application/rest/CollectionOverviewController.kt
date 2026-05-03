@@ -16,6 +16,5 @@ class CollectionOverviewController(private val service: CollectionOverviewServic
 
     @PreAuthorize("hasAuthority('PERM_api:collection:view')")
     @GetMapping("/overview")
-    fun getOverview(@AuthenticationPrincipal jwt: Jwt): CollectionOverviewResponse =
-        service.getOverview(jwt.userId())
+    fun getOverview(@AuthenticationPrincipal jwt: Jwt): CollectionOverviewResponse = service.getOverview(jwt.userId())
 }

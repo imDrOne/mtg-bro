@@ -14,16 +14,19 @@ import kotlinx.serialization.json.put
 
 fun analyzeTribalDepthSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("tribe", buildJsonObject {
-            put("type", "string")
-            put(
-                "description",
-                """Valid MTG creature subtype to analyze, e.g. "Merfolk", "Elf", "Goblin", "Zombie", "Dragon", "Human", "Kithkin".
+        put(
+            "tribe",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    """Valid MTG creature subtype to analyze, e.g. "Merfolk", "Elf", "Goblin", "Zombie", "Dragon", "Human", "Kithkin".
                 Must be an exact creature subtype as recognized by MTG rules.
                 Returns: total owned cards, CMC distribution, role breakdown (creatures / kindred spells / tribal support),
-                color spread, whether a lord/commander exists, and deck viability rating."""
-            )
-        })
+                color spread, whether a lord/commander exists, and deck viability rating.""",
+                )
+            },
+        )
     },
     required = listOf("tribe"),
 )
@@ -31,7 +34,10 @@ fun analyzeTribalDepthSchema() = ToolSchema(
 suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequest): CallToolResult {
     return try {
         val tribe = request.arguments?.get("tribe")?.jsonPrimitive?.content
-            ?: return CallToolResult(content = listOf(TextContent("Error: 'tribe' parameter is required")), isError = true)
+            ?: return CallToolResult(
+                content = listOf(TextContent("Error: 'tribe' parameter is required")),
+                isError = true,
+            )
 
         val url = "${context.baseUrl}/api/v1/cards/tribal/$tribe"
         val response = context.httpClient.get(url).body<String>()

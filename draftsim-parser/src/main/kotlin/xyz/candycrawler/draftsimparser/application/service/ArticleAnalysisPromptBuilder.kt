@@ -12,7 +12,8 @@ enum class ArticleType {
     FORMAT_STRATEGY,
     SET_OVERVIEW,
     GENERIC_MTG_KNOWLEDGE,
-    IGNORE;
+    IGNORE,
+    ;
 
     companion object {
         fun from(value: String?): ArticleType =
@@ -28,7 +29,8 @@ enum class ProcessingProfile {
     FORMAT,
     SET,
     GENERIC,
-    IGNORE;
+    IGNORE,
+    ;
 
     companion object {
         fun from(value: String?, articleType: ArticleType): ProcessingProfile =
@@ -136,59 +138,56 @@ class ArticleAnalysisPromptBuilder {
         }
     """.trimIndent()
 
-    private fun profileInstructions(profile: ProcessingProfile): String =
-        when (profile) {
-            ProcessingProfile.CARD -> """
+    private fun profileInstructions(profile: ProcessingProfile): String = when (profile) {
+        ProcessingProfile.CARD -> """
                 Focus on individual cards, role, power level, synergy, replacement candidates, and when the card belongs in a deck.
                 Do not ignore non-card context if it changes how the card should be evaluated.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.MECHANIC -> """
+        ProcessingProfile.MECHANIC -> """
                 Focus on how the mechanic works, what kinds of cards enable it, what payoffs it creates, and how it changes deck construction.
                 Extract important cards only when they illustrate or materially support the mechanic.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.ARCHETYPE -> """
+        ProcessingProfile.ARCHETYPE -> """
                 Focus on game plan, color pair/theme, enablers, payoffs, curve needs, removal/fixing requirements, and cards that signal the archetype is open.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.DRAFT -> """
+        ProcessingProfile.DRAFT -> """
                 Focus on Limited pick priorities, draft signals, format speed, synergy density, removal/fixing, sideboard notes, and cards whose value depends on draft context.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.FORMAT -> """
+        ProcessingProfile.FORMAT -> """
                 Focus on constructed format context, metagame pressure, matchup implications, card positioning, and strategic reasons to include or avoid cards.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.SET -> """
+        ProcessingProfile.SET -> """
                 Focus on set-level themes, release mechanics, supported archetypes, product or card pool context, and broad implications for deckbuilding.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.GENERIC -> """
+        ProcessingProfile.GENERIC -> """
                 Extract any useful MTG insight. Prefer mechanics, archetypes, format context, and deckbuilding implications over forcing a card recommendation.
-            """.trimIndent()
+        """.trimIndent()
 
-            ProcessingProfile.IGNORE -> """
+        ProcessingProfile.IGNORE -> """
                 Return null unless the paragraph unexpectedly contains concrete MTG knowledge.
-            """.trimIndent()
-        }
+        """.trimIndent()
+    }
 }
 
-private fun String?.normalizeEnumValue(): String? =
-    this
-        ?.trim()
-        ?.replace('-', '_')
-        ?.lowercase(Locale.US)
-        ?.uppercase(Locale.US)
+private fun String?.normalizeEnumValue(): String? = this
+    ?.trim()
+    ?.replace('-', '_')
+    ?.lowercase(Locale.US)
+    ?.uppercase(Locale.US)
 
-private fun ArticleType.defaultProcessingProfile(): ProcessingProfile =
-    when (this) {
-        ArticleType.CARD_REVIEW -> ProcessingProfile.CARD
-        ArticleType.MECHANIC_GUIDE -> ProcessingProfile.MECHANIC
-        ArticleType.ARCHETYPE_GUIDE -> ProcessingProfile.ARCHETYPE
-        ArticleType.DRAFT_GUIDE -> ProcessingProfile.DRAFT
-        ArticleType.FORMAT_STRATEGY -> ProcessingProfile.FORMAT
-        ArticleType.SET_OVERVIEW -> ProcessingProfile.SET
-        ArticleType.GENERIC_MTG_KNOWLEDGE -> ProcessingProfile.GENERIC
-        ArticleType.IGNORE -> ProcessingProfile.IGNORE
-    }
+private fun ArticleType.defaultProcessingProfile(): ProcessingProfile = when (this) {
+    ArticleType.CARD_REVIEW -> ProcessingProfile.CARD
+    ArticleType.MECHANIC_GUIDE -> ProcessingProfile.MECHANIC
+    ArticleType.ARCHETYPE_GUIDE -> ProcessingProfile.ARCHETYPE
+    ArticleType.DRAFT_GUIDE -> ProcessingProfile.DRAFT
+    ArticleType.FORMAT_STRATEGY -> ProcessingProfile.FORMAT
+    ArticleType.SET_OVERVIEW -> ProcessingProfile.SET
+    ArticleType.GENERIC_MTG_KNOWLEDGE -> ProcessingProfile.GENERIC
+    ArticleType.IGNORE -> ProcessingProfile.IGNORE
+}

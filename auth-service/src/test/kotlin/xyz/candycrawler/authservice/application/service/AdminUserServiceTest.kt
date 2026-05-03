@@ -8,13 +8,13 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import xyz.candycrawler.authservice.domain.refreshtoken.repository.RefreshTokenRepository
 import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import xyz.candycrawler.authservice.domain.user.model.User
 import xyz.candycrawler.authservice.domain.user.model.UserFilter
 import xyz.candycrawler.authservice.domain.user.model.UserRole
 import xyz.candycrawler.authservice.domain.user.repository.UserRepository
 import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
-import xyz.candycrawler.authservice.domain.refreshtoken.repository.RefreshTokenRepository
 import xyz.candycrawler.common.pagination.PageRequest
 import xyz.candycrawler.common.pagination.PageResponse
 import xyz.candycrawler.common.pagination.SortDir
@@ -31,8 +31,12 @@ class AdminUserServiceTest {
     private val service = AdminUserService(userRepository, userRoleRepository, refreshTokenRepository, passwordEncoder)
 
     private fun user(id: Long, email: String, enabled: Boolean = true) = User(
-        id = id, email = email, username = "user$id",
-        passwordHash = "\$2a\$10\$hash", enabled = enabled, createdAt = Instant.now(),
+        id = id,
+        email = email,
+        username = "user$id",
+        passwordHash = "\$2a\$10\$hash",
+        enabled = enabled,
+        createdAt = Instant.now(),
     )
 
     @Test
@@ -135,7 +139,10 @@ class AdminUserServiceTest {
         val page = PageRequest(0, 20, "createdAt", SortDir.DESC)
         val pageResponse = PageResponse(
             items = listOf(user(1L, "a@example.com"), user(2L, "b@example.com")),
-            page = 0, size = 20, totalItems = 2L, totalPages = 1,
+            page = 0,
+            size = 20,
+            totalItems = 2L,
+            totalPages = 1,
         )
         whenever(userRepository.findAll(filter, page)).thenReturn(pageResponse)
 

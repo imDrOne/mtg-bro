@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service
 import xyz.candycrawler.authservice.domain.user.repository.UserRepository
 
 @Service
-class UserDetailsServiceAdapter(
-    private val userRepository: UserRepository,
-) : UserDetailsService {
+class UserDetailsServiceAdapter(private val userRepository: UserRepository) : UserDetailsService {
 
     override fun loadUserByUsername(username: String): UserDetails {
         val user = userRepository.findByEmail(username)

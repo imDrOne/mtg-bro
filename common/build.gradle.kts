@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    id("quality-module")
 }
 
 group = "xyz.candy-crawler"

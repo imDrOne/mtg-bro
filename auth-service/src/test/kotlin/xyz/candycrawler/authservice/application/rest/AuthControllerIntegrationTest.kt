@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers
 import xyz.candycrawler.authservice.application.service.UserRegistrationService
 import xyz.candycrawler.authservice.lib.AbstractIntegrationTest
 import kotlin.test.assertNotNull
@@ -19,7 +19,9 @@ import kotlin.test.assertNotNull
 class AuthControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Autowired lateinit var wac: WebApplicationContext
+
     @Autowired lateinit var registrationService: UserRegistrationService
+
     @Autowired lateinit var jdbcTemplate: JdbcTemplate
 
     private lateinit var mockMvc: MockMvc

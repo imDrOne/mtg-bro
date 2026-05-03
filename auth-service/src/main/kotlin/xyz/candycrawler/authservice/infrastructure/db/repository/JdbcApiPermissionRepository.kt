@@ -7,12 +7,9 @@ import xyz.candycrawler.authservice.domain.user.model.UserRole
 import xyz.candycrawler.authservice.infrastructure.db.mapper.sql.ApiPermissionSqlMapper
 
 @Repository
-class JdbcApiPermissionRepository(
-    private val sqlMapper: ApiPermissionSqlMapper,
-) : ApiPermissionRepository {
+class JdbcApiPermissionRepository(private val sqlMapper: ApiPermissionSqlMapper) : ApiPermissionRepository {
 
-    override fun findByRole(role: UserRole): List<ApiPermission> =
-        findByRoles(listOf(role))
+    override fun findByRole(role: UserRole): List<ApiPermission> = findByRoles(listOf(role))
 
     override fun findByRoles(roles: List<UserRole>): List<ApiPermission> =
         sqlMapper.selectByRoles(roles.map { it.name })

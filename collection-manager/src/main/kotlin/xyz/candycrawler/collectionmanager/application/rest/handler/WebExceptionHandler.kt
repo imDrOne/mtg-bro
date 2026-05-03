@@ -15,11 +15,10 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 class WebExceptionHandler {
 
     @ExceptionHandler(RestClientResponseException::class)
-    fun handleRestClientError(ex: RestClientResponseException): ResponseEntity<String> =
-        ResponseEntity
-            .status(ex.statusCode)
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(ex.responseBodyAsString)
+    fun handleRestClientError(ex: RestClientResponseException): ResponseEntity<String> = ResponseEntity
+        .status(ex.statusCode)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(ex.responseBodyAsString)
 
     @ExceptionHandler(MissingServletRequestParameterException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -43,7 +42,7 @@ class WebExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException::class)
     @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
-    fun handleMaxUploadSize(ex: MaxUploadSizeExceededException): ErrorResponse = ErrorResponse(
+    fun handleMaxUploadSize(): ErrorResponse = ErrorResponse(
         status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
         error = HttpStatus.PAYLOAD_TOO_LARGE.reasonPhrase,
         message = "Uploaded file exceeds the maximum allowed size",

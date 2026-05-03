@@ -18,8 +18,7 @@ class ExposedArticleRepository(
     private val toRecord: ArticleToArticleRecordMapper,
 ) : ArticleRepository {
 
-    override fun save(article: Article): Article =
-        sqlMapper.upsert(toRecord.apply(article)).let(toDomain::apply)
+    override fun save(article: Article): Article = sqlMapper.upsert(toRecord.apply(article)).let(toDomain::apply)
 
     override fun update(id: Long, block: (Article) -> Article): Article {
         val existing = sqlMapper.selectById(id)?.let(toDomain::apply)
@@ -29,6 +28,5 @@ class ExposedArticleRepository(
         return updated
     }
 
-    override fun saveTaskArticleLink(taskId: UUID, articleId: Long) =
-        sqlMapper.insertTaskArticleLink(taskId, articleId)
+    override fun saveTaskArticleLink(taskId: UUID, articleId: Long) = sqlMapper.insertTaskArticleLink(taskId, articleId)
 }

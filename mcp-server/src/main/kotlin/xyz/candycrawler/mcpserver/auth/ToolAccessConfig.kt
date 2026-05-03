@@ -33,11 +33,10 @@ sealed class RoleTools {
 }
 
 object RoleToolsSerializer : YamlContentPolymorphicSerializer<RoleTools>(RoleTools::class) {
-    override fun selectDeserializer(node: YamlNode): DeserializationStrategy<RoleTools> =
-        when {
-            node is YamlScalar && node.content == "*" -> WildcardDeserializer
-            else -> NamedDeserializer
-        }
+    override fun selectDeserializer(node: YamlNode): DeserializationStrategy<RoleTools> = when {
+        node is YamlScalar && node.content == "*" -> WildcardDeserializer
+        else -> NamedDeserializer
+    }
 
     private object WildcardDeserializer : DeserializationStrategy<RoleTools> {
         override val descriptor = String.serializer().descriptor
@@ -61,11 +60,9 @@ data class ToolAccessConfigData(
     @SerialName("default_allowed_tools") val defaultAllowedTools: List<String> = emptyList(),
 )
 
-fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): Boolean {
-    return userRoles.any { role ->
-        val allowed = roles[role]
-        allowed?.contains(toolName) ?: defaultAllowedTools.contains(toolName)
-    }
+fun ToolAccessConfigData.hasAccess(toolName: String, userRoles: List<String>): Boolean = userRoles.any { role ->
+    val allowed = roles[role]
+    allowed?.contains(toolName) ?: defaultAllowedTools.contains(toolName)
 }
 
 object ToolAccessConfig {

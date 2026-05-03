@@ -1,6 +1,5 @@
 package xyz.candycrawler.wizardstataggregator.infrastructure.client.lands17
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import xyz.candycrawler.wizardstataggregator.lib.AbstractIntegrationTest

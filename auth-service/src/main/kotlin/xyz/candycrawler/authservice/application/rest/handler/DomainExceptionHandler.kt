@@ -8,11 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import xyz.candycrawler.authservice.domain.user.exception.UserNotFoundException
 
-data class ErrorResponse(
-    val status: Int,
-    val error: String,
-    val message: String,
-)
+data class ErrorResponse(val status: Int, val error: String, val message: String)
 
 @RestControllerAdvice
 class DomainExceptionHandler {

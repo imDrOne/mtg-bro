@@ -9,4 +9,3 @@ data class TrackedLimitedStatSetRecord(
     val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
 )
-

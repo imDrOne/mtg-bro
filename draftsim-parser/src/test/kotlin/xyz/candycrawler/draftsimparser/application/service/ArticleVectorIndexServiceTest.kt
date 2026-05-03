@@ -41,8 +41,8 @@ class ArticleVectorIndexServiceTest {
                         }
                       ]
                     }
-                """.trimIndent()
-            )
+                """.trimIndent(),
+            ),
         )
 
         assertEquals(1, documents.size)
@@ -83,8 +83,8 @@ class ArticleVectorIndexServiceTest {
                         42
                       ]
                     }
-                """.trimIndent()
-            )
+                """.trimIndent(),
+            ),
         )
 
         assertEquals(1, documents.size)

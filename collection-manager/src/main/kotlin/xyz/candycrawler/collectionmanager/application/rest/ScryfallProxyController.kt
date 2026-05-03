@@ -18,9 +18,7 @@ import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.res
 @Tag(name = "Scryfall Proxy", description = "Proxy endpoints for Scryfall API (for UI consumption)")
 @RestController
 @RequestMapping("/api/v1/scryfall")
-class ScryfallProxyController(
-    private val scryfallApiClient: ScryfallApiClient,
-) {
+class ScryfallProxyController(private val scryfallApiClient: ScryfallApiClient) {
 
     @Operation(
         summary = "Search cards via Scryfall API",
@@ -33,10 +31,12 @@ class ScryfallProxyController(
             ApiResponse(
                 responseCode = "200",
                 description = "Scryfall search results",
-                content = [Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = Schema(implementation = ScryfallSearchResponse::class),
-                )],
+                content = [
+                    Content(
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = ScryfallSearchResponse::class),
+                    ),
+                ],
             ),
         ],
     )
@@ -47,7 +47,10 @@ class ScryfallProxyController(
         @RequestParam q: String,
         @Parameter(description = "Strategy for omitting similar cards: cards, art, prints")
         @RequestParam(required = false) unique: String?,
-        @Parameter(description = "Sort order: name, set, released, rarity, color, usd, tix, eur, cmc, power, toughness, edhrec, penny, artist, review")
+        @Parameter(
+            description = "Sort order: name, set, released, rarity, color, usd, tix, eur, " +
+                "cmc, power, toughness, edhrec, penny, artist, review",
+        )
         @RequestParam(required = false) order: String?,
         @Parameter(description = "Sort direction: auto, asc, desc")
         @RequestParam(required = false) dir: String?,

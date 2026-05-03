@@ -5,9 +5,7 @@ import xyz.candycrawler.draftsimparser.application.port.AlertPublisher
 import java.util.UUID
 
 @Service
-class ParseAlertService(
-    private val alertPublisher: AlertPublisher,
-) {
+class ParseAlertService(private val alertPublisher: AlertPublisher) {
 
     fun parsingStarted(taskId: UUID, keyword: String) {
         alertPublisher.send(
@@ -16,7 +14,7 @@ class ParseAlertService(
             taskId: $taskId
             keyword: $keyword
             #draftsim #parse #started
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -30,7 +28,7 @@ class ParseAlertService(
             url: ${postUrl ?: "unknown"}
             error: ${error.shortMessage()}
             #draftsim #parse #article_error
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -42,12 +40,11 @@ class ParseAlertService(
             keyword: $keyword
             error: ${error.shortMessage()}
             #draftsim #parse #failed
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
-    private fun Throwable.shortMessage(): String =
-        (message ?: javaClass.simpleName).take(MAX_ERROR_LENGTH)
+    private fun Throwable.shortMessage(): String = (message ?: javaClass.simpleName).take(MAX_ERROR_LENGTH)
 
     companion object {
         private const val MAX_ERROR_LENGTH = 500

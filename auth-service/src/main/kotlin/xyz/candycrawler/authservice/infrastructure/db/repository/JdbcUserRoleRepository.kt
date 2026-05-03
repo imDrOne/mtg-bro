@@ -6,9 +6,7 @@ import xyz.candycrawler.authservice.domain.user.repository.UserRoleRepository
 import xyz.candycrawler.authservice.infrastructure.db.mapper.sql.UserRoleSqlMapper
 
 @Repository
-class JdbcUserRoleRepository(
-    private val userRoleSqlMapper: UserRoleSqlMapper,
-) : UserRoleRepository {
+class JdbcUserRoleRepository(private val userRoleSqlMapper: UserRoleSqlMapper) : UserRoleRepository {
 
     override fun assignRole(userId: Long, role: UserRole) {
         userRoleSqlMapper.insert(userId, role.name)

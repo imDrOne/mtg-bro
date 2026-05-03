@@ -1,7 +1,7 @@
 package xyz.candycrawler.draftsimparser.infrastructure.db.mapper.sql
 
-import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.like
@@ -23,31 +23,29 @@ import kotlin.uuid.Uuid
 @Component
 class ArticleSqlMapper {
 
-    internal fun upsert(record: ArticleRecord): ArticleRecord =
-        ArticlesTable.batchUpsert(
-            listOf(record),
-            keys = arrayOf(ArticlesTable.externalId),
-            onUpdateExclude = listOf(ArticlesTable.keywords),
-            shouldReturnGeneratedValues = true,
-        ) { r ->
-            this[ArticlesTable.externalId] = r.externalId
-            this[ArticlesTable.title] = r.title
-            this[ArticlesTable.slug] = r.slug
-            this[ArticlesTable.url] = r.url
-            this[ArticlesTable.htmlContent] = r.htmlContent
-            this[ArticlesTable.textContent] = r.textContent
-            this[ArticlesTable.publishedAt] = r.publishedAt
-            this[ArticlesTable.fetchedAt] = r.fetchedAt
-            this[ArticlesTable.keywords] = r.keywords
-            // favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
-            // are NOT updated on conflict — preserved from existing row
-        }.single().toRecord()
+    internal fun upsert(record: ArticleRecord): ArticleRecord = ArticlesTable.batchUpsert(
+        listOf(record),
+        keys = arrayOf(ArticlesTable.externalId),
+        onUpdateExclude = listOf(ArticlesTable.keywords),
+        shouldReturnGeneratedValues = true,
+    ) { r ->
+        this[ArticlesTable.externalId] = r.externalId
+        this[ArticlesTable.title] = r.title
+        this[ArticlesTable.slug] = r.slug
+        this[ArticlesTable.url] = r.url
+        this[ArticlesTable.htmlContent] = r.htmlContent
+        this[ArticlesTable.textContent] = r.textContent
+        this[ArticlesTable.publishedAt] = r.publishedAt
+        this[ArticlesTable.fetchedAt] = r.fetchedAt
+        this[ArticlesTable.keywords] = r.keywords
+        // favorite, analyzedText, errorMsg, analyzStartedAt, analyzEndedAt
+        // are NOT updated on conflict — preserved from existing row
+    }.single().toRecord()
 
-    internal fun selectById(id: Long): ArticleRecord? =
-        ArticlesTable.selectAll()
-            .where { ArticlesTable.id eq id }
-            .map { it.toRecord() }
-            .singleOrNull()
+    internal fun selectById(id: Long): ArticleRecord? = ArticlesTable.selectAll()
+        .where { ArticlesTable.id eq id }
+        .map { it.toRecord() }
+        .singleOrNull()
 
     internal fun search(query: String?, limit: Int, offset: Long, favoriteOnly: Boolean? = null): List<ArticleRecord> {
         val condition = buildSearchCondition(query, favoriteOnly)
@@ -72,7 +70,7 @@ class ArticleSqlMapper {
         if (!query.isNullOrBlank()) {
             val pattern = "%${query.lowercase()}%"
             val textCondition = (ArticlesTable.title.lowerCase() like pattern) or
-                    (ArticlesTable.slug.lowerCase() like pattern)
+                (ArticlesTable.slug.lowerCase() like pattern)
             condition = textCondition
         }
 
@@ -84,11 +82,10 @@ class ArticleSqlMapper {
         return condition
     }
 
-    internal fun findByTaskId(taskId: UUID): List<ArticleRecord> =
-        (ArticlesTable innerJoin ParseTaskArticlesTable)
-            .selectAll()
-            .where { ParseTaskArticlesTable.parseTaskId eq Uuid.parse(taskId.toString()) }
-            .map { it.toRecord() }
+    internal fun findByTaskId(taskId: UUID): List<ArticleRecord> = (ArticlesTable innerJoin ParseTaskArticlesTable)
+        .selectAll()
+        .where { ParseTaskArticlesTable.parseTaskId eq Uuid.parse(taskId.toString()) }
+        .map { it.toRecord() }
 
     internal fun updateMutableFields(id: Long, record: ArticleRecord) {
         ArticlesTable.update({ ArticlesTable.id eq id }) {

@@ -6,10 +6,9 @@ import xyz.candycrawler.collectionmanager.application.parser.dto.ParsedCollectio
 @Component
 class TcgPlayerFileParser : CollectionFileParser {
 
-    override fun parse(content: String): List<ParsedCollectionEntry> =
-        content.lines()
-            .filter { it.isNotBlank() }
-            .mapNotNull { line -> LINE_PATTERN.matchEntire(line.trim())?.toEntry() }
+    override fun parse(content: String): List<ParsedCollectionEntry> = content.lines()
+        .filter { it.isNotBlank() }
+        .mapNotNull { line -> LINE_PATTERN.matchEntire(line.trim())?.toEntry() }
 
     private fun MatchResult.toEntry() = ParsedCollectionEntry(
         quantity = groupValues[1].toInt(),

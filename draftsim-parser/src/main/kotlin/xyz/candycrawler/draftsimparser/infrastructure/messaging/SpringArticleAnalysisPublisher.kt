@@ -6,9 +6,8 @@ import xyz.candycrawler.draftsimparser.application.messaging.ArticleAnalysisMess
 import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
 
 @Component
-class SpringArticleAnalysisPublisher(
-    private val eventPublisher: ApplicationEventPublisher,
-) : ArticleAnalysisPublisher {
+class SpringArticleAnalysisPublisher(private val eventPublisher: ApplicationEventPublisher) :
+    ArticleAnalysisPublisher {
 
     override fun publish(articleId: Long) {
         eventPublisher.publishEvent(ArticleAnalysisMessage(articleId))

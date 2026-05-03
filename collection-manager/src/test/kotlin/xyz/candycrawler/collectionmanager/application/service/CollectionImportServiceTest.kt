@@ -44,7 +44,7 @@ class CollectionImportServiceTest {
                     buildScryfallCardResponse(setCode = "ecl", collectorNumber = "180"),
                 ),
                 notFound = emptyList(),
-            )
+            ),
         )
         whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(2)
 
@@ -65,7 +65,7 @@ class CollectionImportServiceTest {
             buildScryfallResponse(
                 data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
                 notFound = emptyList(),
-            )
+            ),
         )
         whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(1)
 
@@ -90,7 +90,7 @@ class CollectionImportServiceTest {
             buildScryfallResponse(
                 data = listOf(buildScryfallCardResponse(setCode = "ecl", collectorNumber = "218")),
                 notFound = emptyList(),
-            )
+            ),
         )
         whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(1)
 
@@ -108,7 +108,7 @@ class CollectionImportServiceTest {
 
         val notFound = listOf(CardIdentifier(set = "xxx", collectorNumber = "999"))
         whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
-            buildScryfallResponse(data = emptyList(), notFound = notFound)
+            buildScryfallResponse(data = emptyList(), notFound = notFound),
         )
         whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(0)
 
@@ -125,7 +125,7 @@ class CollectionImportServiceTest {
         }
 
         whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
-            buildScryfallResponse(data = emptyList(), notFound = emptyList())
+            buildScryfallResponse(data = emptyList(), notFound = emptyList()),
         )
         whenever(persistenceService.saveImportedData(any(), any(), any())).thenReturn(0)
 
@@ -144,15 +144,10 @@ class CollectionImportServiceTest {
         assertTrue(result.notFound.isEmpty())
     }
 
-    private fun buildScryfallResponse(
-        data: List<ScryfallCardResponse>,
-        notFound: List<CardIdentifier>,
-    ) = ScryfallCollectionResponse(data = data, notFound = notFound)
+    private fun buildScryfallResponse(data: List<ScryfallCardResponse>, notFound: List<CardIdentifier>) =
+        ScryfallCollectionResponse(data = data, notFound = notFound)
 
-    private fun buildScryfallCardResponse(
-        setCode: String,
-        collectorNumber: String,
-    ) = ScryfallCardResponse(
+    private fun buildScryfallCardResponse(setCode: String, collectorNumber: String) = ScryfallCardResponse(
         id = UUID.randomUUID(),
         oracleId = UUID.randomUUID(),
         name = "Test Card",

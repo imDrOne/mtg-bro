@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component
 import kotlin.coroutines.CoroutineContext
 
 @Component
-class ApplicationCoroutineScope : CoroutineScope, DisposableBean {
+class ApplicationCoroutineScope :
+    CoroutineScope,
+    DisposableBean {
 
     private val job = SupervisorJob()
 

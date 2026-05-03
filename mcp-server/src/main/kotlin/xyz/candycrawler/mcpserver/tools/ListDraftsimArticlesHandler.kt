@@ -17,22 +17,34 @@ import kotlinx.serialization.json.put
 
 fun listDraftsimArticlesSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("q", buildJsonObject {
-            put("type", "string")
-            put("description", "Optional keyword query for Draftsim article title, slug, or text search.")
-        })
-        put("page", buildJsonObject {
-            put("type", "integer")
-            put("description", "Page number (1-based, default 1).")
-        })
-        put("page_size", buildJsonObject {
-            put("type", "integer")
-            put("description", "Articles per page (default 20, max 100).")
-        })
-        put("favorite", buildJsonObject {
-            put("type", "boolean")
-            put("description", "Whether to list only favorited articles (default true).")
-        })
+        put(
+            "q",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Optional keyword query for Draftsim article title, slug, or text search.")
+            },
+        )
+        put(
+            "page",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Page number (1-based, default 1).")
+            },
+        )
+        put(
+            "page_size",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Articles per page (default 20, max 100).")
+            },
+        )
+        put(
+            "favorite",
+            buildJsonObject {
+                put("type", "boolean")
+                put("description", "Whether to list only favorited articles (default true).")
+            },
+        )
     },
     required = emptyList(),
 )

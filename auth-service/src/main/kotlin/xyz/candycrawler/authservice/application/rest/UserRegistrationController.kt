@@ -12,9 +12,7 @@ import xyz.candycrawler.authservice.application.service.UserRegistrationService
 
 @RestController
 @RequestMapping("/api/v1/users")
-class UserRegistrationController(
-    private val registrationService: UserRegistrationService,
-) {
+class UserRegistrationController(private val registrationService: UserRegistrationService) {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)

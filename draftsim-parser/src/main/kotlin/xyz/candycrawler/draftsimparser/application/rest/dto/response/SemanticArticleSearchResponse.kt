@@ -3,9 +3,7 @@ package xyz.candycrawler.draftsimparser.application.rest.dto.response
 import xyz.candycrawler.draftsimparser.application.service.ArticleSemanticSearchMatch
 import xyz.candycrawler.draftsimparser.application.service.ArticleSemanticSearchResult
 
-data class SemanticArticleSearchResponse(
-    val results: List<SemanticArticleSearchResultResponse>,
-)
+data class SemanticArticleSearchResponse(val results: List<SemanticArticleSearchResultResponse>)
 
 data class SemanticArticleSearchResultResponse(
     val article: ArticleSummaryResponse,

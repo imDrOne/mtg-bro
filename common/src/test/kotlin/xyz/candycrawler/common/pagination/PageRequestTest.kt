@@ -1,8 +1,8 @@
 package xyz.candycrawler.common.pagination
 
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class PageRequestTest {
 

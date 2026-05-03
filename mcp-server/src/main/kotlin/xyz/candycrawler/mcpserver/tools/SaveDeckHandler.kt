@@ -20,56 +20,95 @@ import kotlinx.serialization.json.put
 
 private val deckEntryItemSchema = buildJsonObject {
     put("type", "object")
-    put("properties", buildJsonObject {
-        put("setCode", buildJsonObject {
-            put("type", "string")
-            put("description", "Set code, e.g. \"lea\", \"m21\"")
-        })
-        put("collectorNumber", buildJsonObject {
-            put("type", "string")
-            put("description", "Collector number, e.g. \"161\", \"42\"")
-        })
-        put("quantity", buildJsonObject {
-            put("type", "integer")
-            put("description", "Number of copies (1-4)")
-        })
-    })
-    put("required", buildJsonArray {
-        add(JsonPrimitive("setCode"))
-        add(JsonPrimitive("collectorNumber"))
-        add(JsonPrimitive("quantity"))
-    })
+    put(
+        "properties",
+        buildJsonObject {
+            put(
+                "setCode",
+                buildJsonObject {
+                    put("type", "string")
+                    put("description", "Set code, e.g. \"lea\", \"m21\"")
+                },
+            )
+            put(
+                "collectorNumber",
+                buildJsonObject {
+                    put("type", "string")
+                    put("description", "Collector number, e.g. \"161\", \"42\"")
+                },
+            )
+            put(
+                "quantity",
+                buildJsonObject {
+                    put("type", "integer")
+                    put("description", "Number of copies (1-4)")
+                },
+            )
+        },
+    )
+    put(
+        "required",
+        buildJsonArray {
+            add(JsonPrimitive("setCode"))
+            add(JsonPrimitive("collectorNumber"))
+            add(JsonPrimitive("quantity"))
+        },
+    )
 }
 
 fun saveDeckSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("name", buildJsonObject {
-            put("type", "string")
-            put("description", "Deck name")
-        })
-        put("format", buildJsonObject {
-            put("type", "string")
-            put("description", "Deck format: STANDARD (mainboard >= 60 cards), SEALED or DRAFT (mainboard >= 40 cards)")
-            put("enum", buildJsonArray {
-                add(JsonPrimitive("STANDARD"))
-                add(JsonPrimitive("SEALED"))
-                add(JsonPrimitive("DRAFT"))
-            })
-        })
-        put("comment", buildJsonObject {
-            put("type", "string")
-            put("description", "Optional comment about the deck (tactics, strategy, etc.)")
-        })
-        put("mainboard", buildJsonObject {
-            put("type", "array")
-            put("description", "Mainboard cards. Use setCode and collectorNumber from search_my_cards results (shown as \"(set #num)\"). Max 4 copies per card.")
-            put("items", deckEntryItemSchema)
-        })
-        put("sideboard", buildJsonObject {
-            put("type", "array")
-            put("description", "Sideboard cards (optional). Same format as mainboard.")
-            put("items", deckEntryItemSchema)
-        })
+        put(
+            "name",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Deck name")
+            },
+        )
+        put(
+            "format",
+            buildJsonObject {
+                put("type", "string")
+                put(
+                    "description",
+                    "Deck format: STANDARD (mainboard >= 60 cards), SEALED or DRAFT (mainboard >= 40 cards)",
+                )
+                put(
+                    "enum",
+                    buildJsonArray {
+                        add(JsonPrimitive("STANDARD"))
+                        add(JsonPrimitive("SEALED"))
+                        add(JsonPrimitive("DRAFT"))
+                    },
+                )
+            },
+        )
+        put(
+            "comment",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Optional comment about the deck (tactics, strategy, etc.)")
+            },
+        )
+        put(
+            "mainboard",
+            buildJsonObject {
+                put("type", "array")
+                put(
+                    "description",
+                    "Mainboard cards. Use setCode and collectorNumber from search_my_cards results (shown as \"(set #num)\"). Max 4 copies per card.",
+                )
+                put("items", deckEntryItemSchema)
+            },
+        )
+        put(
+            "sideboard",
+            buildJsonObject {
+                put("type", "array")
+                put("description", "Sideboard cards (optional). Same format as mainboard.")
+                put("items", deckEntryItemSchema)
+            },
+        )
     },
     required = listOf("name", "format", "mainboard"),
 )
@@ -91,11 +130,13 @@ suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): Call
                 val setCode = obj["setCode"]?.jsonPrimitive?.content ?: ""
                 val collectorNumber = obj["collectorNumber"]?.jsonPrimitive?.content ?: ""
                 val quantity = obj["quantity"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
-                add(buildJsonObject {
-                    put("setCode", JsonPrimitive(setCode))
-                    put("collectorNumber", JsonPrimitive(collectorNumber))
-                    put("quantity", JsonPrimitive(quantity))
-                })
+                add(
+                    buildJsonObject {
+                        put("setCode", JsonPrimitive(setCode))
+                        put("collectorNumber", JsonPrimitive(collectorNumber))
+                        put("quantity", JsonPrimitive(quantity))
+                    },
+                )
             }
         }
 
@@ -151,9 +192,9 @@ suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): Call
                 TextContent(
                     "Deck saved successfully!\n" +
                         "ID: $deckId | Name: $deckName | Format: $deckFormat | Colors: $colors\n" +
-                        "Mainboard: $mainboardCount cards | Sideboard: $sideboardCount cards"
-                )
-            )
+                        "Mainboard: $mainboardCount cards | Sideboard: $sideboardCount cards",
+                ),
+            ),
         )
     } catch (e: Exception) {
         CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)

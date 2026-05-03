@@ -34,8 +34,8 @@ fun Server.addDeckbuildingGuideResource() {
                     text = loadDeckbuildingGuide(),
                     uri = DECKBUILDING_GUIDE_RESOURCE_URI,
                     mimeType = DECKBUILDING_GUIDE_MIME_TYPE,
-                )
-            )
+                ),
+            ),
         )
     }
 }

@@ -42,22 +42,19 @@ class DeckSqlMapper {
         }
     }
 
-    internal fun selectByIdAndUser(id: Long, userId: Long): DeckRecord? =
-        DecksTable.selectAll()
-            .where { (DecksTable.id eq id) and (DecksTable.userId eq userId) }
-            .map { it.toDeckRecord() }
-            .singleOrNull()
+    internal fun selectByIdAndUser(id: Long, userId: Long): DeckRecord? = DecksTable.selectAll()
+        .where { (DecksTable.id eq id) and (DecksTable.userId eq userId) }
+        .map { it.toDeckRecord() }
+        .singleOrNull()
 
-    internal fun selectEntriesByDeckId(deckId: Long): List<DeckEntryRecord> =
-        DeckEntriesTable.selectAll()
-            .where { DeckEntriesTable.deckId eq deckId }
-            .map { it.toEntryRecord() }
+    internal fun selectEntriesByDeckId(deckId: Long): List<DeckEntryRecord> = DeckEntriesTable.selectAll()
+        .where { DeckEntriesTable.deckId eq deckId }
+        .map { it.toEntryRecord() }
 
-    internal fun selectAllByUser(userId: Long): List<DeckRecord> =
-        DecksTable.selectAll()
-            .where { DecksTable.userId eq userId }
-            .orderBy(DecksTable.createdAt to SortOrder.DESC)
-            .map { it.toDeckRecord() }
+    internal fun selectAllByUser(userId: Long): List<DeckRecord> = DecksTable.selectAll()
+        .where { DecksTable.userId eq userId }
+        .orderBy(DecksTable.createdAt to SortOrder.DESC)
+        .map { it.toDeckRecord() }
 
     private fun ResultRow.toDeckRecord() = DeckRecord(
         id = this[DecksTable.id].value,

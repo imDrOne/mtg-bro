@@ -10,9 +10,7 @@ import java.time.Instant
 
 @Repository
 @Transactional
-class JdbcRefreshTokenRepository(
-    private val sqlMapper: RefreshTokenSqlMapper,
-) : RefreshTokenRepository {
+class JdbcRefreshTokenRepository(private val sqlMapper: RefreshTokenSqlMapper) : RefreshTokenRepository {
 
     override fun save(token: RefreshToken): RefreshToken {
         val record = sqlMapper.insert(toRecord(token))
@@ -31,25 +29,23 @@ class JdbcRefreshTokenRepository(
         sqlMapper.revokeAllForUser(userId, revokedAt)
     }
 
-    private fun toRecord(token: RefreshToken): RefreshTokenRecord =
-        RefreshTokenRecord(
-            id = token.id,
-            userId = token.userId,
-            tokenHash = token.tokenHash,
-            issuedAt = token.issuedAt,
-            expiresAt = token.expiresAt,
-            revokedAt = token.revokedAt,
-            replacedById = token.replacedById,
-        )
+    private fun toRecord(token: RefreshToken): RefreshTokenRecord = RefreshTokenRecord(
+        id = token.id,
+        userId = token.userId,
+        tokenHash = token.tokenHash,
+        issuedAt = token.issuedAt,
+        expiresAt = token.expiresAt,
+        revokedAt = token.revokedAt,
+        replacedById = token.replacedById,
+    )
 
-    private fun toDomain(record: RefreshTokenRecord): RefreshToken =
-        RefreshToken(
-            id = record.id,
-            userId = record.userId,
-            tokenHash = record.tokenHash,
-            issuedAt = record.issuedAt,
-            expiresAt = record.expiresAt,
-            revokedAt = record.revokedAt,
-            replacedById = record.replacedById,
-        )
+    private fun toDomain(record: RefreshTokenRecord): RefreshToken = RefreshToken(
+        id = record.id,
+        userId = record.userId,
+        tokenHash = record.tokenHash,
+        issuedAt = record.issuedAt,
+        expiresAt = record.expiresAt,
+        revokedAt = record.revokedAt,
+        replacedById = record.replacedById,
+    )
 }

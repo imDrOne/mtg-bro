@@ -33,12 +33,11 @@ class CollectionOverviewService(private val queryCardRepository: QueryCardReposi
             .associate { it.toPair() }
     }
 
-    private fun computeByType(cards: List<Card>): Map<String, Int> =
-        cards.groupBy { primaryType(it.typeLine) }
-            .mapValues { it.value.size }
-            .entries
-            .sortedByDescending { it.value }
-            .associate { it.toPair() }
+    private fun computeByType(cards: List<Card>): Map<String, Int> = cards.groupBy { primaryType(it.typeLine) }
+        .mapValues { it.value.size }
+        .entries
+        .sortedByDescending { it.value }
+        .associate { it.toPair() }
 
     private fun primaryType(typeLine: String): String {
         val before = typeLine.substringBefore("—").trim()
@@ -81,15 +80,13 @@ class CollectionOverviewService(private val queryCardRepository: QueryCardReposi
         return afterDash.split(" ").map { it.trim() }.filter { it.isNotBlank() }
     }
 
-    private fun tribeColors(tribeCards: List<Card>): String =
-        tribeCards.flatMap { it.colors }.toSet()
-            .sortedBy { MtgColor.sortIndex(it) }
-            .joinToString("")
+    private fun tribeColors(tribeCards: List<Card>): String = tribeCards.flatMap { it.colors }.toSet()
+        .sortedBy { MtgColor.sortIndex(it) }
+        .joinToString("")
 
-    private fun computeByRarity(cards: List<Card>): Map<String, Int> =
-        cards.groupBy { it.rarity }
-            .mapValues { it.value.size }
-            .entries
-            .sortedByDescending { it.value }
-            .associate { it.toPair() }
+    private fun computeByRarity(cards: List<Card>): Map<String, Int> = cards.groupBy { it.rarity }
+        .mapValues { it.value.size }
+        .entries
+        .sortedByDescending { it.value }
+        .associate { it.toPair() }
 }

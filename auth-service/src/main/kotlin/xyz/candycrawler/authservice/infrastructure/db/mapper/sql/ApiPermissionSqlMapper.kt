@@ -6,9 +6,7 @@ import org.springframework.stereotype.Component
 import xyz.candycrawler.authservice.infrastructure.db.entity.ApiPermissionRecord
 
 @Component
-class ApiPermissionSqlMapper(
-    private val jdbc: NamedParameterJdbcTemplate,
-) {
+class ApiPermissionSqlMapper(private val jdbc: NamedParameterJdbcTemplate) {
 
     internal fun selectByRoles(roles: List<String>): List<ApiPermissionRecord> {
         if (roles.isEmpty()) return emptyList()

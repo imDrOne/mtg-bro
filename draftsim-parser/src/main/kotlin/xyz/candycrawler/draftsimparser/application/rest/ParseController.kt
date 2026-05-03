@@ -33,6 +33,5 @@ class ParseController(
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @GetMapping("/{taskId}")
-    fun getTask(@PathVariable taskId: UUID): ParseTaskResponse =
-        parseTaskRepository.findById(taskId).toResponse()
+    fun getTask(@PathVariable taskId: UUID): ParseTaskResponse = parseTaskRepository.findById(taskId).toResponse()
 }

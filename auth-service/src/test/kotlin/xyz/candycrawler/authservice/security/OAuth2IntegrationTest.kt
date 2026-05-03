@@ -45,7 +45,9 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
 
     // Fresh per test instance (JUnit 5 creates new instance per test method by default)
     private val testClientId = "test-client-${UUID.randomUUID()}"
-    private val testClientSecret = "secret-${UUID.randomUUID()}"   // unique — JdbcRegisteredClientRepository.assertUniqueIdentifiers checks globally
+
+    // Unique because JdbcRegisteredClientRepository.assertUniqueIdentifiers checks globally.
+    private val testClientSecret = "secret-${UUID.randomUUID()}"
     private val testRedirectUri = "http://localhost/callback"
 
     @BeforeEach
@@ -68,7 +70,7 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
                 ClientSettings.builder()
                     .requireProofKey(true)
                     .requireAuthorizationConsent(false)
-                    .build()
+                    .build(),
             )
             .build()
         registeredClientRepository.save(client)
@@ -130,7 +132,8 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
 
     @Test
     fun `authorize with unknown client_id returns error`() {
-        val url = authorizeUrl("no-such-client", testRedirectUri, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk", "openid")
+        val url =
+            authorizeUrl("no-such-client", testRedirectUri, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk", "openid")
         mockMvc.get(url)
             .andExpect {
                 status { isBadRequest() }
@@ -230,7 +233,10 @@ class OAuth2IntegrationTest : AbstractIntegrationTest() {
 
         val callbackUrl = step3.response.redirectedUrl
         assertNotNull(callbackUrl, "Authorization endpoint must redirect to client callback URI")
-        assertTrue(callbackUrl.startsWith(testRedirectUri), "Redirect must go to registered redirect_uri, got: $callbackUrl")
+        assertTrue(
+            callbackUrl.startsWith(testRedirectUri),
+            "Redirect must go to registered redirect_uri, got: $callbackUrl",
+        )
 
         val callbackParams = UriComponentsBuilder.fromUriString(callbackUrl).build().queryParams
         val code = callbackParams.getFirst("code")

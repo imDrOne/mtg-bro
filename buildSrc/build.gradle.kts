@@ -12,6 +12,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-allopen:2.1.21")
     implementation("org.springframework.boot:spring-boot-gradle-plugin:4.0.2")
     implementation("io.spring.gradle:dependency-management-plugin:1.1.7")
+    implementation("dev.detekt:dev.detekt.gradle.plugin:2.0.0-alpha.3")
+    implementation("org.jlleitschuh.gradle.ktlint:org.jlleitschuh.gradle.ktlint.gradle.plugin:14.2.0")
     implementation("org.liquibase:liquibase-gradle-plugin:3.1.0")
     implementation("org.liquibase:liquibase-core:5.0.1")
     implementation("org.apache.commons:commons-lang3:3.20.0")

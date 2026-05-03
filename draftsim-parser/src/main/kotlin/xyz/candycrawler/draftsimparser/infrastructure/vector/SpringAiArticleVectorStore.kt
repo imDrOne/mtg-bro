@@ -16,9 +16,7 @@ import xyz.candycrawler.draftsimparser.application.port.ArticleVectorStore
     havingValue = "true",
 )
 @Component
-class SpringAiArticleVectorStore(
-    private val vectorStore: VectorStore,
-) : ArticleVectorStore {
+class SpringAiArticleVectorStore(private val vectorStore: VectorStore) : ArticleVectorStore {
 
     override fun replaceArticleDocuments(articleId: Long, documents: List<ArticleVectorDocument>) {
         val filter = FilterExpressionBuilder().eq(ARTICLE_ID, articleId).build()
@@ -32,7 +30,7 @@ class SpringAiArticleVectorStore(
                         .text(document.content)
                         .metadata(document.metadata)
                         .build()
-                }
+                },
             )
         }
     }
@@ -43,7 +41,7 @@ class SpringAiArticleVectorStore(
                 .query(query)
                 .topK(topK)
                 .similarityThreshold(similarityThreshold)
-                .build()
+                .build(),
         ).orEmpty().mapNotNull { document ->
             val articleId = document.metadata[ARTICLE_ID].toLongOrNull() ?: return@mapNotNull null
             ArticleVectorSearchMatch(
@@ -59,9 +57,8 @@ class SpringAiArticleVectorStore(
     }
 }
 
-private fun Any?.toLongOrNull(): Long? =
-    when (this) {
-        is Number -> this.toLong()
-        is String -> runCatching { toLong() }.getOrNull()
-        else -> null
-    }
+private fun Any?.toLongOrNull(): Long? = when (this) {
+    is Number -> this.toLong()
+    is String -> runCatching { toLong() }.getOrNull()
+    else -> null
+}

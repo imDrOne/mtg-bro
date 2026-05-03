@@ -74,11 +74,11 @@ class DraftsimParseServiceTest {
         url = "https://draftsim.com/draft-guide",
         title = "Draft Guide",
         htmlContent =
-            """
+        """
             <p>The best removal spell is a removal spell.</p>
             <p>Removal wins draft games.</p>
             <p>Draft strategy rewards another removal spell.</p>
-            """.trimIndent(),
+        """.trimIndent(),
         textContent = """
             The best removal spell is a removal spell.
 

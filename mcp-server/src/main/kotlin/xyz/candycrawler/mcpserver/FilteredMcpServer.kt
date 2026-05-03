@@ -2,11 +2,11 @@ package xyz.candycrawler.mcpserver
 
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
+import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ListToolsRequest
 import io.modelcontextprotocol.kotlin.sdk.types.ListToolsResult
 import io.modelcontextprotocol.kotlin.sdk.types.Method
-import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import xyz.candycrawler.mcpserver.auth.ToolAccessConfigData
 import xyz.candycrawler.mcpserver.auth.currentUserRoles
 import xyz.candycrawler.mcpserver.auth.hasAccess
@@ -56,13 +56,12 @@ class FilteredMcpServer(
      * Use this instead of [createSession] in HTTP-transport code where the coroutine
      * context already carries a [UserRolesElement].
      */
-    suspend fun createFilteredSession(transport: Transport) =
-        createSession(transport).also { session ->
-            session.setRequestHandler<ListToolsRequest>(Method.Defined.ToolsList) { _, _ ->
-                ListToolsResult(
-                    tools = visibleToolNames().mapNotNull { name -> tools[name]?.tool },
-                    nextCursor = null,
-                )
-            }
+    suspend fun createFilteredSession(transport: Transport) = createSession(transport).also { session ->
+        session.setRequestHandler<ListToolsRequest>(Method.Defined.ToolsList) { _, _ ->
+            ListToolsResult(
+                tools = visibleToolNames().mapNotNull { name -> tools[name]?.tool },
+                nextCursor = null,
+            )
         }
+    }
 }

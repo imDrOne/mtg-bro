@@ -10,9 +10,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @Transactional
-class CardLimitedStatsSqlMapperTest(
-    @Autowired private val sqlMapper: CardLimitedStatsSqlMapper,
-) : AbstractIntegrationTest() {
+class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimitedStatsSqlMapper) :
+    AbstractIntegrationTest() {
 
     @Test
     fun `insertBatch persists all fields correctly`() {
@@ -83,11 +82,13 @@ class CardLimitedStatsSqlMapperTest(
 
     @Test
     fun `selectByMatchType returns only records with given matchType`() {
-        sqlMapper.upsertBatch(listOf(
-            buildRecord(mtgaId = 400, matchType = "QuickDraft"),
-            buildRecord(mtgaId = 401, matchType = "QuickDraft"),
-            buildRecord(mtgaId = 402, matchType = "Sealed"),
-        ))
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(mtgaId = 400, matchType = "QuickDraft"),
+                buildRecord(mtgaId = 401, matchType = "QuickDraft"),
+                buildRecord(mtgaId = 402, matchType = "Sealed"),
+            ),
+        )
 
         val quickDraftResults = sqlMapper.selectByMatchType("QuickDraft")
         val sealedResults = sqlMapper.selectByMatchType("Sealed")

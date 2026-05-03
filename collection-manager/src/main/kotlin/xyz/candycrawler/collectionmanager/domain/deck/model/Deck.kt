@@ -20,7 +20,7 @@ class Deck(
         val mainboardTotal = entries.filter { !it.isSideboard }.sumOf { it.quantity }
         if (mainboardTotal < format.minMainboardCards) {
             throw InvalidDeckException(
-                "Deck mainboard must have at least ${format.minMainboardCards} cards for ${format.name} format, got $mainboardTotal"
+                "Deck mainboard must have at least ${format.minMainboardCards} cards for ${format.name} format, got $mainboardTotal",
             )
         }
     }

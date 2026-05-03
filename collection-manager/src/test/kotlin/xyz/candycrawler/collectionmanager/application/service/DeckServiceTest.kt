@@ -71,7 +71,10 @@ class DeckServiceTest {
         }
 
         service.save(
-            userId, "Deck", DeckFormat.STANDARD, null,
+            userId,
+            "Deck",
+            DeckFormat.STANDARD,
+            null,
             mainboard.map { Triple(it.setCode, it.collectorNumber, 1) },
             listOf(Triple(sideboard.first().setCode, sideboard.first().collectorNumber, 1)),
         )
@@ -83,7 +86,9 @@ class DeckServiceTest {
 
     @Test
     fun `findAll delegates to queryDeckRepository`() {
-        whenever(queryDeckRepository.findHeaders(userId)).thenReturn(listOf(buildDeckHeader(id = 1L), buildDeckHeader(id = 2L)))
+        whenever(
+            queryDeckRepository.findHeaders(userId),
+        ).thenReturn(listOf(buildDeckHeader(id = 1L), buildDeckHeader(id = 2L)))
 
         val result = service.findAll(userId)
 

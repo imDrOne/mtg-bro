@@ -12,8 +12,6 @@ class UserRolesElement(val roles: List<String>) : AbstractCoroutineContextElemen
     companion object Key : CoroutineContext.Key<UserRolesElement>
 }
 
-suspend fun currentUserRoles(): List<String> =
-    currentCoroutineContext()[UserRolesElement]?.roles ?: emptyList()
+suspend fun currentUserRoles(): List<String> = currentCoroutineContext()[UserRolesElement]?.roles ?: emptyList()
 
-suspend fun isAuthEnabled(): Boolean =
-    currentCoroutineContext()[UserRolesElement] != null
+suspend fun isAuthEnabled(): Boolean = currentCoroutineContext()[UserRolesElement] != null

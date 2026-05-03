@@ -59,7 +59,10 @@ class ArticleAnalysisService(
             val classification = classify(article)
             if (classification.processingProfile == ProcessingProfile.IGNORE) {
                 val updated = articleRepository.update(message.articleId) {
-                    it.copy(analyzedText = buildAnalysisJson(article, classification, emptyList()), analyzEndedAt = LocalDateTime.now())
+                    it.copy(
+                        analyzedText = buildAnalysisJson(article, classification, emptyList()),
+                        analyzEndedAt = LocalDateTime.now(),
+                    )
                 }
                 vectorIndexService.replaceIndex(updated)
                 log.info("Article id={}: classified as ignore, skipping paragraph analysis", message.articleId)
@@ -71,7 +74,9 @@ class ArticleAnalysisService(
                     async(Dispatchers.IO) {
                         semaphore.withPermit {
                             runCatching {
-                                llmClient.complete(promptBuilder.buildAnalysisPrompt(paragraph, article, classification))
+                                llmClient.complete(
+                                    promptBuilder.buildAnalysisPrompt(paragraph, article, classification),
+                                )
                             }.getOrNull()
                         }
                     }
@@ -123,20 +128,19 @@ class ArticleAnalysisService(
         article: Article,
         classification: ArticleAnalysisClassification,
         insights: List<JsonNode>,
-    ): String =
-        objectMapper.writeValueAsString(
-            mapOf(
-                "schema_version" to 2,
-                "article_type" to classification.articleType.name.lowercase(),
-                "processing_profile" to classification.processingProfile.name.lowercase(),
-                "classification" to mapOf(
-                    "reason" to classification.reason,
-                    "confidence" to classification.confidence,
-                ),
-                "keywords" to article.keywords,
-                "insights" to insights,
-            )
-        )
+    ): String = objectMapper.writeValueAsString(
+        mapOf(
+            "schema_version" to 2,
+            "article_type" to classification.articleType.name.lowercase(),
+            "processing_profile" to classification.processingProfile.name.lowercase(),
+            "classification" to mapOf(
+                "reason" to classification.reason,
+                "confidence" to classification.confidence,
+            ),
+            "keywords" to article.keywords,
+            "insights" to insights,
+        ),
+    )
 
     private fun String?.cleanJsonResponse(): String? {
         val trimmed = this?.trim().orEmpty()
@@ -149,10 +153,9 @@ class ArticleAnalysisService(
             .takeIf { it.isNotBlank() && it != "null" }
     }
 
-    private fun JsonNode.flattenInsightObjects(): List<JsonNode> =
-        when {
-            isObject -> listOf(this)
-            isArray -> flatMap { it.flattenInsightObjects() }
-            else -> emptyList()
-        }
+    private fun JsonNode.flattenInsightObjects(): List<JsonNode> = when {
+        isObject -> listOf(this)
+        isArray -> flatMap { it.flattenInsightObjects() }
+        else -> emptyList()
+    }
 }

@@ -30,9 +30,7 @@ import xyz.candycrawler.draftsimparser.application.service.ArticleService
 
 @RestController
 @RequestMapping("/api/v1/articles")
-class ArticleController(
-    private val articleService: ArticleService,
-) {
+class ArticleController(private val articleService: ArticleService) {
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping
@@ -41,8 +39,7 @@ class ArticleController(
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "20") pageSize: Int,
         @RequestParam(required = false) favorite: Boolean?,
-    ): ArticlePageResponse =
-        articleService.search(q, page, pageSize, favorite).toResponse()
+    ): ArticlePageResponse = articleService.search(q, page, pageSize, favorite).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/search/semantic")
@@ -56,15 +53,11 @@ class ArticleController(
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): ArticleResponse =
-        articleService.findById(id).toResponse()
+    fun getById(@PathVariable id: Long): ArticleResponse = articleService.findById(id).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @PatchMapping("/{id}/favorite")
-    fun updateFavorite(
-        @PathVariable id: Long,
-        @RequestBody request: UpdateArticleFavoriteRequest,
-    ): ArticleResponse =
+    fun updateFavorite(@PathVariable id: Long, @RequestBody request: UpdateArticleFavoriteRequest): ArticleResponse =
         articleService.updateFavorite(id, request.favorite).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")

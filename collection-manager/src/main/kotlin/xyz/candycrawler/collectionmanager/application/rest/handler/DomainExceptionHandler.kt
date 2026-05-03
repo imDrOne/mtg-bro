@@ -41,7 +41,7 @@ class DomainExceptionHandler {
     @ExceptionHandler(InvalidDeckException::class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     fun handleDeckValidation(ex: InvalidDeckException): ErrorResponse = ErrorResponse(
-        status = HttpStatus. UNPROCESSABLE_CONTENT.value(),
+        status = HttpStatus.UNPROCESSABLE_CONTENT.value(),
         error = HttpStatus.UNPROCESSABLE_CONTENT.reasonPhrase,
         message = ex.message ?: "Deck validation failed",
     )

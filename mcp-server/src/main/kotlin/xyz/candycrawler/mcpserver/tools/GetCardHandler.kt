@@ -15,19 +15,28 @@ import kotlinx.serialization.json.put
 
 fun getCardSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("set_code", buildJsonObject {
-            put("type", "string")
-            put("description", "Set code (e.g. neo, dmu)")
-        })
-        put("collector_number", buildJsonObject {
-            put("type", "string")
-            put("description", "Collector number")
-        })
+        put(
+            "set_code",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Set code (e.g. neo, dmu)")
+            },
+        )
+        put(
+            "collector_number",
+            buildJsonObject {
+                put("type", "string")
+                put("description", "Collector number")
+            },
+        )
     },
     required = listOf("set_code", "collector_number"),
 )
 
-suspend fun handleGetCard(context: ToolContext, request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest): CallToolResult {
+suspend fun handleGetCard(
+    context: ToolContext,
+    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
+): CallToolResult {
     return try {
         val setCode = request.arguments?.get("set_code")?.jsonPrimitive?.content
             ?: return CallToolResult(content = listOf(TextContent("Error: set_code required")), isError = true)
@@ -44,7 +53,7 @@ suspend fun handleGetCard(context: ToolContext, request: io.modelcontextprotocol
         val data = json["data"]?.jsonArray
         val card = data?.firstOrNull()?.jsonObject ?: return CallToolResult(
             content = listOf(TextContent("Card not found: $setCode #$collectorNumber")),
-            isError = true
+            isError = true,
         )
 
         val name = card["name"]?.jsonPrimitive?.content ?: "?"
@@ -59,7 +68,9 @@ suspend fun handleGetCard(context: ToolContext, request: io.modelcontextprotocol
             val nf = coll["quantityNonFoil"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
             val f = coll["quantityFoil"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
             " — You have: $nf non-foil, $f foil"
-        } else " — Not in collection"
+        } else {
+            " — Not in collection"
+        }
 
         val text = buildString {
             appendLine("$name $manaCost")

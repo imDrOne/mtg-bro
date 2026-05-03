@@ -4,9 +4,7 @@ import org.springframework.stereotype.Service
 import xyz.candycrawler.wizardstataggregator.infrastructure.client.telegram.TelegramAlertClient
 
 @Service
-class CardLimitedStatsAlertService(
-    private val telegramAlertClient: TelegramAlertClient,
-) {
+class CardLimitedStatsAlertService(private val telegramAlertClient: TelegramAlertClient) {
 
     fun collectionStarted(setCode: String) {
         telegramAlertClient.send(
@@ -14,7 +12,7 @@ class CardLimitedStatsAlertService(
             🚀 Wizard stats parsing started
             set: $setCode
             #wizard_stats #limited_stats #started
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -26,7 +24,7 @@ class CardLimitedStatsAlertService(
             matchType: $matchType
             error: ${error.shortMessage()}
             #wizard_stats #limited_stats #parse_error
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -39,7 +37,7 @@ class CardLimitedStatsAlertService(
             records: $recordCount
             error: ${error.shortMessage()}
             #wizard_stats #limited_stats #db_error
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -50,12 +48,11 @@ class CardLimitedStatsAlertService(
             set: $setCode
             successful: $successfulMatchTypes/$totalMatchTypes
             #wizard_stats #limited_stats #finished
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
-    private fun Throwable.shortMessage(): String =
-        (message ?: javaClass.simpleName).take(MAX_ERROR_LENGTH)
+    private fun Throwable.shortMessage(): String = (message ?: javaClass.simpleName).take(MAX_ERROR_LENGTH)
 
     companion object {
         private const val MAX_ERROR_LENGTH = 500

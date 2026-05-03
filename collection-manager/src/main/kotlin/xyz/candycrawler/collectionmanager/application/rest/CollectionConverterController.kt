@@ -20,9 +20,7 @@ import xyz.candycrawler.collectionmanager.application.service.TcgPlayerToMoxfiel
 @Tag(name = "Collection Converter", description = "Utility endpoints for converting collection files between formats")
 @RestController
 @RequestMapping("/api/v1/collection/convert")
-class CollectionConverterController(
-    private val converterService: TcgPlayerToMoxfieldConverterService,
-) {
+class CollectionConverterController(private val converterService: TcgPlayerToMoxfieldConverterService) {
 
     @Operation(
         summary = "Convert TCG Player export to Moxfield CSV",
@@ -37,10 +35,12 @@ class CollectionConverterController(
         """,
         requestBody = io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            content = [Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                schema = Schema(implementation = TcgPlayerConvertRequest::class),
-            )],
+            content = [
+                Content(
+                    mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                    schema = Schema(implementation = TcgPlayerConvertRequest::class),
+                ),
+            ],
         ),
         responses = [
             ApiResponse(
@@ -52,9 +52,7 @@ class CollectionConverterController(
     )
     @PreAuthorize("hasAuthority('PERM_api:collection:convert')")
     @PostMapping("/tcgplayer-to-moxfield", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun convertTcgPlayerToMoxfield(
-        @RequestPart("file") file: MultipartFile,
-    ): ResponseEntity<ByteArray> {
+    fun convertTcgPlayerToMoxfield(@RequestPart("file") file: MultipartFile): ResponseEntity<ByteArray> {
         val content = file.inputStream.bufferedReader().readText()
         val csv = converterService.convert(content)
         val filename = file.originalFilename

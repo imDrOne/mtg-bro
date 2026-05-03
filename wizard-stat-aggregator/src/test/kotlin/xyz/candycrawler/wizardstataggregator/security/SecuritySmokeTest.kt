@@ -69,7 +69,7 @@ class SecuritySmokeTest : AbstractIntegrationTest() {
                 jwt().authorities(
                     SimpleGrantedAuthority("ROLE_ADMIN"),
                     SimpleGrantedAuthority("PERM_api:stats:tracked-sets:manage"),
-                )
+                ),
             )
         }.andExpect { status { isOk() } }
     }

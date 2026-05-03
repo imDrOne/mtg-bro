@@ -26,7 +26,7 @@ class CollectionPersistenceService(
 
         val cardIdBySetAndNumber = savedCards.associateBy(
             { it.setCode to it.collectorNumber },
-            { it.id!! }
+            { it.id!! },
         )
 
         val collectionEntries = quantityByKey.mapNotNull { (key, quantity) ->

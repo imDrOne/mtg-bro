@@ -16,10 +16,10 @@ import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
 import xyz.candycrawler.collectionmanager.domain.card.model.CardSortOrder
-import xyz.candycrawler.collectionmanager.infrastructure.db.table.CollectionEntriesTable
 import xyz.candycrawler.collectionmanager.domain.card.model.SortDirection
 import xyz.candycrawler.collectionmanager.infrastructure.db.entity.CardRecord
 import xyz.candycrawler.collectionmanager.infrastructure.db.table.CardsTable
+import xyz.candycrawler.collectionmanager.infrastructure.db.table.CollectionEntriesTable
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -28,59 +28,58 @@ import kotlin.uuid.Uuid
 @Component
 class CardSqlMapper {
 
-    internal fun upsertBatch(records: List<CardRecord>): List<CardRecord> {
-        return CardsTable.batchUpsert(
-            records,
-            keys = arrayOf(CardsTable.setCode, CardsTable.collectorNumber, CardsTable.lang),
-            shouldReturnGeneratedValues = true,
-        ) { record ->
-            this[CardsTable.scryfallId] = Uuid.parse(record.scryfallId.toString())
-            this[CardsTable.oracleId] = Uuid.parse(record.oracleId.toString())
-            this[CardsTable.name] = record.name
-            this[CardsTable.lang] = record.lang
-            this[CardsTable.layout] = record.layout
-            this[CardsTable.manaCost] = record.manaCost
-            this[CardsTable.cmc] = record.cmc
-            this[CardsTable.typeLine] = record.typeLine
-            this[CardsTable.oracleText] = record.oracleText
-            this[CardsTable.colors] = record.colors
-            this[CardsTable.colorIdentity] = record.colorIdentity
-            this[CardsTable.keywords] = record.keywords
-            this[CardsTable.power] = record.power
-            this[CardsTable.toughness] = record.toughness
-            this[CardsTable.loyalty] = record.loyalty
-            this[CardsTable.setCode] = record.setCode
-            this[CardsTable.setName] = record.setName
-            this[CardsTable.collectorNumber] = record.collectorNumber
-            this[CardsTable.rarity] = record.rarity
-            this[CardsTable.releasedAt] = record.releasedAt
-            this[CardsTable.imageUriSmall] = record.imageUriSmall
-            this[CardsTable.imageUriNormal] = record.imageUriNormal
-            this[CardsTable.imageUriLarge] = record.imageUriLarge
-            this[CardsTable.imageUriPng] = record.imageUriPng
-            this[CardsTable.imageUriArtCrop] = record.imageUriArtCrop
-            this[CardsTable.imageUriBorderCrop] = record.imageUriBorderCrop
-            this[CardsTable.priceUsd] = record.priceUsd
-            this[CardsTable.priceUsdFoil] = record.priceUsdFoil
-            this[CardsTable.priceEur] = record.priceEur
-            this[CardsTable.priceEurFoil] = record.priceEurFoil
-            this[CardsTable.flavorText] = record.flavorText
-            this[CardsTable.artist] = record.artist
-            this[CardsTable.mtgaId] = record.mtgaId
-        }.map { it.toRecord() }
-    }
+    internal fun upsertBatch(records: List<CardRecord>): List<CardRecord> = CardsTable.batchUpsert(
+        records,
+        keys = arrayOf(CardsTable.setCode, CardsTable.collectorNumber, CardsTable.lang),
+        shouldReturnGeneratedValues = true,
+    ) { record ->
+        this[CardsTable.scryfallId] = Uuid.parse(record.scryfallId.toString())
+        this[CardsTable.oracleId] = Uuid.parse(record.oracleId.toString())
+        this[CardsTable.name] = record.name
+        this[CardsTable.lang] = record.lang
+        this[CardsTable.layout] = record.layout
+        this[CardsTable.manaCost] = record.manaCost
+        this[CardsTable.cmc] = record.cmc
+        this[CardsTable.typeLine] = record.typeLine
+        this[CardsTable.oracleText] = record.oracleText
+        this[CardsTable.colors] = record.colors
+        this[CardsTable.colorIdentity] = record.colorIdentity
+        this[CardsTable.keywords] = record.keywords
+        this[CardsTable.power] = record.power
+        this[CardsTable.toughness] = record.toughness
+        this[CardsTable.loyalty] = record.loyalty
+        this[CardsTable.setCode] = record.setCode
+        this[CardsTable.setName] = record.setName
+        this[CardsTable.collectorNumber] = record.collectorNumber
+        this[CardsTable.rarity] = record.rarity
+        this[CardsTable.releasedAt] = record.releasedAt
+        this[CardsTable.imageUriSmall] = record.imageUriSmall
+        this[CardsTable.imageUriNormal] = record.imageUriNormal
+        this[CardsTable.imageUriLarge] = record.imageUriLarge
+        this[CardsTable.imageUriPng] = record.imageUriPng
+        this[CardsTable.imageUriArtCrop] = record.imageUriArtCrop
+        this[CardsTable.imageUriBorderCrop] = record.imageUriBorderCrop
+        this[CardsTable.priceUsd] = record.priceUsd
+        this[CardsTable.priceUsdFoil] = record.priceUsdFoil
+        this[CardsTable.priceEur] = record.priceEur
+        this[CardsTable.priceEurFoil] = record.priceEurFoil
+        this[CardsTable.flavorText] = record.flavorText
+        this[CardsTable.artist] = record.artist
+        this[CardsTable.mtgaId] = record.mtgaId
+    }.map { it.toRecord() }
 
-    internal fun selectById(id: Long): CardRecord? =
+    internal fun selectById(id: Long): CardRecord? = CardsTable.selectAll()
+        .where { CardsTable.id eq id }
+        .map { it.toRecord() }
+        .singleOrNull()
+
+    internal fun selectByIds(ids: List<Long>): List<CardRecord> = if (ids.isEmpty()) {
+        emptyList()
+    } else {
         CardsTable.selectAll()
-            .where { CardsTable.id eq id }
-            .map { it.toRecord() }
-            .singleOrNull()
-
-    internal fun selectByIds(ids: List<Long>): List<CardRecord> =
-        if (ids.isEmpty()) emptyList()
-        else CardsTable.selectAll()
             .where { CardsTable.id inList ids }
             .map { it.toRecord() }
+    }
 
     internal fun selectByNames(names: List<String>): List<CardRecord> {
         if (names.isEmpty()) return emptyList()
@@ -104,7 +103,7 @@ class CardSqlMapper {
         CardsTable.selectAll()
             .where {
                 (CardsTable.setCode eq setCode) and
-                (CardsTable.collectorNumber eq collectorNumber)
+                    (CardsTable.collectorNumber eq collectorNumber)
             }
             .map { it.toRecord() }
             .singleOrNull()
@@ -124,7 +123,15 @@ class CardSqlMapper {
     ): List<CardRecord> {
         val query = CardsTable.selectAll()
 
-        buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)?.let { condition ->
+        buildSearchCondition(
+            queryText,
+            setCode,
+            collectorNumber,
+            colors,
+            colorIdentity,
+            type,
+            rarity,
+        )?.let { condition ->
             query.where { condition }
         }
 
@@ -138,12 +145,11 @@ class CardSqlMapper {
             .map { it.toRecord() }
     }
 
-    internal fun findAllInCollection(userId: Long): List<CardRecord> =
-        (CardsTable innerJoin CollectionEntriesTable)
-            .selectAll()
-            .where { CollectionEntriesTable.userId eq userId }
-            .map { it.toRecord() }
-            .distinctBy { it.id }
+    internal fun findAllInCollection(userId: Long): List<CardRecord> = (CardsTable innerJoin CollectionEntriesTable)
+        .selectAll()
+        .where { CollectionEntriesTable.userId eq userId }
+        .map { it.toRecord() }
+        .distinctBy { it.id }
 
     internal fun searchByUser(
         userId: Long,
@@ -160,7 +166,8 @@ class CardSqlMapper {
         offset: Long,
     ): List<CardRecord> {
         val userCondition = CollectionEntriesTable.userId eq userId
-        val searchCondition = buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
+        val searchCondition =
+            buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
         val condition = searchCondition?.let { userCondition and it } ?: userCondition
 
         val sortColumn = resolveOrderColumn(order)
@@ -195,7 +202,8 @@ class CardSqlMapper {
         rarity: String?,
     ): Long {
         val userCondition = CollectionEntriesTable.userId eq userId
-        val searchCondition = buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
+        val searchCondition =
+            buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)
         val condition = searchCondition?.let { userCondition and it } ?: userCondition
 
         return (CardsTable innerJoin CollectionEntriesTable)
@@ -213,8 +221,10 @@ class CardSqlMapper {
             .selectAll()
             .where {
                 (CollectionEntriesTable.userId eq userId) and
-                ((CardsTable.typeLine.lowerCase() like pattern) or
-                (CardsTable.oracleText.lowerCase() like pattern))
+                    (
+                        (CardsTable.typeLine.lowerCase() like pattern) or
+                            (CardsTable.oracleText.lowerCase() like pattern)
+                        )
             }
             .map { it.toRecord() }
             .distinctBy { it.id }
@@ -231,7 +241,15 @@ class CardSqlMapper {
     ): Long {
         val query = CardsTable.selectAll()
 
-        buildSearchCondition(queryText, setCode, collectorNumber, colors, colorIdentity, type, rarity)?.let { condition ->
+        buildSearchCondition(
+            queryText,
+            setCode,
+            collectorNumber,
+            colors,
+            colorIdentity,
+            type,
+            rarity,
+        )?.let { condition ->
             query.where { condition }
         }
 
@@ -299,15 +317,16 @@ class CardSqlMapper {
         CardSortOrder.ARTIST -> CardsTable.artist
     }
 
-    private fun resolveDirection(order: CardSortOrder, direction: SortDirection): SortOrder =
-        when (direction) {
-            SortDirection.ASC -> SortOrder.ASC
-            SortDirection.DESC -> SortOrder.DESC
-            SortDirection.AUTO -> when (order) {
-                CardSortOrder.RELEASED -> SortOrder.DESC
-                else -> SortOrder.ASC
-            }
+    private fun resolveDirection(order: CardSortOrder, direction: SortDirection): SortOrder = when (direction) {
+        SortDirection.ASC -> SortOrder.ASC
+
+        SortDirection.DESC -> SortOrder.DESC
+
+        SortDirection.AUTO -> when (order) {
+            CardSortOrder.RELEASED -> SortOrder.DESC
+            else -> SortOrder.ASC
         }
+    }
 
     private fun ResultRow.toRecord(): CardRecord = CardRecord(
         id = this[CardsTable.id].value,

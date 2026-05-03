@@ -49,7 +49,7 @@ class DynamicClientRegistrationService(
                 ClientSettings.builder()
                     .requireProofKey(true)
                     .requireAuthorizationConsent(false)
-                    .build()
+                    .build(),
             )
             .tokenSettings(
                 TokenSettings.builder()
@@ -57,7 +57,7 @@ class DynamicClientRegistrationService(
                     .accessTokenTimeToLive(Duration.ofHours(1))
                     .refreshTokenTimeToLive(Duration.ofDays(30))
                     .reuseRefreshTokens(false)
-                    .build()
+                    .build(),
             )
 
         request.redirectUris.forEach { builder.redirectUri(it) }
@@ -79,16 +79,19 @@ class DynamicClientRegistrationService(
         )
     }
 
-    private fun resolveAuthMethod(requested: String?): ClientAuthenticationMethod =
-        when (requested) {
-            "client_secret_basic" -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
-            "client_secret_post" -> ClientAuthenticationMethod.CLIENT_SECRET_POST
-            "none" -> ClientAuthenticationMethod.NONE
-            null -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
-            else -> throw IllegalArgumentException(
-                "Unsupported token_endpoint_auth_method: $requested"
-            )
-        }
+    private fun resolveAuthMethod(requested: String?): ClientAuthenticationMethod = when (requested) {
+        "client_secret_basic" -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
+
+        "client_secret_post" -> ClientAuthenticationMethod.CLIENT_SECRET_POST
+
+        "none" -> ClientAuthenticationMethod.NONE
+
+        null -> ClientAuthenticationMethod.CLIENT_SECRET_BASIC
+
+        else -> throw IllegalArgumentException(
+            "Unsupported token_endpoint_auth_method: $requested",
+        )
+    }
 
     private fun validateRedirectUris(uris: List<String>) {
         require(uris.isNotEmpty()) { "redirect_uris must not be empty" }

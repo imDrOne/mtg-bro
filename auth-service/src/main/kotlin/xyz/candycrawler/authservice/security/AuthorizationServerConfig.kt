@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
@@ -84,10 +84,8 @@ class AuthorizationServerConfig(
         JdbcRegisteredClientRepository(jdbcTemplate)
 
     @Bean
-    fun authorizationService(
-        jdbcTemplate: JdbcTemplate,
-        registeredClientRepository: RegisteredClientRepository,
-    ) = JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
+    fun authorizationService(jdbcTemplate: JdbcTemplate, registeredClientRepository: RegisteredClientRepository) =
+        JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository)
 
     @Bean
     fun authorizationConsentService(
@@ -96,10 +94,9 @@ class AuthorizationServerConfig(
     ) = JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository)
 
     @Bean
-    fun authorizationServerSettings(): AuthorizationServerSettings =
-        AuthorizationServerSettings.builder()
-            .issuer(issuerUri)
-            .build()
+    fun authorizationServerSettings(): AuthorizationServerSettings = AuthorizationServerSettings.builder()
+        .issuer(issuerUri)
+        .build()
 
     @Bean
     fun jwkSource(): JWKSource<SecurityContext> {
@@ -112,20 +109,18 @@ class AuthorizationServerConfig(
         OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource)
 
     @Bean
-    fun jwtEncoder(jwkSource: JWKSource<SecurityContext>): JwtEncoder =
-        NimbusJwtEncoder(jwkSource)
+    fun jwtEncoder(jwkSource: JWKSource<SecurityContext>): JwtEncoder = NimbusJwtEncoder(jwkSource)
 
     @Bean
-    fun jwtCustomizer(): OAuth2TokenCustomizer<JwtEncodingContext> =
-        OAuth2TokenCustomizer { context ->
-            if (context.tokenType == OAuth2TokenType.ACCESS_TOKEN) {
-                val email = context.getPrincipal<Authentication>().name
-                val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
-                val roles = userRoleRepository.findByUserId(user.id!!)
-                context.claims.claim("user_id", user.id)
-                context.claims.claim("roles", roles.map { it.name })
-                val permissions = apiPermissionRepository.findByRoles(roles)
-                context.claims.claim("permissions", permissions.map { it.name })
-            }
+    fun jwtCustomizer(): OAuth2TokenCustomizer<JwtEncodingContext> = OAuth2TokenCustomizer { context ->
+        if (context.tokenType == OAuth2TokenType.ACCESS_TOKEN) {
+            val email = context.getPrincipal<Authentication>().name
+            val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
+            val roles = userRoleRepository.findByUserId(user.id!!)
+            context.claims.claim("user_id", user.id)
+            context.claims.claim("roles", roles.map { it.name })
+            val permissions = apiPermissionRepository.findByRoles(roles)
+            context.claims.claim("permissions", permissions.map { it.name })
         }
+    }
 }

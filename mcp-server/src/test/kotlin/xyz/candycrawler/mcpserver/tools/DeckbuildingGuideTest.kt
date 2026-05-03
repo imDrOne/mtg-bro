@@ -41,7 +41,7 @@ class DeckbuildingGuideTest {
                 capabilities = ServerCapabilities(
                     tools = ServerCapabilities.Tools(listChanged = true),
                     resources = ServerCapabilities.Resources(listChanged = true),
-                )
+                ),
             ),
             toolAccessConfig = ToolAccessConfig.loadFromResources(),
         )

@@ -36,9 +36,7 @@ private fun parseColorFilter(input: String?): List<String>? {
 @Tag(name = "Card Search", description = "Search cards in the local library")
 @RestController
 @RequestMapping("/api/v1/cards")
-class CardSearchController(
-    private val cardSearchService: CardSearchService,
-) {
+class CardSearchController(private val cardSearchService: CardSearchService) {
 
     @Operation(
         summary = "Search cards in the local library",
@@ -51,10 +49,12 @@ class CardSearchController(
             ApiResponse(
                 responseCode = "200",
                 description = "Search results",
-                content = [Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = Schema(implementation = CardSearchResponse::class),
-                )],
+                content = [
+                    Content(
+                        mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = Schema(implementation = CardSearchResponse::class),
+                    ),
+                ],
             ),
         ],
     )
@@ -68,7 +68,10 @@ class CardSearchController(
         @RequestParam(required = false) set: String?,
         @Parameter(description = "Filter by collector number (exact match, use with set for single card)")
         @RequestParam(name = "collector_number", required = false) collectorNumber: String?,
-        @Parameter(description = "Filter by colors (mana cost). Comma-separated or concatenated: w,u,b,r,g. E.g. 'wu' or 'w,u' for white-blue")
+        @Parameter(
+            description = "Filter by colors (mana cost). Comma-separated or concatenated: " +
+                "w,u,b,r,g. E.g. 'wu' or 'w,u' for white-blue",
+        )
         @RequestParam(required = false) colors: String?,
         @Parameter(description = "Filter by color identity. Same format as colors")
         @RequestParam(name = "color_identity", required = false) colorIdentity: String?,
@@ -76,7 +79,9 @@ class CardSearchController(
         @RequestParam(required = false) type: String?,
         @Parameter(description = "Filter by rarity: common, uncommon, rare, mythic, special, bonus")
         @RequestParam(required = false) rarity: String?,
-        @Parameter(description = "Sort order: name, set, released, rarity, color, usd, eur, cmc, power, toughness, artist")
+        @Parameter(
+            description = "Sort order: name, set, released, rarity, color, usd, eur, cmc, power, toughness, artist",
+        )
         @RequestParam(required = false, defaultValue = "name") order: String,
         @Parameter(description = "Sort direction: auto, asc, desc")
         @RequestParam(required = false, defaultValue = "auto") dir: String,

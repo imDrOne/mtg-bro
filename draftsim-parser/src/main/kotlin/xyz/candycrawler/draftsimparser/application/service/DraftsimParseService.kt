@@ -1,6 +1,5 @@
 package xyz.candycrawler.draftsimparser.application.service
 
-import org.springframework.beans.factory.DisposableBean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
@@ -51,7 +51,7 @@ class DraftsimParseService(
                 errorMessage = null,
                 createdAt = now,
                 updatedAt = now,
-            )
+            ),
         )
         val taskId = task.id!!
 
@@ -109,7 +109,12 @@ class DraftsimParseService(
                             runCatching {
                                 processArticle(taskId, sourceArticle)
                             }.onFailure {
-                                log.error("Task {}: article external id={} failed", taskId, sourceArticle.externalId, it)
+                                log.error(
+                                    "Task {}: article external id={} failed",
+                                    taskId,
+                                    sourceArticle.externalId,
+                                    it,
+                                )
                                 parseAlertService.articleParsingFailed(
                                     taskId,
                                     keyword,

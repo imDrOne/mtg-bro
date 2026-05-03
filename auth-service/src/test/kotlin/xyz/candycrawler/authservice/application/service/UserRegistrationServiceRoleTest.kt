@@ -32,7 +32,7 @@ class UserRegistrationServiceRoleTest {
                 passwordHash = "\$2a\$10\$hash",
                 enabled = true,
                 createdAt = Instant.now(),
-            )
+            ),
         )
 
         service.register("new@example.com", "newuser", "password123")

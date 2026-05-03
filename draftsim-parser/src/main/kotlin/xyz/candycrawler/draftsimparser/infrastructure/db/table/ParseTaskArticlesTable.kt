@@ -1,7 +1,7 @@
 package xyz.candycrawler.draftsimparser.infrastructure.db.table
 
-import kotlin.uuid.ExperimentalUuidApi
 import org.jetbrains.exposed.v1.core.Table
+import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 object ParseTaskArticlesTable : Table("parse_task_articles") {

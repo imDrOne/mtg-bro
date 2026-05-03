@@ -33,7 +33,12 @@ class RetryClientHttpRequestInterceptor(
                     response.close()
                     log.warn(
                         "Attempt {}/{}: {} {} returned {}, retrying in {}ms",
-                        attempt, maxAttempts, request.method, request.uri, response.statusCode, delayMs,
+                        attempt,
+                        maxAttempts,
+                        request.method,
+                        request.uri,
+                        response.statusCode,
+                        delayMs,
                     )
                     Thread.sleep(delayMs)
                     delayMs = (delayMs * multiplier).toLong().coerceAtMost(maxDelayMs)
@@ -46,7 +51,12 @@ class RetryClientHttpRequestInterceptor(
                 if (attempt < maxAttempts) {
                     log.warn(
                         "Attempt {}/{}: {} {} failed with '{}', retrying in {}ms",
-                        attempt, maxAttempts, request.method, request.uri, e.message, delayMs,
+                        attempt,
+                        maxAttempts,
+                        request.method,
+                        request.uri,
+                        e.message,
+                        delayMs,
                     )
                     Thread.sleep(delayMs)
                     delayMs = (delayMs * multiplier).toLong().coerceAtMost(maxDelayMs)

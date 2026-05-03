@@ -24,7 +24,8 @@ class RefreshTokenSqlMapperTest : AbstractIntegrationTest() {
 
     private fun insertUser(): Long {
         val email = "rt-${UUID.randomUUID()}@example.com"
-        val record = UserRecord(null, email, "u${UUID.randomUUID().toString().take(8)}", "\$2a\$10\$hash", true, Instant.now())
+        val record =
+            UserRecord(null, email, "u${UUID.randomUUID().toString().take(8)}", "\$2a\$10\$hash", true, Instant.now())
         return userSqlMapper.insert(record).id!!
     }
 
@@ -95,9 +96,15 @@ class RefreshTokenSqlMapperTest : AbstractIntegrationTest() {
         val userId = insertUser()
         val otherUserId = insertUser()
         val now = Instant.now()
-        refreshTokenSqlMapper.insert(RefreshTokenRecord(null, userId, "g".repeat(64), now, now.plusSeconds(3600), null, null))
-        refreshTokenSqlMapper.insert(RefreshTokenRecord(null, userId, "h".repeat(64), now, now.plusSeconds(3600), null, null))
-        refreshTokenSqlMapper.insert(RefreshTokenRecord(null, otherUserId, "i".repeat(64), now, now.plusSeconds(3600), null, null))
+        refreshTokenSqlMapper.insert(
+            RefreshTokenRecord(null, userId, "g".repeat(64), now, now.plusSeconds(3600), null, null),
+        )
+        refreshTokenSqlMapper.insert(
+            RefreshTokenRecord(null, userId, "h".repeat(64), now, now.plusSeconds(3600), null, null),
+        )
+        refreshTokenSqlMapper.insert(
+            RefreshTokenRecord(null, otherUserId, "i".repeat(64), now, now.plusSeconds(3600), null, null),
+        )
 
         refreshTokenSqlMapper.revokeAllForUser(userId, now.plusSeconds(60))
 

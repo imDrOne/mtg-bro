@@ -19,45 +19,66 @@ import kotlinx.serialization.json.put
 
 fun searchDraftsimArticlesSchema() = ToolSchema(
     properties = buildJsonObject {
-        put("query", buildJsonObject {
-            put("type", "string")
-            put(
-                "description",
-                "Search query to find Draftsim articles. Examples: \"Merfolk\", \"BLB draft guide\", \"aggro strategy\"."
-            )
-        })
-        put("page", buildJsonObject {
-            put("type", "integer")
-            put("description", "Page number (1-based, default 1)")
-        })
-        put("page_size", buildJsonObject {
-            put("type", "integer")
-            put("description", "Articles per page (default 10, max 20)")
-        })
-        put("types", buildJsonObject {
-            put("type", "array")
-            put("description", "Optional preview match insightType filter, for example [\"archetype\", \"mechanic\"].")
-            put("items", buildJsonObject {
+        put(
+            "query",
+            buildJsonObject {
                 put("type", "string")
-            })
-        })
-        put("preview_limit", buildJsonObject {
-            put("type", "integer")
-            put("description", "Preview matches per semantic article result (default 3, max 5).")
-        })
+                put(
+                    "description",
+                    "Search query to find Draftsim articles. Examples: \"Merfolk\", \"BLB draft guide\", \"aggro strategy\".",
+                )
+            },
+        )
+        put(
+            "page",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Page number (1-based, default 1)")
+            },
+        )
+        put(
+            "page_size",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Articles per page (default 10, max 20)")
+            },
+        )
+        put(
+            "types",
+            buildJsonObject {
+                put("type", "array")
+                put(
+                    "description",
+                    "Optional preview match insightType filter, for example [\"archetype\", \"mechanic\"].",
+                )
+                put(
+                    "items",
+                    buildJsonObject {
+                        put("type", "string")
+                    },
+                )
+            },
+        )
+        put(
+            "preview_limit",
+            buildJsonObject {
+                put("type", "integer")
+                put("description", "Preview matches per semantic article result (default 3, max 5).")
+            },
+        )
     },
     required = listOf("query"),
 )
 
 suspend fun handleSearchDraftsimArticles(
     context: ToolContext,
-    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
+    request: io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest,
 ): CallToolResult {
     return try {
         val query = request.arguments?.get("query")?.jsonPrimitive?.content
             ?: return CallToolResult(
                 content = listOf(TextContent("Error: query parameter is required")),
-                isError = true
+                isError = true,
             )
         val page = request.arguments?.get("page")?.jsonPrimitive?.content?.toIntOrNull() ?: 1
         val pageSize = request.arguments?.get("page_size")?.jsonPrimitive?.content?.toIntOrNull() ?: 10
@@ -93,39 +114,38 @@ private suspend fun searchSemanticArticles(
     pageSize: Int,
     types: Set<String>,
     previewLimit: Int,
-): CallToolResult? =
-    runCatching {
-        val url = "${context.draftsimParserBaseUrl}/api/v1/articles/search/semantic"
-        val topK = pageSize.coerceIn(1, 20)
-        val summary = findDraftsimSemanticSummary(
-            thresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
-            search = { threshold ->
-                val requestBody = buildJsonObject {
-                    put("query", query)
-                    put("topK", topK)
-                    put("favorite", true)
-                    put("similarityThreshold", threshold)
-                }
-                val response = context.httpClient.post(url) {
-                    contentType(ContentType.Application.Json)
-                    setBody(requestBody.toString())
-                }.body<String>()
-                Json.parseToJsonElement(response).jsonObject
-            },
-            format = { json, threshold, attempt ->
-                formatDraftsimSemanticSearchResponse(
-                    json = json,
-                    types = types,
-                    previewLimit = previewLimit,
-                    similarityThreshold = threshold,
-                    semanticAttempts = attempt,
-                )
-            },
-        ) ?: return null
-        CallToolResult(
-            content = listOf(TextContent(summary))
-        )
-    }.getOrNull()
+): CallToolResult? = runCatching {
+    val url = "${context.draftsimParserBaseUrl}/api/v1/articles/search/semantic"
+    val topK = pageSize.coerceIn(1, 20)
+    val summary = findDraftsimSemanticSummary(
+        thresholds = context.draftsimSearchConfig.semanticSimilarityThresholds,
+        search = { threshold ->
+            val requestBody = buildJsonObject {
+                put("query", query)
+                put("topK", topK)
+                put("favorite", true)
+                put("similarityThreshold", threshold)
+            }
+            val response = context.httpClient.post(url) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody.toString())
+            }.body<String>()
+            Json.parseToJsonElement(response).jsonObject
+        },
+        format = { json, threshold, attempt ->
+            formatDraftsimSemanticSearchResponse(
+                json = json,
+                types = types,
+                previewLimit = previewLimit,
+                similarityThreshold = threshold,
+                semanticAttempts = attempt,
+            )
+        },
+    ) ?: return null
+    CallToolResult(
+        content = listOf(TextContent(summary)),
+    )
+}.getOrNull()
 
 internal suspend fun findDraftsimSemanticSummary(
     thresholds: List<Double>,

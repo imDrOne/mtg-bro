@@ -170,11 +170,7 @@ class CardSqlMapperSearchByUserTest(
         rarity = null,
     )
 
-    private fun saveCard(
-        name: String = "Test Card",
-        setCode: String = "tst",
-        rarity: String = "common",
-    ): CardRecord {
+    private fun saveCard(name: String = "Test Card", setCode: String = "tst", rarity: String = "common"): CardRecord {
         val record = buildRecord(name = name, setCode = setCode, rarity = rarity)
         return cardSqlMapper.upsertBatch(listOf(record)).single()
     }

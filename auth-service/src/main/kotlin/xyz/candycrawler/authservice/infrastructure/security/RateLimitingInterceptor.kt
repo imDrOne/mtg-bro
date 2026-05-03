@@ -23,19 +23,19 @@ class RateLimitingInterceptor(
     private val registrationProxyManager: CaffeineProxyManager<String> =
         Bucket4jCaffeine.builderFor<String>(
             Caffeine.newBuilder()
-                .maximumSize(100_000)
+                .maximumSize(100_000),
         ).build()
 
     private val loginProxyManager: CaffeineProxyManager<String> =
         Bucket4jCaffeine.builderFor<String>(
             Caffeine.newBuilder()
-                .maximumSize(100_000)
+                .maximumSize(100_000),
         ).build()
 
     private val dcrProxyManager: CaffeineProxyManager<String> =
         Bucket4jCaffeine.builderFor<String>(
             Caffeine.newBuilder()
-                .maximumSize(100_000)
+                .maximumSize(100_000),
         ).build()
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
@@ -65,35 +65,32 @@ class RateLimitingInterceptor(
         return false
     }
 
-    private fun registrationConfig(): BucketConfiguration =
-        BucketConfiguration.builder()
-            .addLimit(
-                Bandwidth.builder()
-                    .capacity(5)
-                    .refillIntervally(5, Duration.ofMinutes(10))
-                    .build()
-            )
-            .build()
+    private fun registrationConfig(): BucketConfiguration = BucketConfiguration.builder()
+        .addLimit(
+            Bandwidth.builder()
+                .capacity(5)
+                .refillIntervally(5, Duration.ofMinutes(10))
+                .build(),
+        )
+        .build()
 
-    private fun loginConfig(): BucketConfiguration =
-        BucketConfiguration.builder()
-            .addLimit(
-                Bandwidth.builder()
-                    .capacity(10)
-                    .refillIntervally(10, Duration.ofMinutes(5))
-                    .build()
-            )
-            .build()
+    private fun loginConfig(): BucketConfiguration = BucketConfiguration.builder()
+        .addLimit(
+            Bandwidth.builder()
+                .capacity(10)
+                .refillIntervally(10, Duration.ofMinutes(5))
+                .build(),
+        )
+        .build()
 
-    private fun dcrConfig(): BucketConfiguration =
-        BucketConfiguration.builder()
-            .addLimit(
-                Bandwidth.builder()
-                    .capacity(10)
-                    .refillIntervally(10, Duration.ofMinutes(10))
-                    .build()
-            )
-            .build()
+    private fun dcrConfig(): BucketConfiguration = BucketConfiguration.builder()
+        .addLimit(
+            Bandwidth.builder()
+                .capacity(10)
+                .refillIntervally(10, Duration.ofMinutes(10))
+                .build(),
+        )
+        .build()
 
     private fun resolveClientIp(request: HttpServletRequest): String {
         val xff = request.getHeader("X-Forwarded-For")

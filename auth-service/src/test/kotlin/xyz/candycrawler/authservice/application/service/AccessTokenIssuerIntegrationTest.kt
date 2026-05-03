@@ -1,16 +1,17 @@
 package xyz.candycrawler.authservice.application.service
 
+import com.nimbusds.jwt.SignedJWT
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import xyz.candycrawler.authservice.application.rest.AuthController
 import xyz.candycrawler.authservice.lib.AbstractIntegrationTest
-import com.nimbusds.jwt.SignedJWT
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AccessTokenIssuerIntegrationTest : AbstractIntegrationTest() {
 
     @Autowired lateinit var accessTokenIssuer: AccessTokenIssuer
+
     @Autowired lateinit var registrationService: UserRegistrationService
 
     @Test

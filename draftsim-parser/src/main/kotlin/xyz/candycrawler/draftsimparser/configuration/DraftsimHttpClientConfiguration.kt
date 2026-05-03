@@ -9,9 +9,8 @@ import org.springframework.web.client.RestClient
 class DraftsimHttpClientConfiguration {
 
     @Bean
-    fun draftsimRestClient(
-        @Value("\${infrastructure.http.client.draftsim.base-url}") baseUrl: String,
-    ): RestClient = RestClient.builder()
-        .baseUrl(baseUrl)
-        .build()
+    fun draftsimRestClient(@Value("\${infrastructure.http.client.draftsim.base-url}") baseUrl: String): RestClient =
+        RestClient.builder()
+            .baseUrl(baseUrl)
+            .build()
 }

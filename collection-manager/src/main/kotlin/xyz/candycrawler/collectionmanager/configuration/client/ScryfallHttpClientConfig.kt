@@ -17,9 +17,7 @@ import xyz.candycrawler.collectionmanager.configuration.client.property.Scryfall
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
 
 @Configuration
-class ScryfallHttpClientConfig(
-    private val props: ScryfallHttpClientProperties,
-) {
+class ScryfallHttpClientConfig(private val props: ScryfallHttpClientProperties) {
 
     @Bean
     fun scryfallApiClient(): ScryfallApiClient {
@@ -45,7 +43,7 @@ class ScryfallHttpClientConfig(
                         initialDelayMs = props.retry.initialDelayMs,
                         multiplier = props.retry.multiplier,
                         maxDelayMs = props.retry.maxDelayMs,
-                    )
+                    ),
                 )
                 interceptors.add(LoggingClientHttpRequestInterceptor())
             }

@@ -36,10 +36,9 @@ class TrackedLimitedStatSetSqlMapper {
         return requireNotNull(selectBySetCode(record.setCode))
     }
 
-    internal fun selectAll(): List<TrackedLimitedStatSetRecord> =
-        TrackedLimitedStatSetsTable.selectAll()
-            .orderBy(TrackedLimitedStatSetsTable.setCode to SortOrder.ASC)
-            .map { it.toRecord() }
+    internal fun selectAll(): List<TrackedLimitedStatSetRecord> = TrackedLimitedStatSetsTable.selectAll()
+        .orderBy(TrackedLimitedStatSetsTable.setCode to SortOrder.ASC)
+        .map { it.toRecord() }
 
     internal fun selectActive(today: LocalDate): List<TrackedLimitedStatSetRecord> =
         TrackedLimitedStatSetsTable.selectAll()
@@ -51,11 +50,10 @@ class TrackedLimitedStatSetSqlMapper {
         TrackedLimitedStatSetsTable.deleteWhere { TrackedLimitedStatSetsTable.setCode eq setCode }
     }
 
-    private fun selectBySetCode(setCode: String): TrackedLimitedStatSetRecord? =
-        TrackedLimitedStatSetsTable.selectAll()
-            .where { TrackedLimitedStatSetsTable.setCode eq setCode }
-            .map { it.toRecord() }
-            .singleOrNull()
+    private fun selectBySetCode(setCode: String): TrackedLimitedStatSetRecord? = TrackedLimitedStatSetsTable.selectAll()
+        .where { TrackedLimitedStatSetsTable.setCode eq setCode }
+        .map { it.toRecord() }
+        .singleOrNull()
 
     private fun ResultRow.toRecord(): TrackedLimitedStatSetRecord = TrackedLimitedStatSetRecord(
         setCode = this[TrackedLimitedStatSetsTable.setCode],

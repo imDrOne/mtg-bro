@@ -10,9 +10,5 @@ data class TribalStatsResponse(
     val hasCommander: Boolean,
     val deckViability: String,
 ) {
-    data class ByRoleResponse(
-        val creatures: Int,
-        val tribalSpells: Int,
-        val tribalSupport: Int,
-    )
+    data class ByRoleResponse(val creatures: Int, val tribalSpells: Int, val tribalSupport: Int)
 }

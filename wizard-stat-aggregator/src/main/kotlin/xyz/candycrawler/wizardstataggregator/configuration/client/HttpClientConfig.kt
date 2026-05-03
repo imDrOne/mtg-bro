@@ -17,9 +17,7 @@ import xyz.candycrawler.wizardstataggregator.configuration.client.property.Lands
 import xyz.candycrawler.wizardstataggregator.infrastructure.client.lands17.Lands17ApiClient
 
 @Configuration
-class HttpClientConfig(
-    private val props: Lands17HttpClientProperties,
-) {
+class HttpClientConfig(private val props: Lands17HttpClientProperties) {
 
     @Bean
     fun lands17restApiClient(): Lands17ApiClient {
@@ -40,12 +38,14 @@ class HttpClientConfig(
             .baseUrl(props.baseUrl)
             .configureMessageConverters { it.addCustomConverter(jsonConverter).build() }
             .requestInterceptors { interceptors ->
-                interceptors.add(RetryClientHttpRequestInterceptor(
-                    maxAttempts = props.retry.maxAttempts,
-                    initialDelayMs = props.retry.initialDelayMs,
-                    multiplier = props.retry.multiplier,
-                    maxDelayMs = props.retry.maxDelayMs,
-                ))
+                interceptors.add(
+                    RetryClientHttpRequestInterceptor(
+                        maxAttempts = props.retry.maxAttempts,
+                        initialDelayMs = props.retry.initialDelayMs,
+                        multiplier = props.retry.multiplier,
+                        maxDelayMs = props.retry.maxDelayMs,
+                    ),
+                )
                 interceptors.add(LoggingClientHttpRequestInterceptor())
             }
             .build()

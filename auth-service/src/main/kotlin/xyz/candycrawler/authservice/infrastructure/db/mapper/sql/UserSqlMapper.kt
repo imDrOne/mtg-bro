@@ -12,9 +12,7 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 
 @Component
-class UserSqlMapper(
-    private val jdbc: NamedParameterJdbcTemplate,
-) {
+class UserSqlMapper(private val jdbc: NamedParameterJdbcTemplate) {
 
     internal fun insert(record: UserRecord): UserRecord {
         val sql = """

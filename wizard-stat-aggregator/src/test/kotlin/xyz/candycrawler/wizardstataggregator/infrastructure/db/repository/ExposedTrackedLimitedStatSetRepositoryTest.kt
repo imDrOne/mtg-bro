@@ -51,4 +51,3 @@ class ExposedTrackedLimitedStatSetRepositoryTest {
         then(sqlMapper).should().deleteBySetCode("DMU")
     }
 }
-

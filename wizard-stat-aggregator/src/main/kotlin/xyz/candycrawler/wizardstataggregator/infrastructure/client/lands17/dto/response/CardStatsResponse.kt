@@ -46,5 +46,5 @@ data class CardStatsResponse(
     @JsonProperty("never_drawn_win_rate")
     val neverDrawnWinRate: Double,
     @JsonProperty("drawn_improvement_win_rate")
-    val drawnImprovementWinRate: Double
+    val drawnImprovementWinRate: Double,
 )

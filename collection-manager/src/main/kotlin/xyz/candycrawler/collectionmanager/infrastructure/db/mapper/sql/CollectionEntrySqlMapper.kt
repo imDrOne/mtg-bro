@@ -37,15 +37,17 @@ class CollectionEntrySqlMapper {
             .map { it.toRecord() }
 
     internal fun selectByUserAndCardIds(userId: Long, cardIds: List<Long>): List<CollectionEntryRecord> =
-        if (cardIds.isEmpty()) emptyList()
-        else CollectionEntriesTable.selectAll()
-            .where { (CollectionEntriesTable.userId eq userId) and (CollectionEntriesTable.cardId inList cardIds) }
-            .map { it.toRecord() }
+        if (cardIds.isEmpty()) {
+            emptyList()
+        } else {
+            CollectionEntriesTable.selectAll()
+                .where { (CollectionEntriesTable.userId eq userId) and (CollectionEntriesTable.cardId inList cardIds) }
+                .map { it.toRecord() }
+        }
 
-    internal fun selectByUser(userId: Long): List<CollectionEntryRecord> =
-        CollectionEntriesTable.selectAll()
-            .where { CollectionEntriesTable.userId eq userId }
-            .map { it.toRecord() }
+    internal fun selectByUser(userId: Long): List<CollectionEntryRecord> = CollectionEntriesTable.selectAll()
+        .where { CollectionEntriesTable.userId eq userId }
+        .map { it.toRecord() }
 
     private fun ResultRow.toRecord(): CollectionEntryRecord = CollectionEntryRecord(
         id = this[CollectionEntriesTable.id].value,

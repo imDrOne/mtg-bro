@@ -77,10 +77,26 @@ class DeckSqlMapperTest(
         val cardId = insertCard(setCode = "tst", collectorNumber = "1")
         val deckId = sqlMapper.insert(buildDeckRecord()).id!!
 
-        sqlMapper.insertEntries(listOf(
-            DeckEntryRecord(id = null, userId = userId, deckId = deckId, cardId = cardId, quantity = 4, isSideboard = false),
-            DeckEntryRecord(id = null, userId = userId, deckId = deckId, cardId = cardId, quantity = 2, isSideboard = true),
-        ))
+        sqlMapper.insertEntries(
+            listOf(
+                DeckEntryRecord(
+                    id = null,
+                    userId = userId,
+                    deckId = deckId,
+                    cardId = cardId,
+                    quantity = 4,
+                    isSideboard = false,
+                ),
+                DeckEntryRecord(
+                    id = null,
+                    userId = userId,
+                    deckId = deckId,
+                    cardId = cardId,
+                    quantity = 2,
+                    isSideboard = true,
+                ),
+            ),
+        )
 
         val entries = sqlMapper.selectEntriesByDeckId(deckId)
         assertEquals(2, entries.size)
@@ -101,10 +117,26 @@ class DeckSqlMapperTest(
         val deck1Id = sqlMapper.insert(buildDeckRecord()).id!!
         val deck2Id = sqlMapper.insert(buildDeckRecord()).id!!
 
-        sqlMapper.insertEntries(listOf(
-            DeckEntryRecord(id = null, userId = userId, deckId = deck1Id, cardId = cardId, quantity = 1, isSideboard = false),
-            DeckEntryRecord(id = null, userId = userId, deckId = deck2Id, cardId = cardId, quantity = 2, isSideboard = false),
-        ))
+        sqlMapper.insertEntries(
+            listOf(
+                DeckEntryRecord(
+                    id = null,
+                    userId = userId,
+                    deckId = deck1Id,
+                    cardId = cardId,
+                    quantity = 1,
+                    isSideboard = false,
+                ),
+                DeckEntryRecord(
+                    id = null,
+                    userId = userId,
+                    deckId = deck2Id,
+                    cardId = cardId,
+                    quantity = 2,
+                    isSideboard = false,
+                ),
+            ),
+        )
 
         val deck1Entries = sqlMapper.selectEntriesByDeckId(deck1Id)
         assertEquals(1, deck1Entries.size)
@@ -135,16 +167,17 @@ class DeckSqlMapperTest(
         assertTrue(all.none { it.name == "Other User Deck" })
     }
 
-    private fun buildDeckRecord(name: String = "Test Deck", comment: String? = null, userId: Long = this.userId) = DeckRecord(
-        id = null,
-        userId = userId,
-        name = name,
-        format = "STANDARD",
-        colorIdentity = listOf("G"),
-        comment = comment,
-        createdAt = null,
-        updatedAt = null,
-    )
+    private fun buildDeckRecord(name: String = "Test Deck", comment: String? = null, userId: Long = this.userId) =
+        DeckRecord(
+            id = null,
+            userId = userId,
+            name = name,
+            format = "STANDARD",
+            colorIdentity = listOf("G"),
+            comment = comment,
+            createdAt = null,
+            updatedAt = null,
+        )
 
     private fun insertCard(setCode: String, collectorNumber: String): Long =
         cardSqlMapper.upsertBatch(listOf(buildCardRecord(setCode, collectorNumber))).single().id!!

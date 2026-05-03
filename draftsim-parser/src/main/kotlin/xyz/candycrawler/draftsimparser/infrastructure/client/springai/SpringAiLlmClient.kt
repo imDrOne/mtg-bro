@@ -9,9 +9,7 @@ import xyz.candycrawler.draftsimparser.application.port.LlmClient
 
 @ConditionalOnProperty(prefix = "infrastructure.llm", name = ["client"], havingValue = "SPRING_AI")
 @Component
-class SpringAiLlmClient(
-    chatClientBuilder: ChatClient.Builder,
-) : LlmClient {
+class SpringAiLlmClient(chatClientBuilder: ChatClient.Builder) : LlmClient {
 
     private val chatClient = chatClientBuilder.build()
 

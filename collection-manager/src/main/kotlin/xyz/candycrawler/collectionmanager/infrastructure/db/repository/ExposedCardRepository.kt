@@ -26,15 +26,12 @@ class ExposedCardRepository(
     override fun saveAll(cards: List<Card>): List<Card> =
         sqlMapper.upsertBatch(cards.map(toRecord::apply)).map(toDomain::apply)
 
-    override fun findById(id: Long): Card =
-        sqlMapper.selectById(id)?.let(toDomain::apply)
-            ?: throw CardNotFoundException(id)
+    override fun findById(id: Long): Card = sqlMapper.selectById(id)?.let(toDomain::apply)
+        ?: throw CardNotFoundException(id)
 
-    override fun findByIds(ids: List<Long>): List<Card> =
-        sqlMapper.selectByIds(ids).map(toDomain::apply)
+    override fun findByIds(ids: List<Long>): List<Card> = sqlMapper.selectByIds(ids).map(toDomain::apply)
 
-    override fun findByNames(names: List<String>): List<Card> =
-        sqlMapper.selectByNames(names).map(toDomain::apply)
+    override fun findByNames(names: List<String>): List<Card> = sqlMapper.selectByNames(names).map(toDomain::apply)
 
     override fun findBySetAndCollectorPairs(pairs: List<Pair<String, String>>): List<Card> =
         sqlMapper.selectBySetAndCollectorPairs(pairs).map(toDomain::apply)

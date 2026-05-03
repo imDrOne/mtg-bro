@@ -1,7 +1,7 @@
 package xyz.candycrawler.collectionmanager.domain.card.model
 
-import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class CardSearchCriteriaTest {
 

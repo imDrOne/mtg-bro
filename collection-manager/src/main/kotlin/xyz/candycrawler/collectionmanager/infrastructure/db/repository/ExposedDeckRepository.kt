@@ -12,10 +12,8 @@ import xyz.candycrawler.collectionmanager.infrastructure.db.mapper.sql.DeckSqlMa
 
 @Repository
 @Transactional
-class ExposedDeckRepository(
-    private val sqlMapper: DeckSqlMapper,
-    private val toDomain: DeckRecordToDeckMapper,
-) : DeckRepository {
+class ExposedDeckRepository(private val sqlMapper: DeckSqlMapper, private val toDomain: DeckRecordToDeckMapper) :
+    DeckRepository {
 
     override fun save(deck: Deck): Deck {
         val record = DeckRecord(

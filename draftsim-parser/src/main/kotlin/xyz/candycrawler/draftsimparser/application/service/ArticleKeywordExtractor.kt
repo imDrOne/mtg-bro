@@ -30,7 +30,7 @@ class ArticleKeywordExtractor {
         return scores.entries
             .sortedWith(
                 compareByDescending<Map.Entry<String, Double>> { it.value }
-                    .thenBy { it.key }
+                    .thenBy { it.key },
             )
             .take(min(limit, scores.size))
             .map { it.key }
@@ -42,8 +42,7 @@ class ArticleKeywordExtractor {
         return count * phraseBoost * lengthBoost
     }
 
-    private fun removeWordPressReplacementMarker(text: String): String =
-        WORDPRESS_REPLACED_REGEX.replace(text, " ")
+    private fun removeWordPressReplacementMarker(text: String): String = WORDPRESS_REPLACED_REGEX.replace(text, " ")
 
     companion object {
         const val DEFAULT_LIMIT = 20
@@ -61,7 +60,7 @@ class ArticleKeywordExtractor {
             "that", "the", "their", "them", "then", "there", "these", "they", "this", "those", "through",
             "too", "under", "until", "very", "was", "way", "were", "what", "when", "where", "whether",
             "which", "while", "who", "why", "will", "with", "within", "without", "would", "you", "your",
-            "replaced"
+            "replaced",
         )
     }
 }

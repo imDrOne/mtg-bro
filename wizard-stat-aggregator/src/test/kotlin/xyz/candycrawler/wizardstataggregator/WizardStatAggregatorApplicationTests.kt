@@ -12,5 +12,4 @@ class WizardStatAggregatorApplicationTests(private val context: ApplicationConte
     fun contextLoads() {
         assertEquals(context.id, "wizard-stat-aggregator")
     }
-
 }

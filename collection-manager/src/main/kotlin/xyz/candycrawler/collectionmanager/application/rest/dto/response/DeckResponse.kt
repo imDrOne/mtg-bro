@@ -2,9 +2,7 @@ package xyz.candycrawler.collectionmanager.application.rest.dto.response
 
 import java.time.LocalDateTime
 
-data class DeckListResponse(
-    val decks: List<DeckHeaderResponse>,
-)
+data class DeckListResponse(val decks: List<DeckHeaderResponse>)
 
 data class DeckHeaderResponse(
     val id: Long,
@@ -28,7 +26,4 @@ data class DeckDetailResponse(
     val updatedAt: LocalDateTime?,
 )
 
-data class DeckEntryResponse(
-    val cardId: Long,
-    val quantity: Int,
-)
+data class DeckEntryResponse(val cardId: Long, val quantity: Int)

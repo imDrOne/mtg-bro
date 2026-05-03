@@ -19,4 +19,3 @@ data class TrackedLimitedStatSet(
 
     fun isActive(today: LocalDate): Boolean = !watchUntil.isBefore(today)
 }
-

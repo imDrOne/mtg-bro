@@ -6,17 +6,13 @@ import xyz.candycrawler.wizardstataggregator.infrastructure.client.lands17.dto.r
 @Service
 class Lands17ApiClientFacade(val lands17ApiClient: Lands17ApiClient) {
 
-    fun getDraftStatistic(setCode: String): List<CardStatsResponse> {
-        return lands17ApiClient.getStatistic(
-            setCode = setCode,
-            matchType = Lands17ApiClient.MatchType.QUICK_DRAFT.value,
-        )
-    }
+    fun getDraftStatistic(setCode: String): List<CardStatsResponse> = lands17ApiClient.getStatistic(
+        setCode = setCode,
+        matchType = Lands17ApiClient.MatchType.QUICK_DRAFT.value,
+    )
 
-    fun getSealedStatistic(setCode: String): List<CardStatsResponse> {
-        return lands17ApiClient.getStatistic(
-            setCode = setCode,
-            matchType = Lands17ApiClient.MatchType.SEALED.value,
-        )
-    }
+    fun getSealedStatistic(setCode: String): List<CardStatsResponse> = lands17ApiClient.getStatistic(
+        setCode = setCode,
+        matchType = Lands17ApiClient.MatchType.SEALED.value,
+    )
 }

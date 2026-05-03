@@ -1,10 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.port
 
-data class ArticleVectorDocument(
-    val id: String,
-    val content: String,
-    val metadata: Map<String, Any>,
-)
+data class ArticleVectorDocument(val id: String, val content: String, val metadata: Map<String, Any>)
 
 data class ArticleVectorSearchMatch(
     val articleId: Long,

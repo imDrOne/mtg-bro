@@ -30,13 +30,18 @@ class CardSearchControllerTest {
     fun `searchCards builds criteria from params and returns paginated response`() {
         val card = buildCardWithCollection(id = 1L, name = "Lightning Bolt")
         val page = buildPage(listOf(card), totalCards = 1L)
-        whenever(cardSearchService.searchByUser(eq(userId), argThat { criteria ->
-            criteria.query == "bolt" &&
-                criteria.setCode == "neo" &&
-                criteria.rarity == "rare" &&
-                criteria.page == 1 &&
-                criteria.pageSize == 20
-        })).thenReturn(page)
+        whenever(
+            cardSearchService.searchByUser(
+                eq(userId),
+                argThat { criteria ->
+                    criteria.query == "bolt" &&
+                        criteria.setCode == "neo" &&
+                        criteria.rarity == "rare" &&
+                        criteria.page == 1 &&
+                        criteria.pageSize == 20
+                },
+            ),
+        ).thenReturn(page)
 
         val response = controller.searchCards(
             jwt = jwt,
@@ -67,9 +72,28 @@ class CardSearchControllerTest {
         whenever(cardSearchService.searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.page == 1 }))
             .thenReturn(buildPage(emptyList(), totalCards = 0L))
 
-        controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 0, pageSize = 20)
+        controller.searchCards(
+            jwt = jwt,
+            q = null,
+            set = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = "name",
+            dir = "auto",
+            page = 0,
+            pageSize = 20,
+        )
 
-        org.mockito.kotlin.verify(cardSearchService).searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.page == 1 })
+        org.mockito.kotlin.verify(cardSearchService).searchByUser(
+            eq(userId),
+            argThat { c: CardSearchCriteria ->
+                c.page ==
+                    1
+            },
+        )
     }
 
     @Test
@@ -77,9 +101,28 @@ class CardSearchControllerTest {
         whenever(cardSearchService.searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.pageSize == 175 }))
             .thenReturn(buildPage(emptyList(), totalCards = 0L, pageSize = 175))
 
-        controller.searchCards(jwt = jwt, q = null, set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 500)
+        controller.searchCards(
+            jwt = jwt,
+            q = null,
+            set = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = "name",
+            dir = "auto",
+            page = 1,
+            pageSize = 500,
+        )
 
-        org.mockito.kotlin.verify(cardSearchService).searchByUser(eq(userId), argThat { c: CardSearchCriteria -> c.pageSize == 175 })
+        org.mockito.kotlin.verify(cardSearchService).searchByUser(
+            eq(userId),
+            argThat { c: CardSearchCriteria ->
+                c.pageSize ==
+                    175
+            },
+        )
     }
 
     @Test
@@ -94,7 +137,20 @@ class CardSearchControllerTest {
         )
         whenever(cardSearchService.searchByUser(eq(userId), any())).thenReturn(buildPage(listOf(card), 1L))
 
-        val response = controller.searchCards(jwt = jwt, q = "test", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+        val response = controller.searchCards(
+            jwt = jwt,
+            q = "test",
+            set = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = "name",
+            dir = "auto",
+            page = 1,
+            pageSize = 20,
+        )
 
         val dto = response.data.single()
         assertEquals("https://small", dto.imageUris?.small)
@@ -108,7 +164,20 @@ class CardSearchControllerTest {
         val card = buildCardWithCollection(id = 3L, name = "Bolt", nonFoil = 2, foil = 1)
         whenever(cardSearchService.searchByUser(eq(userId), any())).thenReturn(buildPage(listOf(card), 1L))
 
-        val response = controller.searchCards(jwt = jwt, q = "bolt", set = null, collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null, order = "name", dir = "auto", page = 1, pageSize = 20)
+        val response = controller.searchCards(
+            jwt = jwt,
+            q = "bolt",
+            set = null,
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+            order = "name",
+            dir = "auto",
+            page = 1,
+            pageSize = 20,
+        )
 
         val dto = response.data.single()
         assertEquals(2, dto.collection?.quantityNonFoil)
@@ -116,18 +185,14 @@ class CardSearchControllerTest {
         assertEquals(3, dto.collection?.totalQuantity)
     }
 
-    private fun buildPage(
-        cards: List<CardWithCollection>,
-        totalCards: Long,
-        page: Int = 1,
-        pageSize: Int = 20,
-    ) = CardWithCollectionPage(
-        cards = cards,
-        totalCards = totalCards,
-        hasMore = false,
-        page = page,
-        pageSize = pageSize,
-    )
+    private fun buildPage(cards: List<CardWithCollection>, totalCards: Long, page: Int = 1, pageSize: Int = 20) =
+        CardWithCollectionPage(
+            cards = cards,
+            totalCards = totalCards,
+            hasMore = false,
+            page = page,
+            pageSize = pageSize,
+        )
 
     private fun buildCardWithCollection(
         id: Long? = null,

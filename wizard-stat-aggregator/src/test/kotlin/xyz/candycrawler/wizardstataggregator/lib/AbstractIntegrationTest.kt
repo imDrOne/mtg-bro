@@ -15,7 +15,6 @@ abstract class AbstractIntegrationTest {
 
     protected val logger: Logger = LoggerFactory.getLogger(Lands17ApiClient::class.java)
 
-
     companion object {
         private val postgres = PostgreSQLContainer("postgres:16-alpine")
 

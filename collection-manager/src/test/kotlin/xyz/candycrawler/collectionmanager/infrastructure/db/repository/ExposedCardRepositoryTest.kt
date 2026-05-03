@@ -206,7 +206,17 @@ class ExposedCardRepositoryTest {
                 anyLong(),
             ),
         ).thenReturn(emptyList())
-        whenever(sqlMapper.countSearch(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(5L)
+        whenever(
+            sqlMapper.countSearch(
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+            ),
+        ).thenReturn(5L)
 
         val result = repository.search(criteria)
 
@@ -264,11 +274,7 @@ class ExposedCardRepositoryTest {
         )
     }
 
-    private fun buildCard(
-        id: Long? = null,
-        setCode: String = "dsk",
-        collectorNumber: String = "1",
-    ): Card = Card(
+    private fun buildCard(id: Long? = null, setCode: String = "dsk", collectorNumber: String = "1"): Card = Card(
         id = id,
         scryfallId = UUID.randomUUID(),
         oracleId = UUID.randomUUID(),
@@ -304,43 +310,40 @@ class ExposedCardRepositoryTest {
         artist = null,
     )
 
-    private fun buildRecord(
-        id: Long? = null,
-        setCode: String = "dsk",
-        collectorNumber: String = "1",
-    ): CardRecord = CardRecord(
-        id = id,
-        scryfallId = UUID.randomUUID(),
-        oracleId = UUID.randomUUID(),
-        name = "Eclipsed Elf",
-        lang = "en",
-        layout = "normal",
-        manaCost = "{G}",
-        cmc = 1.0,
-        typeLine = "Creature — Elf",
-        oracleText = null,
-        colors = listOf("G"),
-        colorIdentity = listOf("G"),
-        keywords = emptyList(),
-        power = "1",
-        toughness = "1",
-        loyalty = null,
-        setCode = setCode,
-        setName = "Duskmourn: House of Horror",
-        collectorNumber = collectorNumber,
-        rarity = "common",
-        releasedAt = LocalDate.of(2024, 9, 27),
-        imageUriSmall = null,
-        imageUriNormal = null,
-        imageUriLarge = null,
-        imageUriPng = null,
-        imageUriArtCrop = null,
-        imageUriBorderCrop = null,
-        priceUsd = null,
-        priceUsdFoil = null,
-        priceEur = null,
-        priceEurFoil = null,
-        flavorText = null,
-        artist = null,
-    )
+    private fun buildRecord(id: Long? = null, setCode: String = "dsk", collectorNumber: String = "1"): CardRecord =
+        CardRecord(
+            id = id,
+            scryfallId = UUID.randomUUID(),
+            oracleId = UUID.randomUUID(),
+            name = "Eclipsed Elf",
+            lang = "en",
+            layout = "normal",
+            manaCost = "{G}",
+            cmc = 1.0,
+            typeLine = "Creature — Elf",
+            oracleText = null,
+            colors = listOf("G"),
+            colorIdentity = listOf("G"),
+            keywords = emptyList(),
+            power = "1",
+            toughness = "1",
+            loyalty = null,
+            setCode = setCode,
+            setName = "Duskmourn: House of Horror",
+            collectorNumber = collectorNumber,
+            rarity = "common",
+            releasedAt = LocalDate.of(2024, 9, 27),
+            imageUriSmall = null,
+            imageUriNormal = null,
+            imageUriLarge = null,
+            imageUriPng = null,
+            imageUriArtCrop = null,
+            imageUriBorderCrop = null,
+            priceUsd = null,
+            priceUsdFoil = null,
+            priceEur = null,
+            priceEurFoil = null,
+            flavorText = null,
+            artist = null,
+        )
 }

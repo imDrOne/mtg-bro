@@ -10,13 +10,10 @@ import xyz.candycrawler.authservice.application.rest.dto.response.DynamicClientR
 import xyz.candycrawler.authservice.application.service.DynamicClientRegistrationService
 
 @RestController
-class DynamicClientRegistrationController(
-    private val registrationService: DynamicClientRegistrationService,
-) {
+class DynamicClientRegistrationController(private val registrationService: DynamicClientRegistrationService) {
 
     @PostMapping("/connect/register")
     @ResponseStatus(HttpStatus.CREATED)
-    fun register(
-        @RequestBody request: DynamicClientRegistrationRequest,
-    ): DynamicClientRegistrationResponse = registrationService.register(request)
+    fun register(@RequestBody request: DynamicClientRegistrationRequest): DynamicClientRegistrationResponse =
+        registrationService.register(request)
 }

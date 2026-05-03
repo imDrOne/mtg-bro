@@ -38,8 +38,12 @@ class AuthenticationServiceTest {
     private val rawPassword = "secret123"
     private val passwordHash = passwordEncoder.encode(rawPassword)!!
     private val activeUser = User(
-        id = 7L, email = "user@example.com", username = "user",
-        passwordHash = passwordHash, enabled = true, createdAt = Instant.now(),
+        id = 7L,
+        email = "user@example.com",
+        username = "user",
+        passwordHash = passwordHash,
+        enabled = true,
+        createdAt = Instant.now(),
     )
 
     private fun mockIssue() {
@@ -101,9 +105,13 @@ class AuthenticationServiceTest {
         val hash = sha256Hex(raw)
         val now = Instant.now()
         val stored = RefreshToken(
-            id = 500L, userId = 7L, tokenHash = hash,
-            issuedAt = now.minusSeconds(60), expiresAt = now.plusSeconds(3600),
-            revokedAt = null, replacedById = null,
+            id = 500L,
+            userId = 7L,
+            tokenHash = hash,
+            issuedAt = now.minusSeconds(60),
+            expiresAt = now.plusSeconds(3600),
+            revokedAt = null,
+            replacedById = null,
         )
         whenever(refreshTokenRepository.findByTokenHash(hash)).thenReturn(stored)
         whenever(userRepository.findById(7L)).thenReturn(activeUser)
@@ -122,9 +130,13 @@ class AuthenticationServiceTest {
         val hash = sha256Hex(raw)
         val now = Instant.now()
         val revoked = RefreshToken(
-            id = 600L, userId = 7L, tokenHash = hash,
-            issuedAt = now.minusSeconds(120), expiresAt = now.plusSeconds(3600),
-            revokedAt = now.minusSeconds(60), replacedById = 601L,
+            id = 600L,
+            userId = 7L,
+            tokenHash = hash,
+            issuedAt = now.minusSeconds(120),
+            expiresAt = now.plusSeconds(3600),
+            revokedAt = now.minusSeconds(60),
+            replacedById = 601L,
         )
         whenever(refreshTokenRepository.findByTokenHash(hash)).thenReturn(revoked)
 
@@ -146,9 +158,13 @@ class AuthenticationServiceTest {
         val hash = sha256Hex(raw)
         val now = Instant.now()
         val expired = RefreshToken(
-            id = 700L, userId = 7L, tokenHash = hash,
-            issuedAt = now.minusSeconds(7200), expiresAt = now.minusSeconds(60),
-            revokedAt = null, replacedById = null,
+            id = 700L,
+            userId = 7L,
+            tokenHash = hash,
+            issuedAt = now.minusSeconds(7200),
+            expiresAt = now.minusSeconds(60),
+            revokedAt = null,
+            replacedById = null,
         )
         whenever(refreshTokenRepository.findByTokenHash(hash)).thenReturn(expired)
         assertThrows<RefreshTokenInvalidException> { service.refresh(raw) }
@@ -160,9 +176,13 @@ class AuthenticationServiceTest {
         val hash = sha256Hex(raw)
         val now = Instant.now()
         val stored = RefreshToken(
-            id = 800L, userId = 7L, tokenHash = hash,
-            issuedAt = now.minusSeconds(60), expiresAt = now.plusSeconds(3600),
-            revokedAt = null, replacedById = null,
+            id = 800L,
+            userId = 7L,
+            tokenHash = hash,
+            issuedAt = now.minusSeconds(60),
+            expiresAt = now.plusSeconds(3600),
+            revokedAt = null,
+            replacedById = null,
         )
         whenever(refreshTokenRepository.findByTokenHash(hash)).thenReturn(stored)
 

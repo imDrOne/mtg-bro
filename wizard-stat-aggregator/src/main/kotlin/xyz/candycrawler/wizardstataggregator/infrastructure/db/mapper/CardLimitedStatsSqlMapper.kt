@@ -15,7 +15,11 @@ class CardLimitedStatsSqlMapper {
     internal fun upsertBatch(records: List<CardLimitedStatsRecord>) {
         CardLimitedStatsTable.batchUpsert(
             records,
-            keys = arrayOf(CardLimitedStatsTable.mtgaId, CardLimitedStatsTable.setCode, CardLimitedStatsTable.matchType),
+            keys = arrayOf(
+                CardLimitedStatsTable.mtgaId,
+                CardLimitedStatsTable.setCode,
+                CardLimitedStatsTable.matchType,
+            ),
             shouldReturnGeneratedValues = false,
         ) { record ->
             this[CardLimitedStatsTable.name] = record.name
@@ -48,23 +52,21 @@ class CardLimitedStatsSqlMapper {
         }
     }
 
-    internal fun selectById(id: Long): CardLimitedStatsRecord? =
-        CardLimitedStatsTable.selectAll()
-            .where { CardLimitedStatsTable.id eq id }
-            .map { it.toRecord() }
-            .singleOrNull()
+    internal fun selectById(id: Long): CardLimitedStatsRecord? = CardLimitedStatsTable.selectAll()
+        .where { CardLimitedStatsTable.id eq id }
+        .map { it.toRecord() }
+        .singleOrNull()
 
-    internal fun selectByMatchType(matchType: String): List<CardLimitedStatsRecord> =
-        CardLimitedStatsTable.selectAll()
-            .where { CardLimitedStatsTable.matchType eq matchType }
-            .map { it.toRecord() }
+    internal fun selectByMatchType(matchType: String): List<CardLimitedStatsRecord> = CardLimitedStatsTable.selectAll()
+        .where { CardLimitedStatsTable.matchType eq matchType }
+        .map { it.toRecord() }
 
     internal fun selectByMtgaIdAndMatchType(mtgaId: Int, setCode: String, matchType: String): CardLimitedStatsRecord? =
         CardLimitedStatsTable.selectAll()
             .where {
                 (CardLimitedStatsTable.mtgaId eq mtgaId) and
-                (CardLimitedStatsTable.setCode eq setCode) and
-                (CardLimitedStatsTable.matchType eq matchType)
+                    (CardLimitedStatsTable.setCode eq setCode) and
+                    (CardLimitedStatsTable.matchType eq matchType)
             }
             .map { it.toRecord() }
             .singleOrNull()

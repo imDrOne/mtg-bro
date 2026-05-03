@@ -1,7 +1,6 @@
 package xyz.candycrawler.mcpserver
 
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO as ClientCIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpSendPipeline
 import io.ktor.http.HttpHeaders
@@ -18,9 +17,9 @@ import xyz.candycrawler.mcpserver.auth.currentUserRoles
 import xyz.candycrawler.mcpserver.auth.currentUserToken
 import xyz.candycrawler.mcpserver.auth.hasAccess
 import xyz.candycrawler.mcpserver.auth.isAuthEnabled
-import xyz.candycrawler.mcpserver.tools.addDeckbuildingGuideResource
 import xyz.candycrawler.mcpserver.tools.DraftsimSearchConfig
 import xyz.candycrawler.mcpserver.tools.ToolContext
+import xyz.candycrawler.mcpserver.tools.addDeckbuildingGuideResource
 import xyz.candycrawler.mcpserver.tools.analyzeTribalDepthSchema
 import xyz.candycrawler.mcpserver.tools.getCardSchema
 import xyz.candycrawler.mcpserver.tools.getCollectionOverviewSchema
@@ -31,8 +30,8 @@ import xyz.candycrawler.mcpserver.tools.handleGetCard
 import xyz.candycrawler.mcpserver.tools.handleGetCollectionOverview
 import xyz.candycrawler.mcpserver.tools.handleGetDeckbuildingGuide
 import xyz.candycrawler.mcpserver.tools.handleGetDraftsimArticlesById
-import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
 import xyz.candycrawler.mcpserver.tools.handleListDraftsimArticles
+import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
 import xyz.candycrawler.mcpserver.tools.handleSaveDeck
 import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
@@ -43,6 +42,7 @@ import xyz.candycrawler.mcpserver.tools.saveDeckSchema
 import xyz.candycrawler.mcpserver.tools.searchDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
+import io.ktor.client.engine.cio.CIO as ClientCIO
 
 fun createServer(
     baseUrl: String,
@@ -84,13 +84,16 @@ fun createServer(
 
     server.addTool(
         name = "search_my_cards",
-        description = "Search cards in your local library (imported collection) with filters. PREFER this over get_my_collection — use colors, color_identity, type from user preferences to filter and avoid loading full collection. Returns card names, set, rarity, and how many copies you own.",
+        description = "Search cards in your local library (imported collection) with filters. " +
+            "Prefer this over get_my_collection to avoid loading the full collection. " +
+            "Returns card names, set, rarity, and owned copy counts.",
         inputSchema = searchMyCardsSchema(),
     ) { request -> handleSearchMyCards(context, request) }
 
     server.addTool(
         name = "search_scryfall",
-        description = "Search Scryfall card database. Use Scryfall syntax: f:standard (format), c:bg (colors), t:creature (type), id:wu (identity). Example: 'f:standard c:bg' for Standard legal black-green cards.",
+        description = "Search Scryfall card database. Use Scryfall syntax: f:standard (format), " +
+            "c:bg (colors), t:creature (type), id:wu (identity).",
         inputSchema = searchScryfallSchema(),
     ) { request -> handleSearchScryfall(context, request) }
 
@@ -102,19 +105,22 @@ fun createServer(
 
     server.addTool(
         name = "list_scryfall_format_codes",
-        description = "Returns format and color codes for search_scryfall and search_my_cards. Use filters to avoid loading large datasets.",
+        description = "Returns format and color codes for search_scryfall and search_my_cards. " +
+            "Use filters to avoid loading large datasets.",
         inputSchema = listScryfallFormatCodesSchema(),
     ) { handleListScryfallFormatCodes() }
 
     server.addTool(
         name = "get_deckbuilding_guide",
-        description = "Returns the mtg-bro deckbuilding workflow guide for AI agents using this MCP server. Read this before building, tuning, or saving a Magic deck.",
+        description = "Returns the mtg-bro deckbuilding workflow guide for AI agents using this MCP server. " +
+            "Read this before building, tuning, or saving a Magic deck.",
         inputSchema = getDeckbuildingGuideSchema(),
     ) { request -> handleGetDeckbuildingGuide(request) }
 
     server.addTool(
         name = "analyze_tribal_depth",
-        description = "Analyze tribal depth for a given MTG creature type in your collection. Returns total card count, CMC distribution, role breakdown (creatures / kindred spells / tribal support cards), color spread, whether a lord or commander exists, and deck viability. Use this when the user asks about a specific tribe like Merfolk, Elf, Goblin, etc.",
+        description = "Analyze tribal depth for a given MTG creature type in your collection. " +
+            "Returns counts, CMC distribution, roles, colors, lord/commander presence, and deck viability.",
         inputSchema = analyzeTribalDepthSchema(),
     ) { request ->
         checkAccess("analyze_tribal_depth", toolAccessConfig)?.let { return@addTool it }
@@ -123,7 +129,8 @@ fun createServer(
 
     server.addTool(
         name = "get_collection_overview",
-        description = "Get a high-level summary of your entire card collection: total unique cards, breakdown by color (W/U/B/R/G/C), type (creature/instant/etc), rarity, and top 10 tribes with their colors. Use this when the user asks what their collection looks like or wants an overview before planning a deck.",
+        description = "Get a high-level summary of your entire card collection: unique cards, colors, " +
+            "types, rarity, and top tribes with colors.",
         inputSchema = getCollectionOverviewSchema(),
     ) { request ->
         checkAccess("get_collection_overview", toolAccessConfig)?.let { return@addTool it }
@@ -132,7 +139,8 @@ fun createServer(
 
     server.addTool(
         name = "search_draftsim_articles",
-        description = "Semantically search favorited Draftsim.com articles about MTG draft strategy, set reviews, mechanics, archetypes, and limited format guides. Returns relevant article IDs and matching insight snippets. Use get_draftsim_articles to fetch analyzed content for specific articles of interest.",
+        description = "Semantically search favorited Draftsim.com articles about MTG draft strategy, " +
+            "set reviews, mechanics, archetypes, and limited format guides.",
         inputSchema = searchDraftsimArticlesSchema(),
     ) { request ->
         checkAccess("search_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
@@ -141,7 +149,8 @@ fun createServer(
 
     server.addTool(
         name = "list_draftsim_articles",
-        description = "List compact Draftsim article metadata by optional keyword query. Returns article IDs, titles, slugs, URLs, published dates, keywords, favorite flags, and analyzed status. Use this to discover article IDs before get_draftsim_articles.",
+        description = "List compact Draftsim article metadata by optional keyword query. " +
+            "Use this to discover article IDs before get_draftsim_articles.",
         inputSchema = listDraftsimArticlesSchema(),
     ) { request ->
         checkAccess("list_draftsim_articles", toolAccessConfig)?.let { return@addTool it }
@@ -150,7 +159,8 @@ fun createServer(
 
     server.addTool(
         name = "get_draftsim_articles",
-        description = "Fetch analyzed MTG card knowledge from specific Draftsim articles by ID. Returns structured card evaluations (tiers, synergies, archetypes). Use after search_draftsim_articles to get content for articles of interest.",
+        description = "Fetch analyzed MTG card knowledge from specific Draftsim articles by ID. " +
+            "Returns structured card evaluations such as tiers, synergies, and archetypes.",
         inputSchema = getDraftsimArticlesByIdSchema(),
     ) { request ->
         checkAccess("get_draftsim_articles", toolAccessConfig)?.let { return@addTool it }

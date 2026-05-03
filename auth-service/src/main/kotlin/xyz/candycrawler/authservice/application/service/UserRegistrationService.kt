@@ -38,7 +38,12 @@ class UserRegistrationService(
         )
 
         val saved = userRepository.save(user)
-        userRoleRepository.assignRole(requireNotNull(saved.id) { "saved user must have a database-assigned id" }, UserRole.FREE)
+        userRoleRepository.assignRole(
+            requireNotNull(saved.id) {
+                "saved user must have a database-assigned id"
+            },
+            UserRole.FREE,
+        )
         return saved
     }
 }

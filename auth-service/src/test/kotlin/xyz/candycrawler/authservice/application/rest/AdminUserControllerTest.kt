@@ -6,7 +6,6 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
-import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
@@ -19,6 +18,7 @@ import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
 import xyz.candycrawler.authservice.application.service.AdminUserService
+import xyz.candycrawler.authservice.domain.user.exception.UserInvalidException
 import xyz.candycrawler.authservice.domain.user.model.User
 import xyz.candycrawler.authservice.domain.user.model.UserFilter
 import xyz.candycrawler.authservice.lib.AbstractIntegrationTest
@@ -44,8 +44,12 @@ class AdminUserControllerTest : AbstractIntegrationTest() {
     }
 
     private fun user(id: Long, email: String) = User(
-        id = id, email = email, username = "user$id",
-        passwordHash = "\$2a\$10\$hash", enabled = true, createdAt = Instant.now(),
+        id = id,
+        email = email,
+        username = "user$id",
+        passwordHash = "\$2a\$10\$hash",
+        enabled = true,
+        createdAt = Instant.now(),
     )
 
     @Test
@@ -53,7 +57,10 @@ class AdminUserControllerTest : AbstractIntegrationTest() {
     fun `listUsers returns 200 with page response`() {
         val pageResponse = PageResponse(
             items = listOf(user(1L, "a@example.com")),
-            page = 0, size = 20, totalItems = 1L, totalPages = 1,
+            page = 0,
+            size = 20,
+            totalItems = 1L,
+            totalPages = 1,
         )
         whenever(adminUserService.listUsers(any<UserFilter>(), any())).thenReturn(pageResponse)
 

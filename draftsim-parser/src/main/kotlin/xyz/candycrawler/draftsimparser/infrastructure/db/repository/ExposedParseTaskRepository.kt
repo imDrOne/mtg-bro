@@ -18,13 +18,11 @@ class ExposedParseTaskRepository(
     private val toRecord: ParseTaskToParseTaskRecordMapper,
 ) : ParseTaskRepository {
 
-    override fun save(task: ParseTask): ParseTask =
-        sqlMapper.insert(toRecord.apply(task)).let(toDomain::apply)
+    override fun save(task: ParseTask): ParseTask = sqlMapper.insert(toRecord.apply(task)).let(toDomain::apply)
 
     @Transactional(readOnly = true)
-    override fun findById(id: UUID): ParseTask =
-        sqlMapper.selectById(id)?.let(toDomain::apply)
-            ?: throw ParseTaskNotFoundException(id)
+    override fun findById(id: UUID): ParseTask = sqlMapper.selectById(id)?.let(toDomain::apply)
+        ?: throw ParseTaskNotFoundException(id)
 
     override fun update(id: UUID, block: (ParseTask) -> ParseTask): ParseTask {
         val existing = findById(id)
@@ -33,6 +31,5 @@ class ExposedParseTaskRepository(
         return updated
     }
 
-    override fun incrementProcessedArticles(id: UUID, delta: Int) =
-        sqlMapper.incrementProcessedArticles(id, delta)
+    override fun incrementProcessedArticles(id: UUID, delta: Int) = sqlMapper.incrementProcessedArticles(id, delta)
 }

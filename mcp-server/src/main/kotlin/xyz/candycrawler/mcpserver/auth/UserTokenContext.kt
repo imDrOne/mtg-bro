@@ -11,5 +11,4 @@ class UserTokenElement(val token: String) : AbstractCoroutineContextElement(Key)
     companion object Key : CoroutineContext.Key<UserTokenElement>
 }
 
-suspend fun currentUserToken(): String? =
-    currentCoroutineContext()[UserTokenElement]?.token
+suspend fun currentUserToken(): String? = currentCoroutineContext()[UserTokenElement]?.token

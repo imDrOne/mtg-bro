@@ -10,9 +10,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @Transactional
-class TrackedLimitedStatSetSqlMapperTest(
-    @Autowired private val sqlMapper: TrackedLimitedStatSetSqlMapper,
-) : AbstractIntegrationTest() {
+class TrackedLimitedStatSetSqlMapperTest(@Autowired private val sqlMapper: TrackedLimitedStatSetSqlMapper) :
+    AbstractIntegrationTest() {
 
     @Test
     fun `upsert inserts tracked set`() {
@@ -65,4 +64,3 @@ class TrackedLimitedStatSetSqlMapperTest(
             updatedAt = null,
         )
 }
-

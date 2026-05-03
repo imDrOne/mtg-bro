@@ -107,24 +107,21 @@ private data class SearchCacheKey(
     val favoriteOnly: Boolean?,
 )
 
-private fun String.normalizeSemanticQuery(): String =
-    trim()
-        .lowercase(Locale.US)
-        .replace(Regex("\\s+"), " ")
+private fun String.normalizeSemanticQuery(): String = trim()
+    .lowercase(Locale.US)
+    .replace(Regex("\\s+"), " ")
 
-private fun ArticleVectorSearchMatch.toSemanticMatch(): ArticleSemanticSearchMatch =
-    ArticleSemanticSearchMatch(
-        score = score,
-        content = content,
-        insightType = metadata["insight_type"] as? String,
-        subject = metadata["subject"] as? String,
-        tags = metadata["tags"].toStringList(),
-    )
+private fun ArticleVectorSearchMatch.toSemanticMatch(): ArticleSemanticSearchMatch = ArticleSemanticSearchMatch(
+    score = score,
+    content = content,
+    insightType = metadata["insight_type"] as? String,
+    subject = metadata["subject"] as? String,
+    tags = metadata["tags"].toStringList(),
+)
 
-private fun Any?.toStringList(): List<String> =
-    when (this) {
-        is List<*> -> this.mapNotNull { it as? String }
-        is Array<*> -> this.mapNotNull { it as? String }
-        is String -> listOf(this)
-        else -> emptyList()
-    }
+private fun Any?.toStringList(): List<String> = when (this) {
+    is List<*> -> this.mapNotNull { it as? String }
+    is Array<*> -> this.mapNotNull { it as? String }
+    is String -> listOf(this)
+    else -> emptyList()
+}

@@ -69,6 +69,5 @@ class AdminUserService(
     }
 
     @Transactional(readOnly = true)
-    fun listUsers(filter: UserFilter, page: PageRequest): PageResponse<User> =
-        userRepository.findAll(filter, page)
+    fun listUsers(filter: UserFilter, page: PageRequest): PageResponse<User> = userRepository.findAll(filter, page)
 }

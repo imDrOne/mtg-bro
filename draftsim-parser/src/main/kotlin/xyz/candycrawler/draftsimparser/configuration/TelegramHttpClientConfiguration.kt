@@ -9,9 +9,8 @@ import org.springframework.web.client.RestClient
 class TelegramHttpClientConfiguration {
 
     @Bean
-    fun telegramRestClient(
-        @Value("\${infrastructure.http.client.telegram.base-url}") baseUrl: String,
-    ): RestClient = RestClient.builder()
-        .baseUrl(baseUrl)
-        .build()
+    fun telegramRestClient(@Value("\${infrastructure.http.client.telegram.base-url}") baseUrl: String): RestClient =
+        RestClient.builder()
+            .baseUrl(baseUrl)
+            .build()
 }

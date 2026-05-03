@@ -16,9 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @Transactional
-class CardSqlMapperTest(
-    @Autowired private val sqlMapper: CardSqlMapper,
-) : AbstractIntegrationTest() {
+class CardSqlMapperTest(@Autowired private val sqlMapper: CardSqlMapper) : AbstractIntegrationTest() {
 
     @Test
     fun `upsertBatch persists all fields correctly`() {
@@ -484,7 +482,15 @@ class CardSqlMapperTest(
             ),
         )
 
-        val total = sqlMapper.countSearch(queryText = null, setCode = "cnt", collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null)
+        val total = sqlMapper.countSearch(
+            queryText = null,
+            setCode = "cnt",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+        )
 
         assertEquals(3L, total)
     }
@@ -499,7 +505,15 @@ class CardSqlMapperTest(
             ),
         )
 
-        val total = sqlMapper.countSearch(queryText = "lightning", setCode = "cnt2", collectorNumber = null, colors = null, colorIdentity = null, type = null, rarity = null)
+        val total = sqlMapper.countSearch(
+            queryText = "lightning",
+            setCode = "cnt2",
+            collectorNumber = null,
+            colors = null,
+            colorIdentity = null,
+            type = null,
+            rarity = null,
+        )
 
         assertEquals(2L, total)
     }
