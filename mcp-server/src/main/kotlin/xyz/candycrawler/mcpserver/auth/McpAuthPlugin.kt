@@ -8,11 +8,13 @@ import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.request.path
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.security.interfaces.RSAPublicKey
 import java.util.concurrent.TimeUnit
 
 val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
+    val log = LoggerFactory.getLogger("McpAuthPlugin")
     val issuerUri = pluginConfig.issuerUri
     val resourceMetadataUrl = pluginConfig.resourceMetadataUrl
     val scopes = pluginConfig.scopes
@@ -49,6 +51,7 @@ val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
             call.attributes.put(UserRolesKey, roles)
             call.attributes.put(UserTokenKey, token)
         } catch (e: Exception) {
+            log.debug("Rejected invalid MCP bearer token", e)
             call.response.header(
                 "WWW-Authenticate",
                 """Bearer error="invalid_token", resource_metadata="$resourceMetadataUrl"""",

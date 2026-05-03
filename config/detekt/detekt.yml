@@ -8,8 +8,6 @@ complexity:
     allowedFunctionsPerClass: 20
 
 exceptions:
-  SwallowedException:
-    active: false
   TooGenericExceptionCaught:
     active: false
 
