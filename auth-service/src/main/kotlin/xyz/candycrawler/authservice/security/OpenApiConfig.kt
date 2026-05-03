@@ -35,7 +35,8 @@ class OpenApiConfig {
                         .`in`(SecurityScheme.In.COOKIE)
                         .name("refresh_token")
                         .description(
-                            "Refresh token cookie — set automatically on login, used by POST /api/v1/auth/refresh and /logout",
+                            "Refresh token cookie — set automatically on login, used by " +
+                                "POST /api/v1/auth/refresh and /logout",
                         ),
                 ),
         )

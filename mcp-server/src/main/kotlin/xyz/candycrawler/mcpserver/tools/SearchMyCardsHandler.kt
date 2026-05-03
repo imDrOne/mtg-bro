@@ -22,7 +22,9 @@ fun searchMyCardsSchema() = ToolSchema(
                 put("type", "string")
                 put(
                     "description",
-                    """Free-text search. Matches against card name, type line (e.g. "merfolk", "instant", "legendary"), and oracle text (e.g. "draw a card", "flying"). Case-insensitive substring match. Examples: "merfolk" → all cards with Merfolk in type line or text; "draw a card" → all cards mentioning draw in oracle text; "legendary creature" → all legendary creatures. Note: q also matches type_line; combine with type= for type-only filtering.""",
+                    "Free-text search. Matches card name, type line, and oracle text. " +
+                        "Case-insensitive substring match. Examples: \"merfolk\", \"draw a card\", " +
+                        "\"legendary creature\". Combine with type= for type-only filtering.",
                 )
             },
         )
@@ -39,7 +41,8 @@ fun searchMyCardsSchema() = ToolSchema(
                 put("type", "string")
                 put(
                     "description",
-                    """Filter by mana colors in card cost: w,u,b,r,g. Cards must contain ALL these colors. Example: "wu" → cards with white AND blue in their colors.""",
+                    "Filter by mana colors in card cost: w,u,b,r,g. " +
+                        "Cards must contain ALL these colors. Example: \"wu\".",
                 )
             },
         )
@@ -49,7 +52,8 @@ fun searchMyCardsSchema() = ToolSchema(
                 put("type", "string")
                 put(
                     "description",
-                    """Filter by color identity (includes all mana symbols on the card, not just cost). Example: "wu" → cards playable in a WU commander deck.""",
+                    "Filter by color identity, including all mana symbols on the card, not just cost. " +
+                        "Example: \"wu\".",
                 )
             },
         )
@@ -59,7 +63,8 @@ fun searchMyCardsSchema() = ToolSchema(
                 put("type", "string")
                 put(
                     "description",
-                    """Filter by card type (case-insensitive substring match on type line). Example: "creature", "instant", "enchantment". Use this for type-only filtering; q= also matches type_line but additionally searches name and oracle text.""",
+                    "Filter by card type with a case-insensitive substring match on type line. " +
+                        "Examples: \"creature\", \"instant\", \"enchantment\".",
                 )
             },
         )
@@ -117,7 +122,8 @@ suspend fun handleSearchMyCards(
             return CallToolResult(
                 content = listOf(
                     TextContent(
-                        "Error: collection-manager returned empty response. Token may be missing user_id claim — re-authenticate and retry.",
+                        "Error: collection-manager returned empty response. " +
+                            "Token may be missing user_id claim — re-authenticate and retry.",
                     ),
                 ),
                 isError = true,

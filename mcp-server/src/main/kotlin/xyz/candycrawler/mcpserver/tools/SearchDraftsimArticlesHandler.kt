@@ -25,7 +25,8 @@ fun searchDraftsimArticlesSchema() = ToolSchema(
                 put("type", "string")
                 put(
                     "description",
-                    "Search query to find Draftsim articles. Examples: \"Merfolk\", \"BLB draft guide\", \"aggro strategy\".",
+                    "Search query to find Draftsim articles. Examples: \"Merfolk\", " +
+                        "\"BLB draft guide\", \"aggro strategy\".",
                 )
             },
         )

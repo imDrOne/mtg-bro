@@ -77,7 +77,8 @@ internal fun formatDraftsimArticleList(json: JsonObject): String? {
 
     return buildString {
         appendLine(
-            "Found ${articles.size} Draftsim articles (total: $totalArticles, page: $page, page_size: $pageSize, has_more: $hasMore)",
+            "Found ${articles.size} Draftsim articles (total: $totalArticles, " +
+                "page: $page, page_size: $pageSize, has_more: $hasMore)",
         )
         appendLine()
         articles.forEach { el ->

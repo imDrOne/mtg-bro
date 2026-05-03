@@ -96,7 +96,8 @@ fun saveDeckSchema() = ToolSchema(
                 put("type", "array")
                 put(
                     "description",
-                    "Mainboard cards. Use setCode and collectorNumber from search_my_cards results (shown as \"(set #num)\"). Max 4 copies per card.",
+                    "Mainboard cards. Use setCode and collectorNumber from search_my_cards results " +
+                        "(shown as \"(set #num)\"). Max 4 copies per card.",
                 )
                 put("items", deckEntryItemSchema)
             },
