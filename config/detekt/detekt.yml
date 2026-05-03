@@ -22,5 +22,3 @@ style:
     active: false
   ThrowsCount:
     active: false
-  UtilityClassWithPublicConstructor:
-    active: false

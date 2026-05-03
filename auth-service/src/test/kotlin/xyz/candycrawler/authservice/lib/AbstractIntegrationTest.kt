@@ -8,7 +8,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 
 @SpringBootTest
 @ActiveProfiles("test")
-abstract class AbstractIntegrationTest {
+abstract class AbstractIntegrationTest protected constructor() {
 
     companion object {
         private val postgres = PostgreSQLContainer("postgres:16-alpine")
