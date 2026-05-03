@@ -26,6 +26,7 @@ class ToolAccessConfigTest {
         assertFalse(config.hasAccess("list_draftsim_articles", roles))
         assertFalse(config.hasAccess("search_draftsim_articles", roles))
         assertFalse(config.hasAccess("get_draftsim_articles", roles))
+        assertFalse(config.hasAccess("search_limited_card_stats", roles))
         assertFalse(config.hasAccess("save_deck", roles))
     }
 
@@ -35,6 +36,7 @@ class ToolAccessConfigTest {
         assertTrue(config.hasAccess("search_my_cards", roles))
         assertTrue(config.hasAccess("analyze_tribal_depth", roles))
         assertTrue(config.hasAccess("list_draftsim_articles", roles))
+        assertTrue(config.hasAccess("search_limited_card_stats", roles))
         assertTrue(config.hasAccess("save_deck", roles))
     }
 

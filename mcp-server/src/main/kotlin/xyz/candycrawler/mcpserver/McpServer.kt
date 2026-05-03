@@ -34,12 +34,14 @@ import xyz.candycrawler.mcpserver.tools.handleListDraftsimArticles
 import xyz.candycrawler.mcpserver.tools.handleListScryfallFormatCodes
 import xyz.candycrawler.mcpserver.tools.handleSaveDeck
 import xyz.candycrawler.mcpserver.tools.handleSearchDraftsimArticles
+import xyz.candycrawler.mcpserver.tools.handleSearchLimitedCardStats
 import xyz.candycrawler.mcpserver.tools.handleSearchMyCards
 import xyz.candycrawler.mcpserver.tools.handleSearchScryfall
 import xyz.candycrawler.mcpserver.tools.listDraftsimArticlesSchema
 import xyz.candycrawler.mcpserver.tools.listScryfallFormatCodesSchema
 import xyz.candycrawler.mcpserver.tools.saveDeckSchema
 import xyz.candycrawler.mcpserver.tools.searchDraftsimArticlesSchema
+import xyz.candycrawler.mcpserver.tools.searchLimitedCardStatsSchema
 import xyz.candycrawler.mcpserver.tools.searchMyCardsSchema
 import xyz.candycrawler.mcpserver.tools.searchScryfallSchema
 import io.ktor.client.engine.cio.CIO as ClientCIO
@@ -47,6 +49,7 @@ import io.ktor.client.engine.cio.CIO as ClientCIO
 fun createServer(
     baseUrl: String,
     draftsimParserBaseUrl: String,
+    wizardStatAggregatorBaseUrl: String = "http://localhost:8082",
     draftsimSearchConfig: DraftsimSearchConfig = DraftsimSearchConfig(),
 ): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
@@ -65,6 +68,7 @@ fun createServer(
     val context = ToolContext(
         baseUrl = baseUrl,
         draftsimParserBaseUrl = draftsimParserBaseUrl,
+        wizardStatAggregatorBaseUrl = wizardStatAggregatorBaseUrl,
         httpClient = httpClient,
         draftsimSearchConfig = draftsimSearchConfig,
     )
@@ -167,7 +171,27 @@ fun createServer(
         handleGetDraftsimArticlesById(context, request)
     }
 
-    server.addTool(
+    server.addLimitedStatsTool(context, toolAccessConfig)
+
+    server.addSaveDeckTool(context, toolAccessConfig)
+
+    return server
+}
+
+private fun FilteredMcpServer.addLimitedStatsTool(context: ToolContext, toolAccessConfig: ToolAccessConfigData) {
+    addTool(
+        name = "search_limited_card_stats",
+        description = "Search 17lands limited card statistics for a set and match type. " +
+            "Use names, mtga_ids, or win-rate filters to avoid loading an entire set.",
+        inputSchema = searchLimitedCardStatsSchema(),
+    ) { request ->
+        checkAccess("search_limited_card_stats", toolAccessConfig)?.let { return@addTool it }
+        handleSearchLimitedCardStats(context, request)
+    }
+}
+
+private fun FilteredMcpServer.addSaveDeckTool(context: ToolContext, toolAccessConfig: ToolAccessConfigData) {
+    addTool(
         name = "save_deck",
         description = """Save a finalized deck to your collection.
             IMPORTANT: Use search_my_cards first to find card IDs (the numeric 'id' field in results).
@@ -180,8 +204,6 @@ fun createServer(
         checkAccess("save_deck", toolAccessConfig)?.let { return@addTool it }
         handleSaveDeck(context, request)
     }
-
-    return server
 }
 
 internal suspend fun checkAccess(toolName: String, config: ToolAccessConfigData): CallToolResult? {

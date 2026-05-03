@@ -19,6 +19,7 @@ MCP (Model Context Protocol) server for deck building. Exposes tools so Claude (
 | `list_draftsim_articles`     | Lists compact Draftsim article metadata for discovering article IDs.                                                                                      |
 | `search_draftsim_articles`   | Semantically searches favorited Draftsim article insights.                                                                                                |
 | `get_draftsim_articles`      | Fetches compact analyzed Draftsim insights by article ID.                                                                                                 |
+| `search_limited_card_stats`  | Searches 17lands limited stats by set, match type, card names, MTGA IDs, and win-rate filters.                                                           |
 
 ## Cursor (stdio)
 
@@ -89,6 +90,7 @@ COLLECTION_MANAGER_BASE_URL=http://localhost:8080 \
 |--------|---------|-------------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | Base URL of collection-manager |
 | `DRAFTSIM_PARSER_BASE_URL` | `http://localhost:8081` | Base URL of draftsim-parser |
+| `WIZARD_STAT_AGGREGATOR_BASE_URL` | `http://localhost:8082` | Base URL of wizard-stat-aggregator |
 | `DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS` | `0.80,0.65,0.50` | Ordered CSV thresholds for Draftsim semantic retry |
 | `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `MCP_HTTP_PORT` | `3000` | Port for HTTP transport |

@@ -3,6 +3,9 @@ package xyz.candycrawler.wizardstataggregator.infrastructure.db.mapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSearchCriteria
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSortDirection
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSortOrder
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.entity.CardLimitedStatsRecord
 import xyz.candycrawler.wizardstataggregator.lib.AbstractIntegrationTest
 import kotlin.test.assertEquals
@@ -144,15 +147,84 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
         assertNull(result)
     }
 
+    @Test
+    fun `search filters by set code match type names mtga ids and win rate`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(
+                    mtgaId = 800,
+                    name = "Premium Common",
+                    setCode = "DMU",
+                    matchType = "QuickDraft",
+                    winRate = 0.62,
+                ),
+                buildRecord(
+                    mtgaId = 801,
+                    name = "Medium Common",
+                    setCode = "DMU",
+                    matchType = "QuickDraft",
+                    winRate = 0.55,
+                ),
+                buildRecord(
+                    mtgaId = 802,
+                    name = "Wrong Set",
+                    setCode = "BRO",
+                    matchType = "QuickDraft",
+                    winRate = 0.65,
+                ),
+                buildRecord(mtgaId = 803, name = "Wrong Match", setCode = "DMU", matchType = "Sealed", winRate = 0.67),
+            ),
+        )
+
+        val result = sqlMapper.search(
+            CardLimitedStatsSearchCriteria(
+                setCode = "dmu",
+                matchType = "QuickDraft",
+                names = listOf("premium common", "wrong set"),
+                mtgaIds = listOf(800, 802),
+                minWinRate = 0.60,
+            ),
+        )
+
+        assertEquals(listOf(800), result.map { it.mtgaId })
+    }
+
+    @Test
+    fun `search sorts paginates and counts results`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(mtgaId = 900, name = "Low", winRate = 0.51),
+                buildRecord(mtgaId = 901, name = "High", winRate = 0.64),
+                buildRecord(mtgaId = 902, name = "Middle", winRate = 0.57),
+            ),
+        )
+        val criteria = CardLimitedStatsSearchCriteria(
+            setCode = "DMU",
+            matchType = "QuickDraft",
+            order = CardLimitedStatsSortOrder.WIN_RATE,
+            direction = CardLimitedStatsSortDirection.DESC,
+            page = 1,
+            pageSize = 2,
+        )
+
+        val result = sqlMapper.search(criteria)
+        val count = sqlMapper.countSearch(criteria)
+
+        assertEquals(listOf(901, 902), result.map { it.mtgaId })
+        assertEquals(3, count)
+    }
+
     private fun buildRecord(
         mtgaId: Int,
+        name: String = "Lightning Bolt",
         setCode: String = "DMU",
         matchType: String = "QuickDraft",
         avgSeen: Double? = 2.34,
         avgPick: Double? = 3.12,
+        winRate: Double = 0.58,
     ): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = null,
-        name = "Lightning Bolt",
+        name = name,
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
@@ -169,7 +241,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
         gameCount = 600,
         poolCount = 820,
         playRate = 0.73,
-        winRate = 0.58,
+        winRate = winRate,
         openingHandGameCount = 120,
         openingHandWinRate = 0.61,
         drawnGameCount = 300,

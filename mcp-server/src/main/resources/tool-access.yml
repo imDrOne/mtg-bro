@@ -16,6 +16,7 @@ roles:
     - list_draftsim_articles
     - search_draftsim_articles
     - get_draftsim_articles
+    - search_limited_card_stats
     - save_deck
   ADMIN: "*"
 default_allowed_tools: []

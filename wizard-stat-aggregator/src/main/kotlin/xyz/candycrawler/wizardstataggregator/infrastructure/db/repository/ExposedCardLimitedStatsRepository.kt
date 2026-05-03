@@ -4,6 +4,8 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.wizardstataggregator.domain.stat.limited.exception.CardLimitedStatsNotFoundException
 import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStats
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsPage
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSearchCriteria
 import xyz.candycrawler.wizardstataggregator.domain.stat.limited.repository.CardLimitedStatsRepository
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.entity.CardLimitedStatsRecord
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.mapper.CardLimitedStatsSqlMapper
@@ -28,6 +30,19 @@ class ExposedCardLimitedStatsRepository(private val sqlMapper: CardLimitedStatsS
             ?: throw CardLimitedStatsNotFoundException(
                 "with mtgaId=$mtgaId, setCode=$setCode and matchType=$matchType not found",
             )
+
+    override fun search(criteria: CardLimitedStatsSearchCriteria): CardLimitedStatsPage {
+        val stats = sqlMapper.search(criteria).map { it.toDomain() }
+        val totalStats = sqlMapper.countSearch(criteria)
+
+        return CardLimitedStatsPage(
+            stats = stats,
+            totalStats = totalStats,
+            hasMore = criteria.offset + criteria.pageSize < totalStats,
+            page = criteria.page,
+            pageSize = criteria.pageSize,
+        )
+    }
 
     private fun CardLimitedStats.toRecord(): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = id,

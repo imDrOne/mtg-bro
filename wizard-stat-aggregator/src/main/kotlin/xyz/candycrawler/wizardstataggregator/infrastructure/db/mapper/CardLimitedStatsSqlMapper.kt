@@ -1,11 +1,21 @@
 package xyz.candycrawler.wizardstataggregator.infrastructure.db.mapper
 
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSearchCriteria
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSortDirection
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSortOrder
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.entity.CardLimitedStatsRecord
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.table.CardLimitedStatsTable
 
@@ -70,6 +80,59 @@ class CardLimitedStatsSqlMapper {
             }
             .map { it.toRecord() }
             .singleOrNull()
+
+    internal fun search(criteria: CardLimitedStatsSearchCriteria): List<CardLimitedStatsRecord> {
+        val query = CardLimitedStatsTable.selectAll()
+            .where { buildSearchCondition(criteria) }
+
+        return query
+            .orderBy(resolveOrderColumn(criteria.order) to resolveDirection(criteria.direction))
+            .limit(criteria.pageSize)
+            .offset(criteria.offset)
+            .map { it.toRecord() }
+    }
+
+    internal fun countSearch(criteria: CardLimitedStatsSearchCriteria): Long = CardLimitedStatsTable.selectAll()
+        .where { buildSearchCondition(criteria) }
+        .count()
+
+    private fun buildSearchCondition(criteria: CardLimitedStatsSearchCriteria): Op<Boolean> {
+        val conditions = mutableListOf<Op<Boolean>>(
+            CardLimitedStatsTable.setCode.lowerCase() eq criteria.setCode.lowercase(),
+            CardLimitedStatsTable.matchType eq criteria.matchType,
+        )
+
+        if (criteria.names.isNotEmpty()) {
+            conditions.add(CardLimitedStatsTable.name.lowerCase() inList criteria.names.map { it.lowercase() })
+        }
+
+        if (criteria.mtgaIds.isNotEmpty()) {
+            conditions.add(CardLimitedStatsTable.mtgaId inList criteria.mtgaIds)
+        }
+
+        criteria.minWinRate?.let {
+            conditions.add(CardLimitedStatsTable.winRate greaterEq it)
+        }
+
+        criteria.maxWinRate?.let {
+            conditions.add(CardLimitedStatsTable.winRate lessEq it)
+        }
+
+        return conditions.reduce { acc, op -> acc and op }
+    }
+
+    private fun resolveOrderColumn(order: CardLimitedStatsSortOrder): Expression<*> = when (order) {
+        CardLimitedStatsSortOrder.NAME -> CardLimitedStatsTable.name
+        CardLimitedStatsSortOrder.MTGA_ID -> CardLimitedStatsTable.mtgaId
+        CardLimitedStatsSortOrder.WIN_RATE -> CardLimitedStatsTable.winRate
+        CardLimitedStatsSortOrder.GAME_COUNT -> CardLimitedStatsTable.gameCount
+        CardLimitedStatsSortOrder.DRAWN_IMPROVEMENT_WIN_RATE -> CardLimitedStatsTable.drawnImprovementWinRate
+    }
+
+    private fun resolveDirection(direction: CardLimitedStatsSortDirection): SortOrder = when (direction) {
+        CardLimitedStatsSortDirection.ASC -> SortOrder.ASC
+        CardLimitedStatsSortDirection.DESC -> SortOrder.DESC
+    }
 
     private fun ResultRow.toRecord(): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = this[CardLimitedStatsTable.id].value,

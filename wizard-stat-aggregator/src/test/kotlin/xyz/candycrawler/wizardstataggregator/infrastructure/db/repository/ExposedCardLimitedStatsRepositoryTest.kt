@@ -9,6 +9,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import xyz.candycrawler.wizardstataggregator.domain.stat.limited.exception.CardLimitedStatsNotFoundException
 import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStats
+import xyz.candycrawler.wizardstataggregator.domain.stat.limited.model.CardLimitedStatsSearchCriteria
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.entity.CardLimitedStatsRecord
 import xyz.candycrawler.wizardstataggregator.infrastructure.db.mapper.CardLimitedStatsSqlMapper
 import kotlin.test.assertEquals
@@ -96,6 +97,24 @@ class ExposedCardLimitedStatsRepositoryTest {
         assertFailsWith<CardLimitedStatsNotFoundException> {
             repository.findByMtgaIdAndMatchType(99, "DMU", "Sealed")
         }
+    }
+
+    // ---- search ----
+
+    @Test
+    fun `search returns mapped page`() {
+        val criteria = CardLimitedStatsSearchCriteria(setCode = "DMU", matchType = "QuickDraft", pageSize = 2)
+        val records = listOf(buildRecord(mtgaId = 1), buildRecord(mtgaId = 2))
+        given(sqlMapper.search(criteria)).willReturn(records)
+        given(sqlMapper.countSearch(criteria)).willReturn(3)
+
+        val result = repository.search(criteria)
+
+        assertEquals(records.map { it.toDomain() }, result.stats)
+        assertEquals(3, result.totalStats)
+        assertEquals(true, result.hasMore)
+        assertEquals(1, result.page)
+        assertEquals(2, result.pageSize)
     }
 
     // ---- fixtures ----

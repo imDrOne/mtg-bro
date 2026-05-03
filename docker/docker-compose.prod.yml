@@ -66,6 +66,7 @@ services:
     depends_on:
       - collection-manager
       - draftsim-parser
+      - wizard-stat-aggregator
     networks:
       - mtg-bro-net
 

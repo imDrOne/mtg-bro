@@ -90,9 +90,11 @@ services:
     depends_on:
       - collection-manager
       - draftsim-parser
+      - wizard-stat-aggregator
     environment:
       COLLECTION_MANAGER_BASE_URL: http://collection-manager:8080
       DRAFTSIM_PARSER_BASE_URL: http://draftsim-parser:8080
+      WIZARD_STAT_AGGREGATOR_BASE_URL: http://wizard-stat-aggregator:8080
       DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS: ${DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS:-0.80,0.65,0.50}
       # AUTH_ISSUER_URI / MCP_BASE_URL not set → OAuth disabled for local dev.
       # To enable, expose auth-service via a second ngrok tunnel and set both vars.

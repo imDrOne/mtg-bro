@@ -21,6 +21,9 @@ class DeckbuildingGuideTest {
         assertTrue("list_draftsim_articles" in guide)
         assertTrue("search_draftsim_articles" in guide)
         assertTrue("get_draftsim_articles" in guide)
+        assertTrue("search_limited_card_stats" in guide)
+        assertTrue("match_type=QuickDraft" in guide)
+        assertTrue("match_type=Sealed" in guide)
         assertTrue("save_deck" in guide)
     }
 

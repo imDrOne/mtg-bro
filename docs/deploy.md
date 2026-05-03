@@ -135,6 +135,7 @@ python3 qdrant-migrate.py
 |--------|----------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://collection-manager:8080` |
 | `DRAFTSIM_PARSER_BASE_URL` | `http://draftsim-parser:8081` |
+| `WIZARD_STAT_AGGREGATOR_BASE_URL` | `http://wizard-stat-aggregator:8080` |
 | `AUTH_ISSUER_URI` | Публичный URL auth-service, например `https://auth.duckdns.org` |
 | `MCP_BASE_URL` | Публичный URL MCP-сервера, например `https://mtg-bro.duckdns.org` |
 

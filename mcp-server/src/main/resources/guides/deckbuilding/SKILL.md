@@ -28,15 +28,30 @@ Prefer this order unless the user asks for a narrower task:
 5. Use `list_draftsim_articles` to discover relevant Draftsim article IDs by title, slug, keywords, or favorite catalog browsing.
 6. Use `search_draftsim_articles` for strategy questions, archetypes, mechanics, set reviews, and semantic insight search.
 7. Use `get_draftsim_articles` only after selecting specific article IDs.
-8. Use `search_scryfall` for legality checks and external card discovery.
+8. Use `search_limited_card_stats` for Draft and Sealed card performance from 17lands.
+9. Use `search_scryfall` for legality checks and external card discovery.
 
 Call the smallest useful tool first. Prefer filtered searches over broad dumps, and fetch full article/card detail only after selecting candidates.
 
 ## Format Notes
 
 - Standard: Constructed format. Mainboard must be at least 60 cards. Sideboard is usually up to 15 cards. Use format legality and normal copy limits unless a card says otherwise.
-- Sealed: Limited format built from a sealed pool. Main deck must be at least 40 cards. Prioritize curve, fixing, removal, bombs, and coherent two-color builds unless the pool supports splashing.
-- Draft: Limited format built from drafted cards. Main deck must be at least 40 cards. Use Draftsim insights for set archetypes, mechanics, signals, card roles, and synergy density.
+- Sealed: Limited format built from a sealed pool. Main deck must be at least 40 cards. Prioritize curve, fixing, removal, bombs, and coherent two-color builds unless the pool supports splashing. Use `search_limited_card_stats` with `match_type=Sealed`.
+- Draft: Limited format built from drafted cards. Main deck must be at least 40 cards. Use Draftsim insights for set archetypes, mechanics, signals, card roles, and synergy density. Use `search_limited_card_stats` with `match_type=QuickDraft`.
+
+## Limited Stats
+
+Use `search_limited_card_stats` when evaluating Draft or Sealed card quality for a known set.
+
+- Required input: `set_code`, for example `dmu`, `eoe`, or `fin`.
+- Draft stats: pass `match_type=QuickDraft`.
+- Sealed stats: pass `match_type=Sealed`.
+- To evaluate known cards, pass exact `names` or `mtga_ids` instead of fetching a whole set.
+- To discover strong performers, use `min_win_rate`, `max_win_rate`, `sort=win_rate`, and small `page_size`.
+- Useful sort fields: `win_rate`, `game_count`, `drawn_improvement_win_rate`, `name`, `mtga_id`.
+- Win rates are decimals: `0.58` means 58%.
+
+Prefer limited stats for empirical card performance and Draftsim articles for context such as archetypes, mechanics, signals, and synergy requirements.
 
 ## Build The Deck
 
