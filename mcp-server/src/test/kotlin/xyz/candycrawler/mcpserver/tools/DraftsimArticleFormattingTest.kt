@@ -1,5 +1,6 @@
 package xyz.candycrawler.mcpserver.tools
 
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -8,6 +9,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -116,10 +118,12 @@ class DraftsimArticleFormattingTest {
             ).jsonObject,
             types = setOf("mechanic"),
             previewLimit = 1,
+            similarityThreshold = DRAFTSIM_SIMILARITY_MEDIUM,
         )
 
         assertTrue(response != null)
         assertTrue("[id=7] Set Guide - set-guide (2026-01-02) score=0.877" in response)
+        assertTrue("similarity_threshold: 0.65" in response)
         assertTrue("preview 1: subject=Station; type=mechanic" in response)
         assertTrue("excerpt=Station rewards tapping creatures. It is best with cheap bodies." in response)
         assertTrue("tags=mechanic, tap" in response)
@@ -245,6 +249,28 @@ class DraftsimArticleFormattingTest {
         assertTrue(fallback != null)
         assertTrue("fallback: keyword article search for 'station'" in fallback)
         assertTrue("[id=3] Draft Guide - draft-guide (2026-01-01)" in fallback)
+    }
+
+    @Test
+    fun `semantic summary tries thresholds from high to low until one formats`() = runBlocking {
+        val searchedThresholds = mutableListOf<Double>()
+        val formattedThresholds = mutableListOf<Double>()
+
+        val summary = findDraftsimSemanticSummary(
+            thresholds = DRAFTSIM_SIMILARITY_THRESHOLDS,
+            search = { threshold ->
+                searchedThresholds += threshold
+                Json.parseToJsonElement("""{"results": []}""").jsonObject
+            },
+            format = { _, threshold ->
+                formattedThresholds += threshold
+                if (threshold == DRAFTSIM_SIMILARITY_MEDIUM) "semantic result at $threshold" else null
+            },
+        )
+
+        assertEquals("semantic result at 0.65", summary)
+        assertEquals(listOf(DRAFTSIM_SIMILARITY_HIGH, DRAFTSIM_SIMILARITY_MEDIUM), searchedThresholds)
+        assertEquals(listOf(DRAFTSIM_SIMILARITY_HIGH, DRAFTSIM_SIMILARITY_MEDIUM), formattedThresholds)
     }
 
     private fun articleArray(analyzedText: String) = buildJsonArray {

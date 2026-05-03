@@ -69,6 +69,7 @@ internal fun formatDraftsimSemanticSearchResponse(
     json: JsonObject,
     types: Set<String> = emptySet(),
     previewLimit: Int = 3,
+    similarityThreshold: Double? = null,
 ): String? {
     val results = json["results"]?.jsonArray ?: return null
     if (results.isEmpty()) return null
@@ -105,6 +106,9 @@ internal fun formatDraftsimSemanticSearchResponse(
     return buildString {
         appendLine("Found ${lines.size} semantically relevant articles")
         appendLine("preview_limit: $safePreviewLimit")
+        if (similarityThreshold != null) {
+            appendLine("similarity_threshold: ${String.format(Locale.US, "%.2f", similarityThreshold)}")
+        }
         if (types.isNotEmpty()) appendLine("types: ${types.joinToString()}")
         appendLine()
         lines.forEach { appendLine(it) }

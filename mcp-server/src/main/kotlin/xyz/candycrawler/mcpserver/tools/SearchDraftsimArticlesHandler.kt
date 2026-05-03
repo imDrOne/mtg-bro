@@ -11,10 +11,21 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+
+internal const val DRAFTSIM_SIMILARITY_LOW = 0.50
+internal const val DRAFTSIM_SIMILARITY_MEDIUM = 0.65
+internal const val DRAFTSIM_SIMILARITY_HIGH = 0.80
+
+internal val DRAFTSIM_SIMILARITY_THRESHOLDS = listOf(
+    DRAFTSIM_SIMILARITY_HIGH,
+    DRAFTSIM_SIMILARITY_MEDIUM,
+    DRAFTSIM_SIMILARITY_LOW,
+)
 
 fun searchDraftsimArticlesSchema() = ToolSchema(
     properties = buildJsonObject {
@@ -91,20 +102,39 @@ private suspend fun searchSemanticArticles(
 ): CallToolResult? =
     runCatching {
         val url = "${context.draftsimParserBaseUrl}/api/v1/articles/search/semantic"
-        val requestBody = buildJsonObject {
-            put("query", query)
-            put("topK", pageSize.coerceIn(1, 20))
-            put("favorite", true)
-        }
-        val response = context.httpClient.post(url) {
-            contentType(ContentType.Application.Json)
-            setBody(requestBody.toString())
-        }.body<String>()
-
-        val summary =
-            formatDraftsimSemanticSearchResponse(Json.parseToJsonElement(response).jsonObject, types, previewLimit)
-                ?: return null
+        val topK = pageSize.coerceIn(1, 20)
+        val summary = findDraftsimSemanticSummary(
+            thresholds = DRAFTSIM_SIMILARITY_THRESHOLDS,
+            search = { threshold ->
+                val requestBody = buildJsonObject {
+                    put("query", query)
+                    put("topK", topK)
+                    put("favorite", true)
+                    put("similarityThreshold", threshold)
+                }
+                val response = context.httpClient.post(url) {
+                    contentType(ContentType.Application.Json)
+                    setBody(requestBody.toString())
+                }.body<String>()
+                Json.parseToJsonElement(response).jsonObject
+            },
+            format = { json, threshold ->
+                formatDraftsimSemanticSearchResponse(json, types, previewLimit, threshold)
+            },
+        ) ?: return null
         CallToolResult(
             content = listOf(TextContent(summary))
         )
     }.getOrNull()
+
+internal suspend fun findDraftsimSemanticSummary(
+    thresholds: List<Double>,
+    search: suspend (Double) -> JsonObject,
+    format: (JsonObject, Double) -> String?,
+): String? {
+    for (threshold in thresholds) {
+        val summary = format(search(threshold), threshold)
+        if (summary != null) return summary
+    }
+    return null
+}
