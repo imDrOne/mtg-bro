@@ -92,6 +92,10 @@ COLLECTION_MANAGER_BASE_URL=http://localhost:8080 \
 | `DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS` | `0.80,0.65,0.50` | Ordered CSV thresholds for Draftsim semantic retry |
 | `MCP_TRANSPORT` | `stdio` | `stdio` or `http` |
 | `MCP_HTTP_PORT` | `3000` | Port for HTTP transport |
+| `AUTH_ISSUER_URI` | _(none)_ | Auth-service public URL; enables OAuth in HTTP transport when set with `MCP_BASE_URL` |
+| `MCP_BASE_URL` | _(none)_ | MCP server public URL; enables OAuth metadata in HTTP transport when set with `AUTH_ISSUER_URI` |
+
+OAuth is disabled when `AUTH_ISSUER_URI` or `MCP_BASE_URL` is missing. This is the default for local stdio and simple local HTTP runs.
 
 ## Command-line arguments
 
