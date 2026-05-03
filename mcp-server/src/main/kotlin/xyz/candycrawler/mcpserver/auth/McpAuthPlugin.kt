@@ -12,13 +12,6 @@ import java.net.URI
 import java.security.interfaces.RSAPublicKey
 import java.util.concurrent.TimeUnit
 
-class McpAuthConfig {
-    lateinit var issuerUri: String
-    lateinit var jwksUri: String
-    lateinit var resourceMetadataUrl: String
-    var scopes: String = "openid profile decks:read"
-}
-
 val McpAuthPlugin = createApplicationPlugin("McpAuth", ::McpAuthConfig) {
     val issuerUri = pluginConfig.issuerUri
     val resourceMetadataUrl = pluginConfig.resourceMetadataUrl

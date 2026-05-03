@@ -13,10 +13,6 @@ exceptions:
   TooGenericExceptionCaught:
     active: false
 
-naming:
-  MatchingDeclarationName:
-    active: false
-
 style:
   MagicNumber:
     active: false
