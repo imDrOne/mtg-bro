@@ -29,7 +29,7 @@ class SecurityConfig {
                     "/api-docs",
                     "/api-docs/**",
                 ).permitAll()
-                .requestMatchers("/api/**").hasRole("ADMIN")
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
         }
         .oauth2ResourceServer { it.jwt { jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()) } }

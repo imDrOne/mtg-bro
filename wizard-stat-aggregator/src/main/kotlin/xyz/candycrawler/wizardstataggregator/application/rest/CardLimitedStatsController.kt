@@ -38,6 +38,7 @@ class CardLimitedStatsController(
     private val coroutineScope: ApplicationCoroutineScope,
 ) {
 
+    @PreAuthorize("hasAuthority('PERM_api:stats:search')")
     @GetMapping
     fun search(
         @RequestParam(name = "set_code") setCode: String,

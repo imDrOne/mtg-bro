@@ -248,7 +248,8 @@ JOIN api_permissions p ON p.name = 'api:decks:delete';
 | `api:decks:read`, `api:decks:write` | collection-manager |
 | `api:scryfall:search` | collection-manager |
 | `api:articles:read`, `api:articles:parse` | draftsim-parser |
-| `api:stats:collect` | wizard-stat-aggregator |
+| `api:stats:search` | wizard-stat-aggregator |
+| `api:stats:collect`, `api:stats:tracked-sets:manage` | wizard-stat-aggregator |
 
 ### Current state
 
