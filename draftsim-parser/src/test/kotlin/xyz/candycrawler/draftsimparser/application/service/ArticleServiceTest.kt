@@ -5,12 +5,14 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
+import xyz.candycrawler.draftsimparser.domain.article.exception.ArticleNotFoundException
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ArticleServiceTest {
 
@@ -61,6 +63,39 @@ class ArticleServiceTest {
         assertEquals(listOf(article), result)
         verify(articleVectorIndexService).replaceIndexesAsync(eq(listOf(article)))
         verify(articleSemanticSearchService).evictSearchCache()
+    }
+
+    @Test
+    fun `findByIds returns all articles when all ids are found`() {
+        val article1 = article(id = 1)
+        val article2 = article(id = 2)
+        whenever(queryArticleRepository.findById(1)).thenReturn(article1)
+        whenever(queryArticleRepository.findById(2)).thenReturn(article2)
+
+        val result = service.findByIds(listOf(1, 2))
+
+        assertEquals(listOf(article1, article2), result)
+    }
+
+    @Test
+    fun `findByIds skips missing ids and returns only found articles`() {
+        val article1 = article(id = 1)
+        whenever(queryArticleRepository.findById(1)).thenReturn(article1)
+        whenever(queryArticleRepository.findById(99)).thenThrow(ArticleNotFoundException(99))
+
+        val result = service.findByIds(listOf(1, 99))
+
+        assertEquals(listOf(article1), result)
+    }
+
+    @Test
+    fun `findByIds returns empty list when all ids are missing`() {
+        whenever(queryArticleRepository.findById(10)).thenThrow(ArticleNotFoundException(10))
+        whenever(queryArticleRepository.findById(20)).thenThrow(ArticleNotFoundException(20))
+
+        val result = service.findByIds(listOf(10, 20))
+
+        assertTrue(result.isEmpty())
     }
 
     private fun article(id: Long) = Article(

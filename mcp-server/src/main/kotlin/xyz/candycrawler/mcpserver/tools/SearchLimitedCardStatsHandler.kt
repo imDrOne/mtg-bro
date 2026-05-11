@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -50,6 +49,14 @@ fun searchLimitedCardStatsSchema() = ToolSchema(
                 put("type", "array")
                 put("description", "Optional MTGA card IDs to fetch without loading the whole set.")
                 put("items", buildJsonObject { put("type", "integer") })
+            },
+        )
+        put(
+            "tiers",
+            buildJsonObject {
+                put("type", "array")
+                put("description", "Optional 17lands card grades: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F.")
+                put("items", buildJsonObject { put("type", "string") })
             },
         )
         put(
@@ -114,6 +121,7 @@ suspend fun handleSearchLimitedCardStats(
             .toLands17MatchType()
         val names = request.arguments?.get("names").stringList()
         val mtgaIds = request.arguments?.get("mtga_ids").intList()
+        val tiers = request.arguments?.get("tiers").stringList()
         val minWinRate = request.arguments?.get("min_win_rate")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
         val maxWinRate = request.arguments?.get("max_win_rate")?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
         val sort = request.arguments?.get("sort")?.jsonPrimitive?.contentOrNull ?: "win_rate"
@@ -121,19 +129,20 @@ suspend fun handleSearchLimitedCardStats(
         val page = request.arguments?.get("page")?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 1
         val pageSize = request.arguments?.get("page_size")?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 20
 
-        val response = context.httpClient.get("${context.wizardStatAggregatorBaseUrl}/api/v1/card-limited-stats") {
+        val httpResponse = context.httpClient.get("${context.wizardStatAggregatorBaseUrl}/api/v1/card-limited-stats") {
             parameter("set_code", setCode)
             parameter("match_type", matchType)
             names.forEach { parameter("names", it) }
             mtgaIds.forEach { parameter("mtga_ids", it) }
+            tiers.forEach { parameter("tiers", it) }
             minWinRate?.let { parameter("min_win_rate", it) }
             maxWinRate?.let { parameter("max_win_rate", it) }
             parameter("sort", sort)
             parameter("sort_dir", sortDir)
             parameter("page", page.coerceAtLeast(1))
             parameter("page_size", pageSize.coerceIn(1, 100))
-        }.body<String>()
-
+        }
+        val response = httpResponse.readTextOrFail("wizard-stat-aggregator /api/v1/card-limited-stats")
         val json = Json.parseToJsonElement(response).jsonObject
         CallToolResult(content = listOf(TextContent(formatLimitedCardStatsResponse(json, setCode, matchType))))
     }
@@ -156,6 +165,7 @@ internal fun formatLimitedCardStatsResponse(json: JsonObject, setCode: String, m
         val card = element.jsonObject
         val name = card["name"]?.jsonPrimitive?.contentOrNull ?: "?"
         val mtgaId = card["mtgaId"]?.jsonPrimitive?.contentOrNull ?: "?"
+        val tier = card["tier"]?.jsonPrimitive?.contentOrNull ?: "-"
         val rarity = card["rarity"]?.jsonPrimitive?.contentOrNull ?: "?"
         val color = card["color"]?.jsonPrimitive?.contentOrNull ?: "?"
         val winRate = card["winRate"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
@@ -167,6 +177,7 @@ internal fun formatLimitedCardStatsResponse(json: JsonObject, setCode: String, m
         buildString {
             append("${index + 1}. $name")
             append(" | mtga_id: $mtgaId")
+            append(" | tier: $tier")
             append(" | $color $rarity")
             append(" | WR: ${winRate.formatPercent()}")
             if (gameCount != null) append(" | games: $gameCount")

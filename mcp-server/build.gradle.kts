@@ -24,6 +24,7 @@ val ktorVersion = "3.2.4"
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 
     implementation("io.modelcontextprotocol:kotlin-sdk-server:$mcpVersion")
     implementation("io.ktor:ktor-server-cio:$ktorVersion")

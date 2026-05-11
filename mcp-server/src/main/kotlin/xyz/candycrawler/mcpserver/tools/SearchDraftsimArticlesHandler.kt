@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -103,12 +102,13 @@ private suspend fun searchDraftsimArticlesFallback(
     pageSize: Int,
 ): CallToolResult {
     val url = "${context.draftsimParserBaseUrl}/api/v1/articles"
-    val response = context.httpClient.get(url) {
+    val httpResponse = context.httpClient.get(url) {
         parameter("q", query)
         parameter("page", page)
         parameter("pageSize", pageSize.coerceIn(1, 20))
         parameter("favorite", true)
-    }.body<String>()
+    }
+    val response = httpResponse.readTextOrFail("draftsim-parser /api/v1/articles")
 
     val summary = formatDraftsimFallbackSearchResponse(
         json = Json.parseToJsonElement(response).jsonObject,
@@ -141,10 +141,11 @@ private suspend fun searchSemanticArticles(
                 put("favorite", true)
                 put("similarityThreshold", threshold)
             }
-            val response = context.httpClient.post(url) {
+            val httpResponse = context.httpClient.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody.toString())
-            }.body<String>()
+            }
+            val response = httpResponse.readTextOrFail("draftsim-parser /api/v1/articles/search/semantic")
             Json.parseToJsonElement(response).jsonObject
         },
         format = { json, threshold, attempt ->

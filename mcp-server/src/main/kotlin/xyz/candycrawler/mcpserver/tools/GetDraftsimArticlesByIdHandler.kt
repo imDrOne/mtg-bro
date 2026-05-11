@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -88,11 +87,11 @@ suspend fun handleGetDraftsimArticlesById(
                 put("ids", JsonArray(ids.map { JsonPrimitive(it) }))
             }
 
-            val response = context.httpClient.post(url) {
+            val httpResponse = context.httpClient.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody.toString())
-            }.body<String>()
-
+            }
+            val response = httpResponse.readTextOrFail("draftsim-parser /api/v1/articles/by-ids")
             val articles = Json.parseToJsonElement(response).jsonArray
             if (articles.isEmpty()) {
                 CallToolResult(content = listOf(TextContent("No articles found for the given IDs")))
