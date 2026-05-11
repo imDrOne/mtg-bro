@@ -46,6 +46,8 @@ Use `search_limited_card_stats` when evaluating Draft or Sealed card quality for
 - Required input: `set_code`, for example `dmu`, `eoe`, or `fin`.
 - Draft stats: pass `match_type=QuickDraft`.
 - Sealed stats: pass `match_type=Sealed`.
+- Card grade filter: pass `tiers=A+`, `tiers=A`, `tiers=A-`, `tiers=B+`, etc. to filter by the 17lands Grades view.
+- Omit `tiers` for the full result set. `tier=null` means 17lands did not have enough GIH WR data to compute a grade.
 - To evaluate known cards, pass exact `names` or `mtga_ids` instead of fetching a whole set.
 - To discover strong performers, use `min_win_rate`, `max_win_rate`, `sort=win_rate`, and small `page_size`.
 - Useful sort fields: `win_rate`, `game_count`, `drawn_improvement_win_rate`, `name`, `mtga_id`.

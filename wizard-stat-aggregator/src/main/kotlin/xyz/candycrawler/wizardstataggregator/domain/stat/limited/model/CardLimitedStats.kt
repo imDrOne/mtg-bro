@@ -8,6 +8,7 @@ data class CardLimitedStats(
     val mtgaId: Int,
     val setCode: String,
     val matchType: String,
+    val tier: String? = null,
     val color: String,
     val rarity: String,
     val url: String,
@@ -39,6 +40,7 @@ data class CardLimitedStats(
         if (mtgaId <= 0) invalid("mtgaId must be positive")
         if (setCode.isBlank()) invalid("setCode must not be blank")
         if (matchType.isBlank()) invalid("matchType must not be blank")
+        if (tier != null && tier.isBlank()) invalid("tier must not be blank")
         if (url.isBlank()) invalid("url must not be blank")
         if (types.isEmpty()) invalid("types must not be empty")
         if (seenCount < 0) invalid("seenCount must be non-negative")

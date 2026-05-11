@@ -17,7 +17,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
     AbstractIntegrationTest() {
 
     @Test
-    fun `insertBatch persists all fields correctly`() {
+    fun `upsertBatch persists all fields correctly`() {
         val record = buildRecord(mtgaId = 100)
 
         sqlMapper.upsertBatch(listOf(record))
@@ -30,6 +30,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
         assertEquals(record.mtgaId, result.mtgaId)
         assertEquals(record.setCode, result.setCode)
         assertEquals(record.matchType, result.matchType)
+        assertEquals(record.tier, result.tier)
         assertEquals(record.color, result.color)
         assertEquals(record.rarity, result.rarity)
         assertEquals(record.url, result.url)
@@ -56,7 +57,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
     }
 
     @Test
-    fun `insertBatch persists multiple records`() {
+    fun `upsertBatch persists multiple records`() {
         val records = listOf(
             buildRecord(mtgaId = 200, matchType = "QuickDraft"),
             buildRecord(mtgaId = 201, matchType = "QuickDraft"),
@@ -71,7 +72,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
     }
 
     @Test
-    fun `insertBatch persists null nullable fields`() {
+    fun `upsertBatch persists null nullable fields`() {
         val record = buildRecord(mtgaId = 300, avgSeen = null, avgPick = null)
 
         sqlMapper.upsertBatch(listOf(record))
@@ -214,11 +215,33 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
         assertEquals(3, count)
     }
 
+    @Test
+    fun `search returns all grades by default and supports explicit tier filter`() {
+        sqlMapper.upsertBatch(
+            listOf(
+                buildRecord(mtgaId = 950, name = "A Plus", tier = "A+", winRate = 0.64),
+                buildRecord(mtgaId = 951, name = "C Tier", tier = "C", winRate = 0.57),
+                buildRecord(mtgaId = 952, name = "Unknown Tier", tier = null, winRate = 0.51),
+            ),
+        )
+
+        val defaultResult = sqlMapper.search(
+            CardLimitedStatsSearchCriteria(setCode = "DMU", matchType = "QuickDraft"),
+        )
+        val gradeResult = sqlMapper.search(
+            CardLimitedStatsSearchCriteria(setCode = "DMU", matchType = "QuickDraft", tiers = listOf("A+")),
+        )
+
+        assertEquals(listOf("A+", "C", null), defaultResult.map { it.tier })
+        assertEquals(listOf("A+"), gradeResult.map { it.tier })
+    }
+
     private fun buildRecord(
         mtgaId: Int,
         name: String = "Lightning Bolt",
         setCode: String = "DMU",
         matchType: String = "QuickDraft",
+        tier: String? = null,
         avgSeen: Double? = 2.34,
         avgPick: Double? = 3.12,
         winRate: Double = 0.58,
@@ -228,6 +251,7 @@ class CardLimitedStatsSqlMapperTest(@Autowired private val sqlMapper: CardLimite
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
+        tier = tier,
         color = "R",
         rarity = "common",
         url = "https://example.com/card/$mtgaId",

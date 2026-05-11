@@ -6,6 +6,7 @@ internal data class CardLimitedStatsRecord(
     val mtgaId: Int,
     val setCode: String,
     val matchType: String,
+    val tier: String?,
     val color: String,
     val rarity: String,
     val url: String,

@@ -45,6 +45,7 @@ class CardLimitedStatsController(
         @RequestParam(name = "match_type") matchType: String,
         @RequestParam(required = false) names: List<String>?,
         @RequestParam(name = "mtga_ids", required = false) mtgaIds: List<Int>?,
+        @RequestParam(required = false) tiers: List<String>?,
         @RequestParam(name = "min_win_rate", required = false) minWinRate: Double?,
         @RequestParam(name = "max_win_rate", required = false) maxWinRate: Double?,
         @RequestParam(required = false, defaultValue = "win_rate") sort: String,
@@ -57,6 +58,7 @@ class CardLimitedStatsController(
             matchType = matchType.toLands17MatchType(),
             names = names.orEmpty().mapNotNull { it.trim().takeIf(String::isNotEmpty) },
             mtgaIds = mtgaIds.orEmpty().filter { it > 0 }.distinct(),
+            tiers = tiers.toLimitedStatsTiers(),
             minWinRate = minWinRate,
             maxWinRate = maxWinRate,
             order = CardLimitedStatsSortOrder.fromString(sort),
@@ -121,4 +123,20 @@ private fun String.toLands17MatchType(): String = when (trim().lowercase().repla
     "quickdraft" -> "QuickDraft"
     "sealed" -> "Sealed"
     else -> trim()
+}
+
+private fun List<String>?.toLimitedStatsTiers(): List<String?> {
+    val normalized = orEmpty()
+        .flatMap { it.split(",") }
+        .mapNotNull { it.trim().takeIf(String::isNotEmpty) }
+        .distinct()
+
+    if (normalized.any { it.equals("all", ignoreCase = true) }) return emptyList()
+
+    return normalized.map { tier ->
+        when (tier.lowercase()) {
+            "-", "null", "none", "unknown" -> null
+            else -> tier.uppercase()
+        }
+    }.distinct()
 }

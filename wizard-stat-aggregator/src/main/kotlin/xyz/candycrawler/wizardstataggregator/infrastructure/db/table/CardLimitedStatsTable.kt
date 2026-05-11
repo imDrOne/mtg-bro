@@ -7,6 +7,7 @@ object CardLimitedStatsTable : LongIdTable("card_limited_stats") {
     val mtgaId = integer("mtga_id")
     val setCode = varchar("set_code", 10)
     val matchType = varchar("match_type", 50)
+    val tier = varchar("tier", 20).nullable()
     val color = varchar("color", 50)
     val rarity = varchar("rarity", 50)
     val url = text("url")
@@ -30,8 +31,4 @@ object CardLimitedStatsTable : LongIdTable("card_limited_stats") {
     val neverDrawnGameCount = integer("never_drawn_game_count")
     val neverDrawnWinRate = double("never_drawn_win_rate")
     val drawnImprovementWinRate = double("drawn_improvement_win_rate")
-
-    init {
-        uniqueIndex("uq_card_limited_stats_mtga_id_set_code_match_type", mtgaId, setCode, matchType)
-    }
 }

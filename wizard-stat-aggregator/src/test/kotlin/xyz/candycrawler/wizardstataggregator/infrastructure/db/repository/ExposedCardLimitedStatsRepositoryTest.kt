@@ -27,7 +27,7 @@ class ExposedCardLimitedStatsRepositoryTest {
     // ---- saveAll ----
 
     @Test
-    fun `saveAll delegates batch insert to mapper`() {
+    fun `saveAll delegates batch upsert to mapper`() {
         val stats = listOf(buildDomain(mtgaId = 1), buildDomain(mtgaId = 2))
         val expectedRecords = stats.map { it.toRecord() }
 
@@ -124,12 +124,14 @@ class ExposedCardLimitedStatsRepositoryTest {
         mtgaId: Int = 1,
         setCode: String = "DMU",
         matchType: String = "QuickDraft",
+        tier: String? = null,
     ): CardLimitedStatsRecord = CardLimitedStatsRecord(
         id = id,
         name = "Lightning Bolt",
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
+        tier = tier,
         color = "R",
         rarity = "common",
         url = "https://example.com/card/$mtgaId",
@@ -159,12 +161,14 @@ class ExposedCardLimitedStatsRepositoryTest {
         mtgaId: Int = 1,
         setCode: String = "DMU",
         matchType: String = "QuickDraft",
+        tier: String? = null,
     ): CardLimitedStats = CardLimitedStats(
         id = null,
         name = "Lightning Bolt",
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
+        tier = tier,
         color = "R",
         rarity = "common",
         url = "https://example.com/card/$mtgaId",
@@ -196,6 +200,7 @@ class ExposedCardLimitedStatsRepositoryTest {
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
+        tier = tier,
         color = color,
         rarity = rarity,
         url = url,
@@ -227,6 +232,7 @@ class ExposedCardLimitedStatsRepositoryTest {
         mtgaId = mtgaId,
         setCode = setCode,
         matchType = matchType,
+        tier = tier,
         color = color,
         rarity = rarity,
         url = url,

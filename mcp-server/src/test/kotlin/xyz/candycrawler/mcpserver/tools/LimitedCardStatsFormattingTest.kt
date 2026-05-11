@@ -21,6 +21,7 @@ class LimitedCardStatsFormattingTest {
                         {
                           "name": "Premium Common",
                           "mtgaId": 123,
+                          "tier": "A+",
                           "color": "G",
                           "rarity": "common",
                           "winRate": 0.6123,
@@ -38,7 +39,7 @@ class LimitedCardStatsFormattingTest {
         )
 
         assertTrue("Limited stats for DMU (QuickDraft): returned=1, total=42" in report)
-        assertTrue("Premium Common | mtga_id: 123 | G common | WR: 61.2%" in report)
+        assertTrue("Premium Common | mtga_id: 123 | tier: A+ | G common | WR: 61.2%" in report)
         assertTrue("games: 1500" in report)
         assertTrue("ALSA: 3.45" in report)
         assertTrue("drawn WR: 65.4%" in report)

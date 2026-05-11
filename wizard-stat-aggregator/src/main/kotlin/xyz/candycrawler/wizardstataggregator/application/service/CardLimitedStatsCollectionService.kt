@@ -47,7 +47,7 @@ class CardLimitedStatsCollectionService(
                 MatchType.QUICK_DRAFT -> lands17ApiClientFacade.getDraftStatistic(setCode)
                 MatchType.SEALED -> lands17ApiClientFacade.getSealedStatistic(setCode)
             }
-            responses.map { mapper.toDomain(it, setCode, matchType.value) }
+            mapper.toDomain(responses, setCode, matchType.value)
         }.onFailure {
             log.error("Failed to parse {} stats for set={}: {}", matchType.value, setCode, it.message, it)
             alertService.parsingFailed(setCode, matchType.value, it)

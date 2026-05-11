@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Component
@@ -36,6 +38,7 @@ class CardLimitedStatsSqlMapper {
             this[CardLimitedStatsTable.mtgaId] = record.mtgaId
             this[CardLimitedStatsTable.setCode] = record.setCode
             this[CardLimitedStatsTable.matchType] = record.matchType
+            this[CardLimitedStatsTable.tier] = record.tier
             this[CardLimitedStatsTable.color] = record.color
             this[CardLimitedStatsTable.rarity] = record.rarity
             this[CardLimitedStatsTable.url] = record.url
@@ -110,6 +113,17 @@ class CardLimitedStatsSqlMapper {
             conditions.add(CardLimitedStatsTable.mtgaId inList criteria.mtgaIds)
         }
 
+        if (criteria.tiers.isNotEmpty()) {
+            val nonNullTiers = criteria.tiers.filterNotNull()
+            val tierCondition = when {
+                nonNullTiers.isEmpty() -> CardLimitedStatsTable.tier.isNull()
+                null in criteria.tiers ->
+                    CardLimitedStatsTable.tier.isNull() or (CardLimitedStatsTable.tier inList nonNullTiers)
+                else -> CardLimitedStatsTable.tier inList nonNullTiers
+            }
+            conditions.add(tierCondition)
+        }
+
         criteria.minWinRate?.let {
             conditions.add(CardLimitedStatsTable.winRate greaterEq it)
         }
@@ -140,6 +154,7 @@ class CardLimitedStatsSqlMapper {
         mtgaId = this[CardLimitedStatsTable.mtgaId],
         setCode = this[CardLimitedStatsTable.setCode],
         matchType = this[CardLimitedStatsTable.matchType],
+        tier = this[CardLimitedStatsTable.tier],
         color = this[CardLimitedStatsTable.color],
         rarity = this[CardLimitedStatsTable.rarity],
         url = this[CardLimitedStatsTable.url],

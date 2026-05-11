@@ -26,25 +26,25 @@ data class CardStatsResponse(
     @JsonProperty("pool_count")
     val poolCount: Int,
     @JsonProperty("play_rate")
-    val playRate: Double,
+    val playRate: Double?,
     @JsonProperty("win_rate")
-    val winRate: Double,
+    val winRate: Double?,
     @JsonProperty("opening_hand_game_count")
     val openingHandGameCount: Int,
     @JsonProperty("opening_hand_win_rate")
-    val openingHandWinRate: Double,
+    val openingHandWinRate: Double?,
     @JsonProperty("drawn_game_count")
     val drawnGameCount: Int,
     @JsonProperty("drawn_win_rate")
-    val drawnWinRate: Double,
+    val drawnWinRate: Double?,
     @JsonProperty("ever_drawn_game_count")
     val everDrawnGameCount: Int,
     @JsonProperty("ever_drawn_win_rate")
-    val everDrawnWinRate: Double,
+    val everDrawnWinRate: Double?,
     @JsonProperty("never_drawn_game_count")
     val neverDrawnGameCount: Int,
     @JsonProperty("never_drawn_win_rate")
-    val neverDrawnWinRate: Double,
+    val neverDrawnWinRate: Double?,
     @JsonProperty("drawn_improvement_win_rate")
-    val drawnImprovementWinRate: Double,
+    val drawnImprovementWinRate: Double?,
 )

@@ -5,6 +5,7 @@ data class CardLimitedStatsSearchCriteria(
     val matchType: String,
     val names: List<String> = emptyList(),
     val mtgaIds: List<Int> = emptyList(),
+    val tiers: List<String?> = emptyList(),
     val minWinRate: Double? = null,
     val maxWinRate: Double? = null,
     val order: CardLimitedStatsSortOrder = CardLimitedStatsSortOrder.WIN_RATE,
@@ -15,6 +16,7 @@ data class CardLimitedStatsSearchCriteria(
     init {
         require(setCode.isNotBlank()) { "setCode must not be blank" }
         require(matchType.isNotBlank()) { "matchType must not be blank" }
+        tiers.filterNotNull().forEach { require(it.isNotBlank()) { "tiers must not contain blank values" } }
         require(page >= 1) { "page must be >= 1" }
         require(pageSize in 1..MAX_PAGE_SIZE) { "pageSize must be between 1 and $MAX_PAGE_SIZE" }
         minWinRate?.let { require(it in 0.0..1.0) { "minWinRate must be in [0, 1]" } }
