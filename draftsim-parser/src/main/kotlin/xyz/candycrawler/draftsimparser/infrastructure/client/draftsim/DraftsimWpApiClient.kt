@@ -109,10 +109,9 @@ class DraftsimWpApiClient(@Qualifier("draftsimRestClient") private val draftsimR
     }
 
     companion object {
-        internal fun slugify(name: String): String =
-            name.lowercase()
-                .replace(Regex("[^a-z0-9]+"), "-")
-                .trim('-')
+        internal fun slugify(name: String): String = name.lowercase()
+            .replace(Regex("[^a-z0-9]+"), "-")
+            .trim('-')
 
         internal fun filterTagsBySetSlug(tags: List<WpTagResponse>, setSlug: String): List<Long> {
             val requiredTokens = setSlug.split("-").filter { it.isNotBlank() }
