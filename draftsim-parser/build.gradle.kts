@@ -23,6 +23,7 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation(project(":common-scryfall"))
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocWebMVCVersion")
