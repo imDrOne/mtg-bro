@@ -31,6 +31,7 @@ class ArticleAnalysisService(
     private val promptBuilder: ArticleAnalysisPromptBuilder,
     private val objectMapper: ObjectMapper,
     private val vectorIndexService: ArticleVectorIndexService,
+    private val parseAlertService: ParseAlertService,
 ) : ArticleAnalysisConsumer {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -91,11 +92,22 @@ class ArticleAnalysisService(
             }
             vectorIndexService.replaceIndex(updated)
             log.info("Article id={}: analysis done, {} insight entries saved", message.articleId, insights.size)
+            parseAlertService.articleAnalysisSucceeded(
+                articleId = updated.id!!,
+                slug = updated.slug,
+                insightCount = insights.size,
+                articleType = classification.articleType.name.lowercase(),
+            )
         }.onFailure { ex ->
             log.error("Article id={}: analysis failed", message.articleId, ex)
             articleRepository.update(message.articleId) {
                 it.copy(errorMsg = ex.message?.take(ERROR_MESSAGE_MAX_LENGTH), analyzEndedAt = LocalDateTime.now())
             }
+            parseAlertService.articleAnalysisFailed(
+                articleId = message.articleId,
+                slug = article.slug,
+                error = ex,
+            )
         }
     }
 

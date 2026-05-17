@@ -2,10 +2,14 @@ package xyz.candycrawler.draftsimparser.application.service
 
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.AlertPublisher
+import xyz.candycrawler.draftsimparser.configuration.TelegramAlertProperties
 import java.util.UUID
 
 @Service
-class ParseAlertService(private val alertPublisher: AlertPublisher) {
+class ParseAlertService(
+    private val alertPublisher: AlertPublisher,
+    private val telegramAlertProperties: TelegramAlertProperties,
+) {
 
     fun parsingStarted(taskId: UUID, keyword: String) {
         alertPublisher.send(
@@ -68,6 +72,30 @@ class ParseAlertService(private val alertPublisher: AlertPublisher) {
             keyword: $keyword
             error: ${error.shortMessage()}
             #draftsim #parse #failed
+            """.trimIndent(),
+        )
+    }
+
+    fun articleAnalysisSucceeded(articleId: Long, slug: String, insightCount: Int, articleType: String) {
+        if (!telegramAlertProperties.perArticleSuccess) return
+        alertPublisher.send(
+            """
+            ✅ Article analysis done
+            id: $articleId | slug: $slug
+            type: $articleType | insights: $insightCount
+            #draftsim #analysis #success
+            """.trimIndent(),
+        )
+    }
+
+    fun articleAnalysisFailed(articleId: Long, slug: String, error: Throwable) {
+        if (!telegramAlertProperties.perArticleFailure) return
+        alertPublisher.send(
+            """
+            ❌ Article analysis failed
+            id: $articleId | slug: $slug
+            error: ${error.shortMessage()}
+            #draftsim #analysis #failed
             """.trimIndent(),
         )
     }
