@@ -43,6 +43,7 @@ class ArticleSqlMapperPreserveAnalyzedTextTest(@Autowired private val sqlMapper:
             id,
             initial.copy(
                 analyzedText = """{"schema_version":2}""",
+                keywords = listOf("foundation", "draft"),
                 favorite = true,
                 errorMsg = "prior-error",
                 analyzStartedAt = now,
@@ -87,5 +88,6 @@ class ArticleSqlMapperPreserveAnalyzedTextTest(@Autowired private val sqlMapper:
         assertEquals("prior-error", result.errorMsg)
         assertNotNull(result.analyzStartedAt)
         assertNotNull(result.analyzEndedAt)
+        assertEquals(listOf("foundation", "draft"), result.keywords)
     }
 }
