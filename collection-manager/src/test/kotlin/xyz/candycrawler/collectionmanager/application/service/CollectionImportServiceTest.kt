@@ -9,12 +9,12 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import xyz.candycrawler.collectionmanager.application.parser.TcgPlayerFileParser
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.CardIdentifier
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.ScryfallCollectionRequest
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallCardResponse
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallCollectionResponse
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.mapper.ScryfallCardResponseToCardMapper
+import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.common.scryfall.dto.request.ScryfallCardIdentifier
+import xyz.candycrawler.common.scryfall.dto.request.ScryfallCollectionRequest
+import xyz.candycrawler.common.scryfall.dto.response.ScryfallCardResponse
+import xyz.candycrawler.common.scryfall.dto.response.ScryfallCollectionResponse
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -76,7 +76,7 @@ class CollectionImportServiceTest {
 
         val identifiers = requestCaptor.firstValue.identifiers
         assertEquals(1, identifiers.size)
-        assertEquals(CardIdentifier(set = "ecl", collectorNumber = "218"), identifiers.single())
+        assertEquals(ScryfallCardIdentifier(set = "ecl", collectorNumber = "218", id = null), identifiers.single())
     }
 
     @Test
@@ -106,7 +106,7 @@ class CollectionImportServiceTest {
     fun `import returns notFound from scryfall response`() = runTest {
         val content = "1 Unknown Card [XXX] 999"
 
-        val notFound = listOf(CardIdentifier(set = "xxx", collectorNumber = "999"))
+        val notFound = listOf(ScryfallCardIdentifier(set = "xxx", collectorNumber = "999", id = null))
         whenever(scryfallApiClient.fetchCollection(any())).thenReturn(
             buildScryfallResponse(data = emptyList(), notFound = notFound),
         )
@@ -144,7 +144,7 @@ class CollectionImportServiceTest {
         assertTrue(result.notFound.isEmpty())
     }
 
-    private fun buildScryfallResponse(data: List<ScryfallCardResponse>, notFound: List<CardIdentifier>) =
+    private fun buildScryfallResponse(data: List<ScryfallCardResponse>, notFound: List<ScryfallCardIdentifier>) =
         ScryfallCollectionResponse(data = data, notFound = notFound)
 
     private fun buildScryfallCardResponse(setCode: String, collectorNumber: String) = ScryfallCardResponse(

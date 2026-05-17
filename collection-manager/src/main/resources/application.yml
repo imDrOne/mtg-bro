@@ -31,13 +31,11 @@ springdoc:
   api-docs:
     path: /api-docs
 
-infrastructure:
-  http:
-    client:
-      scryfall:
-        base-url: ${SCRYFALL_BASE_URL:https://api.scryfall.com}
-        retry:
-          max-attempts: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS:3}
-          initial-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS:100}
-          multiplier: ${HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER:2.0}
-          max-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS:2000}
+scryfall:
+  client:
+    base-url: ${SCRYFALL_BASE_URL:https://api.scryfall.com}
+    retry:
+      max-attempts: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS:3}
+      initial-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS:100}
+      multiplier: ${HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER:2.0}
+      max-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS:2000}

@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallSearchResponse
+import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.common.scryfall.dto.response.ScryfallSearchResponse
 
 @Tag(name = "Scryfall Proxy", description = "Proxy endpoints for Scryfall API (for UI consumption)")
 @RestController
