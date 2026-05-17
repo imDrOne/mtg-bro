@@ -18,6 +18,34 @@ class ParseAlertService(private val alertPublisher: AlertPublisher) {
         )
     }
 
+    fun schedulerRunStarted(setCodes: List<String>) {
+        alertPublisher.send(
+            """
+            🛰️ Draftsim scheduled parse started
+            sets: ${setCodes.joinToString()}
+            #draftsim #parse #scheduler #started
+            """.trimIndent(),
+        )
+    }
+
+    fun parsingFinished(
+        taskId: UUID,
+        keyword: String,
+        totalArticles: Int,
+        savedArticles: Int,
+        queuedForAnalysis: Int,
+    ) {
+        alertPublisher.send(
+            """
+            ✅ Draftsim parsing finished
+            taskId: $taskId
+            keyword: $keyword
+            total: $totalArticles | saved: $savedArticles | queued: $queuedForAnalysis
+            #draftsim #parse #finished
+            """.trimIndent(),
+        )
+    }
+
     fun articleParsingFailed(taskId: UUID, keyword: String, postId: Long?, postUrl: String?, error: Throwable) {
         alertPublisher.send(
             """
