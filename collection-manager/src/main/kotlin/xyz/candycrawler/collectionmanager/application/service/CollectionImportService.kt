@@ -53,7 +53,9 @@ class CollectionImportService(
             keys.chunked(SCRYFALL_BATCH_SIZE).map { batch ->
                 async(Dispatchers.IO) {
                     val request = ScryfallCollectionRequest(
-                        identifiers = batch.map { ScryfallCardIdentifier(set = it.first, collectorNumber = it.second, id = null) },
+                        identifiers = batch.map {
+                            ScryfallCardIdentifier(set = it.first, collectorNumber = it.second, id = null)
+                        },
                     )
                     scryfallApiClient.fetchCollection(request)
                 }
