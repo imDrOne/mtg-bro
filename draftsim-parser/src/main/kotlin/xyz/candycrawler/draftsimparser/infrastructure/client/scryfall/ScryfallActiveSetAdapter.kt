@@ -25,19 +25,17 @@ class ScryfallActiveSetAdapter(
         log.debug("Fetched {} sets from Scryfall", sets.size)
 
         return sets
-            .filter { set ->
+            .mapNotNull { set ->
                 val released = set.releasedAt?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-                    ?: return@filter false
-                released in windowStart..today &&
-                    set.setType in allowedTypes &&
-                    set.cardCount > 0 &&
-                    (!set.digital || properties.includeDigital)
-            }
-            .map { set ->
+                    ?: return@mapNotNull null
+                if (released !in windowStart..today) return@mapNotNull null
+                if (set.setType !in allowedTypes) return@mapNotNull null
+                if (set.cardCount <= 0) return@mapNotNull null
+                if (set.digital && !properties.includeDigital) return@mapNotNull null
                 ActiveSet(
                     code = set.code,
                     name = set.name,
-                    releasedAt = LocalDate.parse(set.releasedAt!!),
+                    releasedAt = released,
                     setType = set.setType,
                 )
             }
