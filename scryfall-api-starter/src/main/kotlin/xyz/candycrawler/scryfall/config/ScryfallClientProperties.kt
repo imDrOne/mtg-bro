@@ -1,4 +1,4 @@
-package xyz.candycrawler.common.scryfall.config
+package xyz.candycrawler.scryfall.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

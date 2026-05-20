@@ -2,10 +2,10 @@ package xyz.candycrawler.draftsimparser.infrastructure.client.scryfall
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
 import xyz.candycrawler.draftsimparser.application.port.ActiveSetSource
 import xyz.candycrawler.draftsimparser.configuration.ActiveSetProperties
 import xyz.candycrawler.draftsimparser.domain.set.model.ActiveSet
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
 import java.time.LocalDate
 
 @Component

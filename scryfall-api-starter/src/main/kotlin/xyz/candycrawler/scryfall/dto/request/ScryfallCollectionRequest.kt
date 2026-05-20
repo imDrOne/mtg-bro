@@ -1,4 +1,4 @@
-package xyz.candycrawler.common.scryfall.dto.request
+package xyz.candycrawler.scryfall.dto.request
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

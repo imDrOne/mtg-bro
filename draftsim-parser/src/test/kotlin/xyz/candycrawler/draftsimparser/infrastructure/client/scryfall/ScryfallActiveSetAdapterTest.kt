@@ -2,10 +2,10 @@ package xyz.candycrawler.draftsimparser.infrastructure.client.scryfall
 
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallSetResponse
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallSetsResponse
 import xyz.candycrawler.draftsimparser.configuration.ActiveSetProperties
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.scryfall.dto.response.ScryfallSetResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallSetsResponse
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals

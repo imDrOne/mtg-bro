@@ -1,4 +1,4 @@
-package xyz.candycrawler.common.scryfall.config.interceptor
+package xyz.candycrawler.scryfall.config.interceptor
 
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpRequest

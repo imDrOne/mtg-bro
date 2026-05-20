@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import xyz.candycrawler.collectionmanager.application.parser.CollectionFileParser
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.mapper.ScryfallCardResponseToCardMapper
-import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
-import xyz.candycrawler.common.scryfall.dto.request.ScryfallCardIdentifier
-import xyz.candycrawler.common.scryfall.dto.request.ScryfallCollectionRequest
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallCollectionResponse
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.scryfall.dto.request.ScryfallCardIdentifier
+import xyz.candycrawler.scryfall.dto.request.ScryfallCollectionRequest
+import xyz.candycrawler.scryfall.dto.response.ScryfallCollectionResponse
 
 @Service
 class CollectionImportService(

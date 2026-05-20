@@ -2,7 +2,7 @@ package xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.mapper
 
 import org.springframework.stereotype.Component
 import xyz.candycrawler.collectionmanager.domain.card.model.Card
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallCardResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallCardResponse
 import java.time.LocalDate
 import java.util.function.Function
 

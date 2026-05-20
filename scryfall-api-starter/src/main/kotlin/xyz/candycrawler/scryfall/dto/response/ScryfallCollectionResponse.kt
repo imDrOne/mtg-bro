@@ -1,7 +1,7 @@
-package xyz.candycrawler.common.scryfall.dto.response
+package xyz.candycrawler.scryfall.dto.response
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import xyz.candycrawler.common.scryfall.dto.request.ScryfallCardIdentifier
+import xyz.candycrawler.scryfall.dto.request.ScryfallCardIdentifier
 
 data class ScryfallCollectionResponse(
     val data: List<ScryfallCardResponse>,

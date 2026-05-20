@@ -1,14 +1,14 @@
-package xyz.candycrawler.common.scryfall.client
+package xyz.candycrawler.scryfall.client
 
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.service.annotation.GetExchange
 import org.springframework.web.service.annotation.PostExchange
-import xyz.candycrawler.common.scryfall.dto.request.ScryfallCollectionRequest
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallCatalogResponse
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallCollectionResponse
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallSearchResponse
-import xyz.candycrawler.common.scryfall.dto.response.ScryfallSetsResponse
+import xyz.candycrawler.scryfall.dto.request.ScryfallCollectionRequest
+import xyz.candycrawler.scryfall.dto.response.ScryfallCatalogResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallCollectionResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallSearchResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallSetsResponse
 
 interface ScryfallApiClient {
 

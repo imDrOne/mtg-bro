@@ -1,4 +1,4 @@
-package xyz.candycrawler.common.scryfall.config
+package xyz.candycrawler.scryfall.config
 
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -13,9 +13,9 @@ import org.springframework.web.service.invoker.createClient
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.module.kotlin.jsonMapper
 import tools.jackson.module.kotlin.kotlinModule
-import xyz.candycrawler.common.scryfall.client.ScryfallApiClient
-import xyz.candycrawler.common.scryfall.config.interceptor.LoggingClientHttpRequestInterceptor
-import xyz.candycrawler.common.scryfall.config.interceptor.RetryClientHttpRequestInterceptor
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.scryfall.config.interceptor.LoggingClientHttpRequestInterceptor
+import xyz.candycrawler.scryfall.config.interceptor.RetryClientHttpRequestInterceptor
 
 @AutoConfiguration
 @EnableConfigurationProperties(ScryfallClientProperties::class)
