@@ -6,11 +6,8 @@ import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticlePage
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
-import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSortField
-import xyz.candycrawler.draftsimparser.domain.article.model.SortDirection
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
-import java.time.LocalDate
 
 @Service
 class ArticleService(
@@ -24,29 +21,8 @@ class ArticleService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun search(
-        query: String?,
-        page: Int,
-        pageSize: Int,
-        favoriteOnly: Boolean?,
-        setCode: String? = null,
-        publishedFrom: LocalDate? = null,
-        publishedTo: LocalDate? = null,
-        sortBy: ArticleSortField = ArticleSortField.PUBLISHED_AT,
-        sortDirection: SortDirection = SortDirection.DESC,
-    ): ArticlePage = queryArticleRepository.search(
-        filter = ArticleSearchFilter(
-            query = query,
-            favoriteOnly = favoriteOnly,
-            setCode = setCode,
-            publishedFrom = publishedFrom,
-            publishedTo = publishedTo,
-            sortBy = sortBy,
-            sortDirection = sortDirection,
-        ),
-        page = page,
-        pageSize = pageSize,
-    )
+    fun search(filter: ArticleSearchFilter, page: Int, pageSize: Int): ArticlePage =
+        queryArticleRepository.search(filter, page, pageSize)
 
     fun semanticSearch(
         query: String,

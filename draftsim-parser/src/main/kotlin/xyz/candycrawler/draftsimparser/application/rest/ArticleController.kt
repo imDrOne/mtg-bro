@@ -27,6 +27,7 @@ import xyz.candycrawler.draftsimparser.application.rest.dto.response.toResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSemanticSearchResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSummaryResponse
 import xyz.candycrawler.draftsimparser.application.service.ArticleService
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSortField
 import xyz.candycrawler.draftsimparser.domain.article.model.SortDirection
 import java.time.LocalDate
@@ -48,15 +49,17 @@ class ArticleController(private val articleService: ArticleService) {
         @RequestParam(defaultValue = "PUBLISHED_AT") sortBy: ArticleSortField,
         @RequestParam(defaultValue = "DESC") sortDirection: SortDirection,
     ): ArticlePageResponse = articleService.search(
-        query = q,
+        filter = ArticleSearchFilter(
+            query = q,
+            favoriteOnly = favorite,
+            setCode = setCode,
+            publishedFrom = publishedFrom,
+            publishedTo = publishedTo,
+            sortBy = sortBy,
+            sortDirection = sortDirection,
+        ),
         page = page,
         pageSize = pageSize,
-        favoriteOnly = favorite,
-        setCode = setCode,
-        publishedFrom = publishedFrom,
-        publishedTo = publishedTo,
-        sortBy = sortBy,
-        sortDirection = sortDirection,
     ).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
