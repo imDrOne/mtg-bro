@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -40,7 +39,7 @@ suspend fun handleGetCard(
                 parameter("set", setCode)
                 parameter("collector_number", collectorNumber)
                 parameter("page_size", 1)
-            }.body<String>()
+            }.readTextOrFail("GET /api/v1/cards/search")
 
             val json = Json.parseToJsonElement(response).jsonObject
             val data = json["data"]?.jsonArray
@@ -57,7 +56,18 @@ suspend fun handleGetCard(
         }
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 private fun formatCardDetail(card: JsonObject): String {

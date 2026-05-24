@@ -4,6 +4,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -78,7 +79,18 @@ suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): Call
         }
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 private suspend fun saveDeck(
@@ -103,6 +115,8 @@ private suspend fun saveDeck(
     }
 
     val responseText = response.bodyAsText()
+
+    if (response.status == HttpStatusCode.Unauthorized) throw DownstreamUnauthorizedException("POST /decks")
 
     return when {
         response.status.value == UNPROCESSABLE_ENTITY_STATUS -> {

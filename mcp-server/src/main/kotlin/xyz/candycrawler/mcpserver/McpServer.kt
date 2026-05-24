@@ -1,9 +1,12 @@
 package xyz.candycrawler.mcpserver
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpSendPipeline
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -49,12 +52,22 @@ import io.ktor.client.engine.cio.CIO as ClientCIO
 fun createServer(
     baseUrl: String,
     draftsimParserBaseUrl: String,
-    wizardStatAggregatorBaseUrl: String = "http://localhost:8082",
+    wizardStatAggregatorBaseUrl: String,
     draftsimSearchConfig: DraftsimSearchConfig = DraftsimSearchConfig(),
 ): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 10_000
+            socketTimeoutMillis = 30_000
+        }
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 3)
+            exponentialDelay()
+            retryIf { _, response -> !response.status.isSuccess() && response.status.value >= 500 }
         }
     }
     httpClient.sendPipeline.intercept(HttpSendPipeline.State) {

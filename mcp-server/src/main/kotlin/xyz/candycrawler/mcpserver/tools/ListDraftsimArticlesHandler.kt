@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
@@ -42,13 +41,24 @@ suspend fun handleListDraftsimArticles(context: ToolContext, request: CallToolRe
             parameter("page", options.page)
             parameter("pageSize", options.pageSize)
             parameter("favorite", options.favorite)
-        }.body<String>()
+        }.readTextOrFail("GET /api/v1/articles")
 
         val summary = formatDraftsimArticleList(Json.parseToJsonElement(response).jsonObject)
             ?: return CallToolResult(content = listOf(TextContent("No Draftsim articles found")))
         CallToolResult(content = listOf(TextContent(summary)))
     }.getOrElse { e ->
-        CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+        when (e) {
+            is DownstreamUnauthorizedException -> CallToolResult(
+                content = listOf(
+                    TextContent(
+                        "Your session expired. Claude should refresh automatically — " +
+                            "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                    ),
+                ),
+                isError = true,
+            )
+            else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+        }
     }
 }
 

@@ -51,16 +51,15 @@ class HttpResponseUtilTest {
     }
 
     @Test
-    fun `401 Unauthorized with empty body throws DownstreamHttpException with status and endpointLabel`() = runBlocking {
+    fun `401 Unauthorized throws DownstreamUnauthorizedException with endpointLabel`() = runBlocking {
         val client = mockClient(HttpStatusCode.Unauthorized, "")
 
-        val exception = assertFailsWith<DownstreamHttpException> {
+        val exception = assertFailsWith<DownstreamUnauthorizedException> {
             client.get("http://test/endpoint").readTextOrFail("my-service")
         }
 
-        assertEquals(401, exception.status)
         assertTrue("my-service" in exception.message!!)
-        assertTrue("<empty>" in exception.message!!)
+        assertTrue("401" in exception.message!!)
     }
 
     @Test

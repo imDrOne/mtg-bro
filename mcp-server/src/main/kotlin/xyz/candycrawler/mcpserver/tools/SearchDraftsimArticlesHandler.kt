@@ -60,7 +60,18 @@ suspend fun handleSearchDraftsimArticles(
             ?: searchDraftsimArticlesFallback(context, query, page, pageSize)
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 private suspend fun searchDraftsimArticlesFallback(
