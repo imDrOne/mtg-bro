@@ -28,13 +28,17 @@ import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSemanticS
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSummaryResponse
 import xyz.candycrawler.draftsimparser.application.service.ArticleService
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
+import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSortField
 import xyz.candycrawler.draftsimparser.domain.article.model.SortDirection
 import java.time.LocalDate
 
 @RestController
 @RequestMapping("/api/v1/articles")
-class ArticleController(private val articleService: ArticleService) {
+class ArticleController(
+    private val articleService: ArticleService,
+    private val queryArticleRepository: QueryArticleRepository,
+) {
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping
@@ -48,7 +52,7 @@ class ArticleController(private val articleService: ArticleService) {
         @RequestParam(required = false) publishedTo: LocalDate?,
         @RequestParam(defaultValue = "PUBLISHED_AT") sortBy: ArticleSortField,
         @RequestParam(defaultValue = "DESC") sortDirection: SortDirection,
-    ): ArticlePageResponse = articleService.search(
+    ): ArticlePageResponse = queryArticleRepository.search(
         filter = ArticleSearchFilter(
             query = q,
             favoriteOnly = favorite,

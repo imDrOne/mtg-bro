@@ -4,8 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
-import xyz.candycrawler.draftsimparser.domain.article.model.ArticlePage
-import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 
@@ -20,9 +18,6 @@ class ArticleService(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    fun search(filter: ArticleSearchFilter, page: Int, pageSize: Int): ArticlePage =
-        queryArticleRepository.search(filter, page, pageSize)
 
     fun semanticSearch(
         query: String,
