@@ -26,7 +26,9 @@ class ArticleParseRunnerTest {
     private class MutableTicker : Ticker {
         var nanos: Long = 0L
         override fun read(): Long = nanos
-        fun advance(duration: Duration) { nanos += duration.toNanos() }
+        fun advance(duration: Duration) {
+            nanos += duration.toNanos()
+        }
     }
 
     private val ticker = MutableTicker()
