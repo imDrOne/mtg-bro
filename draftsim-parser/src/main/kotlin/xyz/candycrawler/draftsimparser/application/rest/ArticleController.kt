@@ -26,6 +26,7 @@ import xyz.candycrawler.draftsimparser.application.rest.dto.response.toAnalysisR
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSemanticSearchResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSummaryResponse
+import xyz.candycrawler.draftsimparser.application.service.ArticleSemanticSearchService
 import xyz.candycrawler.draftsimparser.application.service.ArticleService
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
@@ -38,6 +39,7 @@ import java.time.LocalDate
 class ArticleController(
     private val articleService: ArticleService,
     private val queryArticleRepository: QueryArticleRepository,
+    private val articleSemanticSearchService: ArticleSemanticSearchService,
 ) {
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
@@ -69,7 +71,7 @@ class ArticleController(
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/search/semantic")
     fun semanticSearch(@RequestBody request: SemanticArticleSearchRequest): SemanticArticleSearchResponse =
-        articleService.semanticSearch(
+        articleSemanticSearchService.search(
             query = request.query,
             topK = request.topK,
             similarityThreshold = request.similarityThreshold,

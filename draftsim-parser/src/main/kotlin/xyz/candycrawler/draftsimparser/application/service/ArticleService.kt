@@ -19,14 +19,6 @@ class ArticleService(
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun semanticSearch(
-        query: String,
-        topK: Int?,
-        similarityThreshold: Double?,
-        favoriteOnly: Boolean?,
-    ): List<ArticleSemanticSearchResult> =
-        articleSemanticSearchService.search(query, topK, similarityThreshold, favoriteOnly)
-
     fun findById(id: Long): Article = queryArticleRepository.findById(id)
 
     fun updateFavorite(id: Long, favorite: Boolean): Article =
