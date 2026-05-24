@@ -6,6 +6,7 @@ Usage: python3 scripts/deploy.py
 Requires: pip install rich questionary
 """
 
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -211,10 +212,87 @@ def run_deploy(module: str, version: str) -> bool:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Deploy tool for mtg-bro modules.",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "--modules", "-m",
+        metavar="NAME,...",
+        help="Comma-separated modules to deploy.\nAvailable: " + ", ".join(MODULES),
+    )
+    parser.add_argument(
+        "--bump", "-b",
+        choices=["PATCH", "MINOR", "MAJOR"],
+        metavar="TYPE",
+        help="Version bump type: PATCH, MINOR, or MAJOR",
+    )
+    parser.add_argument(
+        "--yes", "-y",
+        action="store_true",
+        help="Skip confirmation prompt",
+    )
+    args = parser.parse_args()
+
+    # --- Non-interactive path ---
+    if args.modules and args.bump:
+        selected = [m.strip() for m in args.modules.split(",")]
+        unknown = set(selected) - set(MODULES)
+        if unknown:
+            console.print(f"[bold red]ERROR:[/] unknown module(s): {', '.join(sorted(unknown))}")
+            console.print(f"Available: {', '.join(MODULES)}")
+            sys.exit(1)
+        bump = args.bump
+
+        plan = []
+        for m in selected:
+            tag = get_latest_tag(m)
+            plan.append({
+                "module":  m,
+                "current": current_version_str(m),
+                "bump":    bump,
+                "next":    bump_version(tag, bump),
+            })
+
+        print_summary_table(plan)
+
+        if not args.yes:
+            confirmed = questionary.confirm("Deploy now?", default=True, style=STYLE).ask()
+            if not confirmed:
+                console.print("[dim]Aborted.[/]")
+                sys.exit(0)
+            console.print()
+
+        ok, fail = 0, 0
+        for p in plan:
+            success = run_deploy(p["module"], p["next"])
+            if success:
+                ok += 1
+            else:
+                fail += 1
+
+        console.print()
+        if fail == 0:
+            lines = [f"[bold #34d399]✓ All {ok} module(s) deployed — pipelines running:[/]"]
+            for p in plan:
+                url = pipeline_url(p["module"])
+                if url:
+                    lines.append(f"  [dim]{p['module']}[/]  [link={url}]{url}[/link]")
+            console.print(Panel("\n".join(lines), border_style="#34d399", padding=(0, 2)))
+        else:
+            lines = [f"[bold #34d399]✓ {ok} succeeded[/]  [bold red]✗ {fail} failed[/]"]
+            for p in plan:
+                url = pipeline_url(p["module"])
+                if url:
+                    lines.append(f"  [dim]{p['module']}[/]  [link={url}]{url}[/link]")
+            console.print(Panel("\n".join(lines), border_style="red", padding=(0, 2)))
+            sys.exit(1)
+        return
+
+    # --- Interactive path (original) ---
     print_banner()
     preflight_check()
 
-    # Step 1: select modules
     selected = questionary.checkbox(
         "Select modules to deploy:",
         choices=MODULES,
@@ -228,7 +306,6 @@ def main() -> None:
 
     console.print()
 
-    # Step 2: select bump type
     bump = questionary.select(
         "Version bump type:",
         choices=[
@@ -245,7 +322,6 @@ def main() -> None:
 
     console.print()
 
-    # Build plan
     plan = []
     for m in selected:
         tag = get_latest_tag(m)
@@ -258,10 +334,7 @@ def main() -> None:
 
     print_summary_table(plan)
 
-    # Confirm
-    confirmed = questionary.confirm(
-        "Deploy now?", default=True, style=STYLE,
-    ).ask()
+    confirmed = questionary.confirm("Deploy now?", default=True, style=STYLE).ask()
 
     if not confirmed:
         console.print("[dim]Aborted.[/]")
@@ -269,7 +342,6 @@ def main() -> None:
 
     console.print()
 
-    # Deploy
     ok, fail = 0, 0
     for p in plan:
         success = run_deploy(p["module"], p["next"])
