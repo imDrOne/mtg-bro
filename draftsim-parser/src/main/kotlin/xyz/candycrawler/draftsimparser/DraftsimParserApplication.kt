@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication
 class DraftsimParserApplication
 
+@Suppress("SpreadOperator")
 fun main(args: Array<String>) {
     runApplication<DraftsimParserApplication>(*args)
 }

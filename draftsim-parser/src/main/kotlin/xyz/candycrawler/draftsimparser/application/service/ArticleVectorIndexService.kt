@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,10 +29,11 @@ class ArticleVectorIndexService(
     private val vectorStoreProvider: ObjectProvider<ArticleVectorStore>,
     private val objectMapper: ObjectMapper,
     @Value("\${infrastructure.vector-index.enabled}") private val enabled: Boolean,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val semaphore = Semaphore(MAX_CONCURRENT_VECTOR_INDEXES)
 
     fun replaceIndex(article: Article) {
@@ -114,7 +116,7 @@ class ArticleVectorIndexService(
 
     private fun buildMetadata(article: Article, root: JsonNode, insight: JsonNode, index: Int): Map<String, Any> =
         buildMap {
-            put("article_id", article.id!!)
+            put("article_id", requireNotNull(article.id))
             put("insight_index", index)
             put("title", article.title)
             put("slug", article.slug)

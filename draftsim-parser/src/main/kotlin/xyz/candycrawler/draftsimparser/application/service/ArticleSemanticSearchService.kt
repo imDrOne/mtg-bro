@@ -27,6 +27,7 @@ data class ArticleSemanticSearchMatch(
     val tags: List<String>,
 )
 
+@Suppress("LongParameterList")
 @Service
 class ArticleSemanticSearchService(
     private val vectorStoreProvider: ObjectProvider<ArticleVectorStore>,

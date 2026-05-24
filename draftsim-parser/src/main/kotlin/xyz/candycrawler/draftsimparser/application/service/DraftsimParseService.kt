@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,6 +30,7 @@ import java.util.UUID
 
 private typealias ArticleFetchStrategy = suspend (page: Int) -> DraftsimArticleSearchResult
 
+@Suppress("LongParameterList")
 @Service
 class DraftsimParseService(
     private val parseTaskRepository: ParseTaskRepository,
@@ -38,10 +40,11 @@ class DraftsimParseService(
     private val parseAlertService: ParseAlertService,
     private val articleKeywordExtractor: ArticleKeywordExtractor,
     @Value("\${infrastructure.analysis.auto-publish}") private val autoPublish: Boolean,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
     fun startParsing(keyword: String): UUID =
         startParseTask(keyword) { page -> articleSource.searchArticles(keyword, page) }
@@ -70,7 +73,7 @@ class DraftsimParseService(
                 updatedAt = now,
             ),
         )
-        val taskId = task.id!!
+        val taskId = requireNotNull(task.id)
 
         scope.launch {
             runCatching {
@@ -151,7 +154,7 @@ class DraftsimParseService(
         log.info("Task {}: fetched {} articles, queuing analysis", taskId, savedArticles.size)
 
         val toAnalyze = if (autoPublish) savedArticles.filter { it.analyzedText == null } else emptyList()
-        toAnalyze.forEach { article -> articleAnalysisPublisher.publish(article.id!!) }
+        toAnalyze.forEach { article -> articleAnalysisPublisher.publish(requireNotNull(article.id)) }
 
         parseTaskRepository.update(taskId) {
             it.copy(status = ParseTaskStatus.COMPLETED, updatedAt = LocalDateTime.now())
@@ -186,7 +189,7 @@ class DraftsimParseService(
             fetchedAt = LocalDateTime.now(),
         )
         val saved = articleRepository.save(article)
-        val savedArticleId = saved.id!!
+        val savedArticleId = requireNotNull(saved.id)
         articleRepository.saveTaskArticleLink(taskId, savedArticleId)
         val keywords = articleKeywordExtractor.extract(saved.textContent)
         return articleRepository.update(savedArticleId) { it.copy(keywords = keywords) }

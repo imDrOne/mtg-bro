@@ -22,7 +22,7 @@ data class ArticleResponse(
 )
 
 fun Article.toResponse() = ArticleResponse(
-    id = id!!,
+    id = requireNotNull(id),
     externalId = externalId,
     title = title,
     slug = slug,
