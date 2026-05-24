@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.rest
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -42,6 +43,8 @@ class ArticleController(
     private val articleSemanticSearchService: ArticleSemanticSearchService,
 ) {
 
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping
     fun search(
@@ -80,7 +83,7 @@ class ArticleController(
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): ArticleResponse = articleService.findById(id).toResponse()
+    fun getById(@PathVariable id: Long): ArticleResponse = queryArticleRepository.findById(id).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @PatchMapping("/{id}/favorite")
@@ -108,5 +111,9 @@ class ArticleController(
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/by-ids")
     fun getByIds(@RequestBody request: GetArticlesByIdsRequest): List<ArticleAnalysisResponse> =
-        articleService.findByIds(request.ids).map { it.toAnalysisResponse() }
+        request.ids.mapNotNull { id ->
+            runCatching { queryArticleRepository.findById(id) }
+                .onFailure { log.warn("getByIds: id={} not found, skipping", id) }
+                .getOrNull()
+        }.map { it.toAnalysisResponse() }
 }
