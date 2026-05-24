@@ -99,6 +99,7 @@ If DCR doesn't work (fallback, manual configuration):
 |-------------------------------|-------------------------|----------------------------------------|
 | `COLLECTION_MANAGER_BASE_URL` | `http://localhost:8080` | collection-manager API URL             |
 | `DRAFTSIM_PARSER_BASE_URL`    | `http://localhost:8081` | draftsim-parser API URL                |
+| `WIZARD_STAT_AGGREGATOR_BASE_URL` | `http://localhost:8082` | wizard-stat-aggregator API URL |
 | `DRAFTSIM_SEMANTIC_SIMILARITY_THRESHOLDS` | `0.80,0.65,0.50` | Ordered CSV thresholds for Draftsim semantic retry |
 | `MCP_TRANSPORT`               | `stdio`                 | Transport mode                         |
 | `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport)  |
