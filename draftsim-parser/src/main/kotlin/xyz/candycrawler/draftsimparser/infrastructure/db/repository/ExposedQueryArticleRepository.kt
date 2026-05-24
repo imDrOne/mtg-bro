@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional
 import xyz.candycrawler.draftsimparser.domain.article.exception.ArticleNotFoundException
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
 import xyz.candycrawler.draftsimparser.domain.article.model.ArticlePage
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 import xyz.candycrawler.draftsimparser.infrastructure.db.mapper.ArticleRecordToArticleMapper
 import xyz.candycrawler.draftsimparser.infrastructure.db.mapper.sql.ArticleSqlMapper
@@ -20,10 +21,10 @@ class ExposedQueryArticleRepository(
     override fun findById(id: Long): Article = sqlMapper.selectById(id)?.let(toDomain::apply)
         ?: throw ArticleNotFoundException(id)
 
-    override fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean?): ArticlePage {
+    override fun search(filter: ArticleSearchFilter, page: Int, pageSize: Int): ArticlePage {
         val offset = ((page - 1) * pageSize).toLong()
-        val records = sqlMapper.search(query, pageSize, offset, favoriteOnly)
-        val total = sqlMapper.countSearch(query, favoriteOnly)
+        val records = sqlMapper.search(filter, pageSize, offset)
+        val total = sqlMapper.countSearch(filter)
         return ArticlePage(
             articles = records.map(toDomain::apply),
             totalArticles = total,
