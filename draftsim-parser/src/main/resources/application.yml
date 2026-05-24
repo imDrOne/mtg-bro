@@ -93,3 +93,4 @@ scheduler:
   article-parse:
     enabled: ${SCHEDULER_ARTICLE_PARSE_ENABLED:false}
     cron: ${SCHEDULER_ARTICLE_PARSE_CRON:@daily}
+    manual-cooldown: ${SCHEDULER_ARTICLE_PARSE_MANUAL_COOLDOWN:PT12H}

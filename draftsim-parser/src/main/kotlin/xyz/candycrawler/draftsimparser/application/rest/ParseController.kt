@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import xyz.candycrawler.draftsimparser.application.rest.dto.request.StartParseRequest
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.ParseTaskResponse
+import xyz.candycrawler.draftsimparser.application.rest.dto.response.TriggerParseResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toResponse
+import xyz.candycrawler.draftsimparser.application.service.ArticleParseRunner
 import xyz.candycrawler.draftsimparser.application.service.DraftsimParseService
 import xyz.candycrawler.draftsimparser.domain.parsetask.repository.ParseTaskRepository
 import java.util.UUID
@@ -21,6 +23,7 @@ import java.util.UUID
 class ParseController(
     private val parseService: DraftsimParseService,
     private val parseTaskRepository: ParseTaskRepository,
+    private val runner: ArticleParseRunner,
 ) {
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
@@ -29,6 +32,14 @@ class ParseController(
     fun startParse(@RequestBody request: StartParseRequest): Map<String, UUID> {
         val taskId = parseService.startParsing(request.keyword)
         return mapOf("taskId" to taskId)
+    }
+
+    @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
+    @PostMapping("/trigger")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    fun triggerScheduledParse(): TriggerParseResponse {
+        val result = runner.triggerManual()
+        return TriggerParseResponse(result.tasks.size, result.tasks)
     }
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")

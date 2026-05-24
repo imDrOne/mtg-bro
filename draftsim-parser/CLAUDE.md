@@ -69,6 +69,7 @@ Same hexagonal pattern as other Spring modules:
 | `HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS` | `2000` | No | Max retry delay (ms) |
 | `SCHEDULER_ARTICLE_PARSE_ENABLED` | `false` | No | Enable scheduled article parsing |
 | `SCHEDULER_ARTICLE_PARSE_CRON` | `@daily` | No | Cron expression for article parse scheduler |
+| `SCHEDULER_ARTICLE_PARSE_MANUAL_COOLDOWN` | `PT12H` | No | Cooldown after manual force-parse during which the cron scheduler skips auto-run |
 | `ACTIVE_SETS_WINDOW_DAYS` | `365` | No | Days back to consider a set "active" |
 | `ACTIVE_SETS_INCLUDE_DIGITAL` | `false` | No | Include digital-only sets |
 | `TELEGRAM_ALERT_PER_ARTICLE_SUCCESS` | `false` | No | Send Telegram alert per successful article analysis |

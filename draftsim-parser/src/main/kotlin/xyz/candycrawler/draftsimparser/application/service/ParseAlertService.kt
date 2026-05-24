@@ -3,6 +3,8 @@ package xyz.candycrawler.draftsimparser.application.service
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.AlertPublisher
 import xyz.candycrawler.draftsimparser.configuration.TelegramAlertProperties
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @Service
@@ -96,6 +98,17 @@ class ParseAlertService(
             id: $articleId | slug: $slug
             error: ${error.shortMessage()}
             #draftsim #analysis #failed
+            """.trimIndent(),
+        )
+    }
+
+    fun schedulerSkippedDueToCooldown(lastManual: Instant, cooldown: Duration) {
+        alertPublisher.send(
+            """
+            ⏸️ Scheduled parse skipped (manual cooldown)
+            last manual: $lastManual
+            cooldown: $cooldown
+            #draftsim #parse #scheduler #skipped
             """.trimIndent(),
         )
     }

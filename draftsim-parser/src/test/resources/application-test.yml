@@ -38,3 +38,4 @@ scheduler:
   article-parse:
     enabled: false
     cron: "@daily"
+    manual-cooldown: PT1S
