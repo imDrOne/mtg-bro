@@ -8,88 +8,37 @@ import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun searchMyCardsSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "q",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Free-text search. Matches card name, type line, and oracle text. " +
-                        "Case-insensitive substring match. Examples: \"merfolk\", \"draw a card\", " +
-                        "\"legendary creature\". Combine with type= for type-only filtering.",
-                )
-            },
-        )
-        put(
-            "set",
-            buildJsonObject {
-                put("type", "string")
-                put("description", """Set code, e.g. "neo", "dmu", "fdn".""")
-            },
-        )
-        put(
-            "colors",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Filter by mana colors in card cost: w,u,b,r,g. " +
-                        "Cards must contain ALL these colors. Example: \"wu\".",
-                )
-            },
-        )
-        put(
-            "color_identity",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Filter by color identity, including all mana symbols on the card, not just cost. " +
-                        "Example: \"wu\".",
-                )
-            },
-        )
-        put(
-            "type",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Filter by card type with a case-insensitive substring match on type line. " +
-                        "Examples: \"creature\", \"instant\", \"enchantment\".",
-                )
-            },
-        )
-        put(
-            "rarity",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Exact match: common, uncommon, rare, mythic")
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Page number (1-based)")
-            },
-        )
-        put(
-            "page_size",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Items per page (max 175)")
-            },
-        )
-    },
+fun searchMyCardsSchema(): ToolSchema = toolSchema(
+    props = mapOf(
+        "q" to stringProp(
+            "Free-text search. Matches card name, type line, and oracle text. " +
+                "Case-insensitive substring match. Examples: \"merfolk\", \"draw a card\", " +
+                "\"legendary creature\". Combine with type= for type-only filtering.",
+        ),
+        "set" to stringProp("""Set code, e.g. "neo", "dmu", "fdn"."""),
+        "colors" to stringProp(
+            "Filter by mana colors in card cost: w,u,b,r,g. " +
+                "Cards must contain ALL these colors. Example: \"wu\".",
+        ),
+        "color_identity" to stringProp(
+            "Filter by color identity, including all mana symbols on the card, not just cost. " +
+                "Example: \"wu\".",
+        ),
+        "type" to stringProp(
+            "Filter by card type with a case-insensitive substring match on type line. " +
+                "Examples: \"creature\", \"instant\", \"enchantment\".",
+        ),
+        "rarity" to stringProp("Exact match: common, uncommon, rare, mythic"),
+        "page" to integerProp("Page number (1-based)"),
+        "page_size" to integerProp("Items per page (max 175)"),
+    ),
 )
 
 suspend fun handleSearchMyCards(

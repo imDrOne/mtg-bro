@@ -7,44 +7,21 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun searchScryfallSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "query",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Scryfall search query (required)")
-            },
-        )
-        put(
-            "unique",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "cards, art, or prints")
-            },
-        )
-        put(
-            "order",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "name, set, released, rarity, usd, cmc, etc.")
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Page number")
-            },
-        )
-    },
+fun searchScryfallSchema(): ToolSchema = toolSchema(
     required = listOf("query"),
+    props = mapOf(
+        "query" to stringProp("Scryfall search query (required)"),
+        "unique" to stringProp("cards, art, or prints"),
+        "order" to stringProp("name, set, released, rarity, usd, cmc, etc."),
+        "page" to integerProp("Page number"),
+    ),
 )
 
 suspend fun handleSearchScryfall(

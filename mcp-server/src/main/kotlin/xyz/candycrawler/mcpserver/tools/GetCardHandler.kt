@@ -8,30 +8,18 @@ import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun getCardSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "set_code",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Set code (e.g. neo, dmu)")
-            },
-        )
-        put(
-            "collector_number",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Collector number")
-            },
-        )
-    },
+fun getCardSchema(): ToolSchema = toolSchema(
     required = listOf("set_code", "collector_number"),
+    props = mapOf(
+        "set_code" to stringProp("Set code (e.g. neo, dmu)"),
+        "collector_number" to stringProp("Collector number"),
+    ),
 )
 
 suspend fun handleGetCard(

@@ -3,9 +3,9 @@ package xyz.candycrawler.mcpserver.tools
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
-import kotlinx.serialization.json.buildJsonObject
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun listScryfallFormatCodesSchema() = ToolSchema(properties = buildJsonObject { })
+fun listScryfallFormatCodesSchema(): ToolSchema = toolSchema(props = emptyMap())
 
 fun handleListScryfallFormatCodes(): CallToolResult {
     val text = """

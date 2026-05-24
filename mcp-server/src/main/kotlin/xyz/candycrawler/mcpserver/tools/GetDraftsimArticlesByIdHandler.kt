@@ -14,54 +14,23 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.arrayProp
+import xyz.candycrawler.mcpserver.tools.schema.integerItem
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.stringItem
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun getDraftsimArticlesByIdSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "ids",
-            buildJsonObject {
-                put("type", "array")
-                put("description", "List of article IDs to fetch analyzed content for.")
-                put(
-                    "items",
-                    buildJsonObject {
-                        put("type", "integer")
-                    },
-                )
-            },
-        )
-        put(
-            "types",
-            buildJsonObject {
-                put("type", "array")
-                put(
-                    "description",
-                    "Optional insight.type filter, for example [\"archetype\", \"mechanic\", \"set_context\"].",
-                )
-                put(
-                    "items",
-                    buildJsonObject {
-                        put("type", "string")
-                    },
-                )
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Insight page number per article (1-based, default 1).")
-            },
-        )
-        put(
-            "page_size",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Insights per page per article (default 50, max 100).")
-            },
-        )
-    },
+fun getDraftsimArticlesByIdSchema(): ToolSchema = toolSchema(
     required = listOf("ids"),
+    props = mapOf(
+        "ids" to arrayProp("List of article IDs to fetch analyzed content for.", items = integerItem),
+        "types" to arrayProp(
+            "Optional insight.type filter, for example [\"archetype\", \"mechanic\", \"set_context\"].",
+            items = stringItem,
+        ),
+        "page" to integerProp("Insight page number per article (1-based, default 1)."),
+        "page_size" to integerProp("Insights per page per article (default 50, max 100)."),
+    ),
 )
 
 suspend fun handleGetDraftsimArticlesById(

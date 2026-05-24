@@ -9,44 +9,21 @@ import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.booleanProp
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun listDraftsimArticlesSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "q",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Optional keyword query for Draftsim article title, slug, or text search.")
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Page number (1-based, default 1).")
-            },
-        )
-        put(
-            "page_size",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Articles per page (default 20, max 100).")
-            },
-        )
-        put(
-            "favorite",
-            buildJsonObject {
-                put("type", "boolean")
-                put("description", "Whether to list only favorited articles (default true).")
-            },
-        )
-    },
-    required = emptyList(),
+fun listDraftsimArticlesSchema(): ToolSchema = toolSchema(
+    props = mapOf(
+        "q" to stringProp("Optional keyword query for Draftsim article title, slug, or text search."),
+        "page" to integerProp("Page number (1-based, default 1)."),
+        "page_size" to integerProp("Articles per page (default 20, max 100)."),
+        "favorite" to booleanProp("Whether to list only favorited articles (default true)."),
+    ),
 )
 
 internal data class DraftsimArticleListOptions(

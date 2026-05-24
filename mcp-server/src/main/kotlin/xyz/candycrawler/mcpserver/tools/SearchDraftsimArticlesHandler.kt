@@ -15,59 +15,27 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.arrayProp
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.stringItem
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun searchDraftsimArticlesSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "query",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Search query to find Draftsim articles. Examples: \"Merfolk\", " +
-                        "\"BLB draft guide\", \"aggro strategy\".",
-                )
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Page number (1-based, default 1)")
-            },
-        )
-        put(
-            "page_size",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Articles per page (default 10, max 20)")
-            },
-        )
-        put(
-            "types",
-            buildJsonObject {
-                put("type", "array")
-                put(
-                    "description",
-                    "Optional preview match insightType filter, for example [\"archetype\", \"mechanic\"].",
-                )
-                put(
-                    "items",
-                    buildJsonObject {
-                        put("type", "string")
-                    },
-                )
-            },
-        )
-        put(
-            "preview_limit",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Preview matches per semantic article result (default 3, max 5).")
-            },
-        )
-    },
+fun searchDraftsimArticlesSchema(): ToolSchema = toolSchema(
     required = listOf("query"),
+    props = mapOf(
+        "query" to stringProp(
+            "Search query to find Draftsim articles. Examples: \"Merfolk\", " +
+                "\"BLB draft guide\", \"aggro strategy\".",
+        ),
+        "page" to integerProp("Page number (1-based, default 1)"),
+        "page_size" to integerProp("Articles per page (default 10, max 20)"),
+        "types" to arrayProp(
+            "Optional preview match insightType filter, for example [\"archetype\", \"mechanic\"].",
+            items = stringItem,
+        ),
+        "preview_limit" to integerProp("Preview matches per semantic article result (default 3, max 5)."),
+    ),
 )
 
 suspend fun handleSearchDraftsimArticles(
