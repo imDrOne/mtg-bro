@@ -105,3 +105,4 @@ If DCR doesn't work (fallback, manual configuration):
 | `MCP_HTTP_PORT`               | `3000`                  | HTTP port (when using http transport)  |
 | `AUTH_ISSUER_URI`             | _(none)_                | Auth-service public URL; enables OAuth |
 | `MCP_BASE_URL`                | _(none)_                | MCP server public URL; enables OAuth   |
+| `MCP_DEV_TOKEN`               | _(none)_                | Static Bearer token used when OAuth is disabled (local dev only). Get via `POST /api/v1/auth/login` — expires in 15 min. |

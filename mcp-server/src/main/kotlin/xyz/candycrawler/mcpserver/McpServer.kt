@@ -6,7 +6,7 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpSendPipeline
 import io.ktor.http.HttpHeaders
-import io.ktor.http.isSuccess
+import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.json.json
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -54,6 +54,7 @@ fun createServer(
     draftsimParserBaseUrl: String,
     wizardStatAggregatorBaseUrl: String,
     draftsimSearchConfig: DraftsimSearchConfig = DraftsimSearchConfig(),
+    devToken: String? = null,
 ): FilteredMcpServer {
     val httpClient = HttpClient(ClientCIO) {
         install(ContentNegotiation) {
@@ -65,13 +66,14 @@ fun createServer(
             socketTimeoutMillis = 30_000
         }
         install(HttpRequestRetry) {
-            retryOnServerErrors(maxRetries = 3)
             exponentialDelay()
-            retryIf { _, response -> !response.status.isSuccess() && response.status.value >= 500 }
+            retryIf(maxRetries = 3) { request, response ->
+                response.status.value in 500..599 && request.method == HttpMethod.Get
+            }
         }
     }
     httpClient.sendPipeline.intercept(HttpSendPipeline.State) {
-        val token = currentUserToken()
+        val token = currentUserToken() ?: devToken
         if (token != null) {
             context.headers[HttpHeaders.Authorization] = "Bearer $token"
         }
