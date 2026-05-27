@@ -22,6 +22,7 @@ class ArticleAnalysisServiceTest {
     private val articleRepository = mock<ArticleRepository>()
     private val queryArticleRepository = mock<QueryArticleRepository>()
     private val vectorIndexService = mock<ArticleVectorIndexService>()
+    private val parseAlertService = mock<ParseAlertService>()
     private val llmClient = RecordingLlmClient()
     private val objectMapper = ObjectMapper()
     private val service = ArticleAnalysisService(
@@ -31,6 +32,7 @@ class ArticleAnalysisServiceTest {
         promptBuilder = ArticleAnalysisPromptBuilder(),
         objectMapper = objectMapper,
         vectorIndexService = vectorIndexService,
+        parseAlertService = parseAlertService,
     )
 
     @Test

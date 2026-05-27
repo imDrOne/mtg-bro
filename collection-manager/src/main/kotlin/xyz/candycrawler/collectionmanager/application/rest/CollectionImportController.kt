@@ -117,7 +117,7 @@ class CollectionImportController(
         val result = importService.import(userId, parser, content)
         return ImportResultResponse(
             importedCount = result.importedCount,
-            notFound = result.notFound.map { NotFoundEntry(it.set, it.collectorNumber) },
+            notFound = result.notFound.map { NotFoundEntry(it.set ?: "", it.collectorNumber ?: "") },
         )
     }
 }

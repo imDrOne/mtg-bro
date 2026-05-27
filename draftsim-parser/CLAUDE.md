@@ -62,6 +62,18 @@ Same hexagonal pattern as other Spring modules:
 | `ARTICLE_VECTOR_SEARCH_CACHE_MAX_SIZE` | `500` | No | Max cached semantic search result sets |
 | `ARTICLE_VECTOR_SEARCH_CACHE_TTL` | `PT10M` | No | Semantic search cache TTL |
 | `ANALYSIS_AUTO_PUBLISH` | `false` | No | Auto-publish analysis results |
+| `SCRYFALL_BASE_URL` | `https://api.scryfall.com` | No | Scryfall API base URL |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS` | `3` | No | Retry attempts for Scryfall calls |
+| `HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS` | `100` | No | Initial retry delay (ms) |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER` | `2.0` | No | Backoff multiplier |
+| `HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS` | `2000` | No | Max retry delay (ms) |
+| `SCHEDULER_ARTICLE_PARSE_ENABLED` | `false` | No | Enable scheduled article parsing |
+| `SCHEDULER_ARTICLE_PARSE_CRON` | `@daily` | No | Cron expression for article parse scheduler |
+| `SCHEDULER_ARTICLE_PARSE_MANUAL_COOLDOWN` | `PT12H` | No | Cooldown after manual force-parse during which the cron scheduler skips auto-run |
+| `ACTIVE_SETS_WINDOW_DAYS` | `365` | No | Days back to consider a set "active" |
+| `ACTIVE_SETS_INCLUDE_DIGITAL` | `false` | No | Include digital-only sets |
+| `TELEGRAM_ALERT_PER_ARTICLE_SUCCESS` | `false` | No | Send Telegram alert per successful article analysis |
+| `TELEGRAM_ALERT_PER_ARTICLE_FAILURE` | `true` | No | Send Telegram alert per failed article analysis |
 
 ## Authentication
 
@@ -108,3 +120,25 @@ Do not change embedding dimensions in-place. If the embedding model changes dime
 
 Extend `AbstractIntegrationTest` (Testcontainers `postgres:16-alpine`). Required for SQL Mappers.
 Services and controllers use unit tests with mocked dependencies.
+
+## Article Parse Scheduler
+
+Scheduled parsing of Draftsim articles for active MTG sets.
+
+Enabled via `SCHEDULER_ARTICLE_PARSE_ENABLED=true`. Active sets are fetched from Scryfall `/sets` filtered by release window (`ACTIVE_SETS_WINDOW_DAYS`) and set types (expansion, core, draft_innovation, commander, masters by default).
+
+For each active set, the scheduler looks up Draftsim WP tags matching the set name, then fetches articles tagged with those IDs. Keyword stored in `parse_tasks` is `set:<set_code>`.
+
+Auto-publish respects `ANALYSIS_AUTO_PUBLISH` and only queues articles where `analyzed_text` is null (re-runs never re-analyze already processed articles).
+
+Local test run:
+```bash
+SCHEDULER_ARTICLE_PARSE_ENABLED=true \
+SCHEDULER_ARTICLE_PARSE_CRON='0 */2 * * * *' \
+ANALYSIS_AUTO_PUBLISH=false \
+./gradlew :draftsim-parser:bootRun
+```
+
+## Article Parsing Flow
+
+See [docs/article-parsing-flow.md](docs/article-parsing-flow.md) for the full flow description, phase breakdown, and sequence diagram.

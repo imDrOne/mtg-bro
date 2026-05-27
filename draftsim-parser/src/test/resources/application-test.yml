@@ -1,0 +1,41 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-test.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9999
+  ai:
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        api-key: ""
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.vectorstore.qdrant.QdrantVectorStoreAutoConfiguration
+
+infrastructure:
+  llm:
+    client: MOCK
+  vector-index:
+    enabled: false
+  analysis:
+    auto-publish: false
+  alerts:
+    telegram:
+      enabled: false
+      bot-token: test
+      chat-id: test
+
+scryfall:
+  client:
+    base-url: http://localhost:9999
+
+scheduler:
+  article-parse:
+    enabled: false
+    cron: "@daily"
+    manual-cooldown: PT1S

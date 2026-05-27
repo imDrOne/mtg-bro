@@ -4,11 +4,27 @@ set -euo pipefail
 echo "=== mtg-bro Admin Bootstrap ==="
 echo ""
 
-# Collect input
-read -rp "Email: " ADMIN_EMAIL
-read -rp "Username: " ADMIN_USERNAME
-read -rsp "Password: " ADMIN_PASSWORD
-echo ""
+# Parse CLI args
+ADMIN_EMAIL=""
+ADMIN_USERNAME=""
+ADMIN_PASSWORD=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --email)    ADMIN_EMAIL="$2";    shift 2 ;;
+        --username) ADMIN_USERNAME="$2"; shift 2 ;;
+        --password) ADMIN_PASSWORD="$2"; shift 2 ;;
+        -h|--help)
+            echo "Usage: $0 [--email EMAIL] [--username USERNAME] [--password PASSWORD]"
+            exit 0 ;;
+        *) echo "Unknown argument: $1" >&2; exit 1 ;;
+    esac
+done
+
+# Fall back to interactive if not provided via args
+[[ -z "$ADMIN_EMAIL" ]]    && read -rp "Email: " ADMIN_EMAIL
+[[ -z "$ADMIN_USERNAME" ]] && read -rp "Username: " ADMIN_USERNAME
+[[ -z "$ADMIN_PASSWORD" ]] && { read -rsp "Password: " ADMIN_PASSWORD; echo ""; }
 
 if [[ -z "$ADMIN_EMAIL" || -z "$ADMIN_USERNAME" || -z "$ADMIN_PASSWORD" ]]; then
     echo "Error: all fields are required"

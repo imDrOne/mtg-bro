@@ -20,7 +20,7 @@ data class ArticleSummaryResponse(
 )
 
 fun Article.toSummaryResponse() = ArticleSummaryResponse(
-    id = id!!,
+    id = requireNotNull(id),
     externalId = externalId,
     title = title,
     slug = slug,

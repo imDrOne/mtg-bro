@@ -4,9 +4,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallCardResponse
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallSearchResponse
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.scryfall.dto.response.ScryfallCardResponse
+import xyz.candycrawler.scryfall.dto.response.ScryfallSearchResponse
 import java.util.UUID
 import kotlin.test.assertEquals
 

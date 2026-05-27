@@ -2,10 +2,16 @@ package xyz.candycrawler.draftsimparser.application.service
 
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.AlertPublisher
+import xyz.candycrawler.draftsimparser.configuration.TelegramAlertProperties
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @Service
-class ParseAlertService(private val alertPublisher: AlertPublisher) {
+class ParseAlertService(
+    private val alertPublisher: AlertPublisher,
+    private val telegramAlertProperties: TelegramAlertProperties,
+) {
 
     fun parsingStarted(taskId: UUID, keyword: String) {
         alertPublisher.send(
@@ -14,6 +20,34 @@ class ParseAlertService(private val alertPublisher: AlertPublisher) {
             taskId: $taskId
             keyword: $keyword
             #draftsim #parse #started
+            """.trimIndent(),
+        )
+    }
+
+    fun schedulerRunStarted(setCodes: List<String>) {
+        alertPublisher.send(
+            """
+            🛰️ Draftsim scheduled parse started
+            sets: ${setCodes.joinToString()}
+            #draftsim #parse #scheduler #started
+            """.trimIndent(),
+        )
+    }
+
+    fun parsingFinished(
+        taskId: UUID,
+        keyword: String,
+        totalArticles: Int,
+        savedArticles: Int,
+        queuedForAnalysis: Int,
+    ) {
+        alertPublisher.send(
+            """
+            ✅ Draftsim parsing finished
+            taskId: $taskId
+            keyword: $keyword
+            total: $totalArticles | saved: $savedArticles | queued: $queuedForAnalysis
+            #draftsim #parse #finished
             """.trimIndent(),
         )
     }
@@ -40,6 +74,41 @@ class ParseAlertService(private val alertPublisher: AlertPublisher) {
             keyword: $keyword
             error: ${error.shortMessage()}
             #draftsim #parse #failed
+            """.trimIndent(),
+        )
+    }
+
+    fun articleAnalysisSucceeded(articleId: Long, slug: String, insightCount: Int, articleType: String) {
+        if (!telegramAlertProperties.perArticleSuccess) return
+        alertPublisher.send(
+            """
+            ✅ Article analysis done
+            id: $articleId | slug: $slug
+            type: $articleType | insights: $insightCount
+            #draftsim #analysis #success
+            """.trimIndent(),
+        )
+    }
+
+    fun articleAnalysisFailed(articleId: Long, slug: String, error: Throwable) {
+        if (!telegramAlertProperties.perArticleFailure) return
+        alertPublisher.send(
+            """
+            ❌ Article analysis failed
+            id: $articleId | slug: $slug
+            error: ${error.shortMessage()}
+            #draftsim #analysis #failed
+            """.trimIndent(),
+        )
+    }
+
+    fun schedulerSkippedDueToCooldown(lastManual: Instant, cooldown: Duration) {
+        alertPublisher.send(
+            """
+            ⏸️ Scheduled parse skipped (manual cooldown)
+            last manual: $lastManual
+            cooldown: $cooldown
+            #draftsim #parse #scheduler #skipped
             """.trimIndent(),
         )
     }

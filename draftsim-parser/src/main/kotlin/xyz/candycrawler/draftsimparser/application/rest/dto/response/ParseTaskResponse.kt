@@ -16,7 +16,7 @@ data class ParseTaskResponse(
 )
 
 fun ParseTask.toResponse() = ParseTaskResponse(
-    id = id!!,
+    id = requireNotNull(id),
     keyword = keyword,
     status = status.name,
     totalArticles = totalArticles,

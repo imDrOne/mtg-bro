@@ -8,11 +8,11 @@ import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import xyz.candycrawler.collectionmanager.application.parser.CollectionFileParser
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.ScryfallApiClient
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.CardIdentifier
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.request.ScryfallCollectionRequest
-import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.dto.response.ScryfallCollectionResponse
 import xyz.candycrawler.collectionmanager.infrastructure.client.scryfall.mapper.ScryfallCardResponseToCardMapper
+import xyz.candycrawler.scryfall.client.ScryfallApiClient
+import xyz.candycrawler.scryfall.dto.request.ScryfallCardIdentifier
+import xyz.candycrawler.scryfall.dto.request.ScryfallCollectionRequest
+import xyz.candycrawler.scryfall.dto.response.ScryfallCollectionResponse
 
 @Service
 class CollectionImportService(
@@ -53,14 +53,16 @@ class CollectionImportService(
             keys.chunked(SCRYFALL_BATCH_SIZE).map { batch ->
                 async(Dispatchers.IO) {
                     val request = ScryfallCollectionRequest(
-                        identifiers = batch.map { CardIdentifier(set = it.first, collectorNumber = it.second) },
+                        identifiers = batch.map {
+                            ScryfallCardIdentifier(set = it.first, collectorNumber = it.second, id = null)
+                        },
                     )
                     scryfallApiClient.fetchCollection(request)
                 }
             }.awaitAll()
         }
 
-    data class ImportResult(val importedCount: Int, val notFound: List<CardIdentifier>)
+    data class ImportResult(val importedCount: Int, val notFound: List<ScryfallCardIdentifier>)
 
     companion object {
         private const val SCRYFALL_BATCH_SIZE = 75

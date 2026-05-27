@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,10 +23,11 @@ class ArticleKeywordService(
     private val queryArticleRepository: QueryArticleRepository,
     private val articleRepository: ArticleRepository,
     private val keywordExtractor: ArticleKeywordExtractor,
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : DisposableBean {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val semaphore = Semaphore(MAX_CONCURRENT_ARTICLES)
 
     fun collectAsync(ids: List<Long>) {

@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.service
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -23,6 +24,7 @@ import java.time.LocalDateTime
 
 private const val MAX_CONCURRENT_LLM_CALLS = 3
 
+@Suppress("LongParameterList")
 @Service
 class ArticleAnalysisService(
     private val llmClient: LlmClient,
@@ -31,6 +33,8 @@ class ArticleAnalysisService(
     private val promptBuilder: ArticleAnalysisPromptBuilder,
     private val objectMapper: ObjectMapper,
     private val vectorIndexService: ArticleVectorIndexService,
+    private val parseAlertService: ParseAlertService,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ArticleAnalysisConsumer {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -45,7 +49,7 @@ class ArticleAnalysisService(
         val paragraphs = article.textContent
             ?.split("\n\n")
             ?.filter { it.isNotBlank() }
-            ?: emptyList()
+            .orEmpty()
 
         if (paragraphs.isEmpty()) {
             log.info("Article id={}: no paragraphs, skipping analysis", message.articleId)
@@ -71,7 +75,7 @@ class ArticleAnalysisService(
 
             val results = coroutineScope {
                 paragraphs.map { paragraph ->
-                    async(Dispatchers.IO) {
+                    async(ioDispatcher) {
                         semaphore.withPermit {
                             runCatching {
                                 llmClient.complete(
@@ -91,11 +95,22 @@ class ArticleAnalysisService(
             }
             vectorIndexService.replaceIndex(updated)
             log.info("Article id={}: analysis done, {} insight entries saved", message.articleId, insights.size)
+            parseAlertService.articleAnalysisSucceeded(
+                articleId = requireNotNull(updated.id),
+                slug = updated.slug,
+                insightCount = insights.size,
+                articleType = classification.articleType.name.lowercase(),
+            )
         }.onFailure { ex ->
             log.error("Article id={}: analysis failed", message.articleId, ex)
             articleRepository.update(message.articleId) {
                 it.copy(errorMsg = ex.message?.take(ERROR_MESSAGE_MAX_LENGTH), analyzEndedAt = LocalDateTime.now())
             }
+            parseAlertService.articleAnalysisFailed(
+                articleId = message.articleId,
+                slug = article.slug,
+                error = ex,
+            )
         }
     }
 

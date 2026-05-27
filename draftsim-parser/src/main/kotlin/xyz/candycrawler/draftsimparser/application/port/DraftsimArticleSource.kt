@@ -20,4 +20,8 @@ data class DraftsimArticleSearchResult(
 
 interface DraftsimArticleSource {
     fun searchArticles(keyword: String, page: Int, pageSize: Int = 10): DraftsimArticleSearchResult
+
+    fun findTagIdsBySetName(setName: String): List<Long>
+
+    fun searchArticlesByTagIds(tagIds: List<Long>, page: Int, pageSize: Int = 10): DraftsimArticleSearchResult
 }

@@ -42,7 +42,7 @@ class SpringAiArticleVectorStore(private val vectorStore: VectorStore) : Article
                 .topK(topK)
                 .similarityThreshold(similarityThreshold)
                 .build(),
-        ).orEmpty().mapNotNull { document ->
+        ).mapNotNull { document ->
             val articleId = document.metadata[ARTICLE_ID].toLongOrNull() ?: return@mapNotNull null
             ArticleVectorSearchMatch(
                 articleId = articleId,

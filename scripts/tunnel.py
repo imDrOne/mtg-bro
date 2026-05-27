@@ -6,6 +6,7 @@ Usage: python3 scripts/tunnel.py [ssh-host]
 Requires: pip install rich questionary
 """
 
+import argparse
 import os
 import re
 import signal
@@ -112,12 +113,25 @@ def print_tunnel_table(host: str, selected: list[tuple]) -> None:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    print_banner()
+    parser = argparse.ArgumentParser(
+        description="SSH tunnel tool for mtg-bro services.",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument("--host", metavar="HOST", help="SSH host or alias from ~/.ssh/config")
+    parser.add_argument(
+        "--services",
+        metavar="NAME,...",
+        help="Comma-separated service names to tunnel.\nAvailable: " + ", ".join(s[0] for s in SERVICES),
+    )
+    # positional for backwards compat (legacy: python3 tunnel.py <host>)
+    parser.add_argument("host_pos", nargs="?", metavar="HOST_POS", help=argparse.SUPPRESS)
+    args = parser.parse_args()
 
-    # Resolve SSH host
-    if len(sys.argv) > 1:
-        ssh_host = sys.argv[1]
-    else:
+    ssh_host = args.host or args.host_pos
+
+    # Resolve SSH host interactively if not provided
+    if not ssh_host:
+        print_banner()
         ssh_hosts = read_ssh_hosts()
         if ssh_hosts:
             ssh_host = questionary.autocomplete(
@@ -126,38 +140,46 @@ def main() -> None:
                 style=STYLE,
             ).ask()
         else:
-            ssh_host = questionary.text(
-                "SSH host:",
-                style=STYLE,
-            ).ask()
+            ssh_host = questionary.text("SSH host:", style=STYLE).ask()
+        if not ssh_host:
+            console.print("[dim]Aborted.[/]")
+            sys.exit(0)
+        console.print()
 
-    if not ssh_host:
-        console.print("[dim]Aborted.[/]")
-        sys.exit(0)
+    # Resolve services
+    if args.services:
+        names = {s.strip() for s in args.services.split(",")}
+        service_map = {s[0]: s for s in SERVICES}
+        unknown = names - service_map.keys()
+        if unknown:
+            print(f"ERROR: unknown service(s): {', '.join(sorted(unknown))}", file=sys.stderr)
+            print(f"Available: {', '.join(s[0] for s in SERVICES)}", file=sys.stderr)
+            sys.exit(1)
+        selected = [service_map[n] for n in (s[0] for s in SERVICES) if s[0] in names]
+    else:
+        if not args.host and not args.host_pos:
+            pass  # already printed banner above
+        else:
+            print_banner()
+            console.print(f"[dim]Host:[/] [bold]{ssh_host}[/]\n")
+        choices = [
+            questionary.Choice(
+                f"{label:<28} localhost:{local_port}  →  {remote_host}:{remote_port}",
+                value=(label, local_port, remote_host, remote_port),
+            )
+            for label, local_port, remote_host, remote_port in SERVICES
+        ]
+        selected = questionary.checkbox(
+            "Select services to tunnel:",
+            choices=choices,
+            style=STYLE,
+            instruction="(↑↓ navigate, SPACE toggle, ENTER confirm)",
+        ).ask()
+        if not selected:
+            console.print("[dim]Nothing selected. Exiting.[/]")
+            sys.exit(0)
+        console.print()
 
-    console.print()
-
-    # Select services
-    choices = [
-        questionary.Choice(
-            f"{label:<28} localhost:{local_port}  →  {remote_host}:{remote_port}",
-            value=(label, local_port, remote_host, remote_port),
-        )
-        for label, local_port, remote_host, remote_port in SERVICES
-    ]
-
-    selected = questionary.checkbox(
-        "Select services to tunnel:",
-        choices=choices,
-        style=STYLE,
-        instruction="(↑↓ navigate, SPACE toggle, ENTER confirm)",
-    ).ask()
-
-    if not selected:
-        console.print("[dim]Nothing selected. Exiting.[/]")
-        sys.exit(0)
-
-    console.print()
     print_tunnel_table(ssh_host, selected)
 
     # Build ssh command
@@ -166,12 +188,10 @@ def main() -> None:
         forwards += ["-L", f"{local_port}:{remote_host}:{remote_port}"]
 
     cmd = ["ssh", "-N", *forwards, ssh_host]
-
     console.print(f"[dim]$ {' '.join(cmd)}[/]")
     console.print()
     console.print("[bold #34d399]Tunnels open.[/] Press [bold]Ctrl-C[/] to close.\n")
 
-    # Run and handle Ctrl-C gracefully
     proc = subprocess.Popen(cmd)
     try:
         proc.wait()

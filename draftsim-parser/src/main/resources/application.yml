@@ -68,3 +68,29 @@ infrastructure:
       enabled: ${TELEGRAM_ALERTS_ENABLED:false}
       bot-token: ${TELEGRAM_BOT_TOKEN:}
       chat-id: ${TELEGRAM_CHAT_ID:}
+      per-article-success: ${TELEGRAM_ALERT_PER_ARTICLE_SUCCESS:false}
+      per-article-failure: ${TELEGRAM_ALERT_PER_ARTICLE_FAILURE:true}
+  active-sets:
+    window-days: ${ACTIVE_SETS_WINDOW_DAYS:365}
+    set-types:
+      - expansion
+      - core
+      - draft_innovation
+      - commander
+      - masters
+    include-digital: ${ACTIVE_SETS_INCLUDE_DIGITAL:false}
+
+scryfall:
+  client:
+    base-url: ${SCRYFALL_BASE_URL:https://api.scryfall.com}
+    retry:
+      max-attempts: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_ATTEMPTS:3}
+      initial-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_INITIAL_DELAY_MS:100}
+      multiplier: ${HTTP_CLIENT_SCRYFALL_RETRY_MULTIPLIER:2.0}
+      max-delay-ms: ${HTTP_CLIENT_SCRYFALL_RETRY_MAX_DELAY_MS:2000}
+
+scheduler:
+  article-parse:
+    enabled: ${SCHEDULER_ARTICLE_PARSE_ENABLED:false}
+    cron: ${SCHEDULER_ARTICLE_PARSE_CRON:@daily}
+    manual-cooldown: ${SCHEDULER_ARTICLE_PARSE_MANUAL_COOLDOWN:PT12H}

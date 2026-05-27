@@ -1,20 +1,30 @@
 package xyz.candycrawler.draftsimparser.infrastructure.db.mapper.sql
 
+import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.exists
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.wrapAsExpression
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Component
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSortField
+import xyz.candycrawler.draftsimparser.domain.article.model.SortDirection
 import xyz.candycrawler.draftsimparser.infrastructure.db.entity.ArticleRecord
 import xyz.candycrawler.draftsimparser.infrastructure.db.table.ArticlesTable
 import xyz.candycrawler.draftsimparser.infrastructure.db.table.ParseTaskArticlesTable
+import xyz.candycrawler.draftsimparser.infrastructure.db.table.ParseTasksTable
 import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -47,39 +57,76 @@ class ArticleSqlMapper {
         .map { it.toRecord() }
         .singleOrNull()
 
-    internal fun search(query: String?, limit: Int, offset: Long, favoriteOnly: Boolean? = null): List<ArticleRecord> {
-        val condition = buildSearchCondition(query, favoriteOnly)
+    internal fun search(filter: ArticleSearchFilter, limit: Int, offset: Long): List<ArticleRecord> {
         val q = ArticlesTable.selectAll()
-        condition?.let { q.where { it } }
-        return q.orderBy(ArticlesTable.publishedAt to org.jetbrains.exposed.v1.core.SortOrder.DESC)
-            .limit(limit)
-            .offset(offset)
-            .map { it.toRecord() }
+        buildCondition(filter)?.let { q.where { it } }
+        q.orderBy(buildSortExpression(filter.sortBy) to filter.sortDirection.toExposed())
+        return q.limit(limit).offset(offset).map { it.toRecord() }
     }
 
-    internal fun countSearch(query: String?, favoriteOnly: Boolean? = null): Long {
-        val condition = buildSearchCondition(query, favoriteOnly)
+    internal fun countSearch(filter: ArticleSearchFilter): Long {
         val q = ArticlesTable.selectAll()
-        condition?.let { q.where { it } }
+        buildCondition(filter)?.let { q.where { it } }
         return q.count()
     }
 
-    private fun buildSearchCondition(query: String?, favoriteOnly: Boolean?): Op<Boolean>? {
+    private fun buildCondition(filter: ArticleSearchFilter): Op<Boolean>? {
         var condition: Op<Boolean>? = null
 
-        if (!query.isNullOrBlank()) {
-            val pattern = "%${query.lowercase()}%"
+        if (!filter.query.isNullOrBlank()) {
+            val pattern = "%${filter.query.lowercase()}%"
             val textCondition = (ArticlesTable.title.lowerCase() like pattern) or
                 (ArticlesTable.slug.lowerCase() like pattern)
             condition = textCondition
         }
 
-        if (favoriteOnly == true) {
+        if (filter.favoriteOnly == true) {
             val favCondition = ArticlesTable.favorite eq true
-            condition = condition?.let { it and favCondition } ?: favCondition
+            condition = condition?.and(favCondition) ?: favCondition
+        }
+
+        if (filter.setCode != null) {
+            val setCondition = exists(
+                (ParseTaskArticlesTable innerJoin ParseTasksTable)
+                    .selectAll()
+                    .where {
+                        (ParseTaskArticlesTable.articleId eq ArticlesTable.id) and
+                            (ParseTasksTable.keyword eq "set:${filter.setCode.lowercase()}")
+                    }
+            )
+            condition = condition?.and(setCondition) ?: setCondition
+        }
+
+        if (filter.publishedFrom != null) {
+            val fromCondition = ArticlesTable.publishedAt greaterEq filter.publishedFrom.atStartOfDay()
+            condition = condition?.and(fromCondition) ?: fromCondition
+        }
+
+        if (filter.publishedTo != null) {
+            val toCondition = ArticlesTable.publishedAt lessEq filter.publishedTo.plusDays(1).atStartOfDay()
+            condition = condition?.and(toCondition) ?: toCondition
         }
 
         return condition
+    }
+
+    private fun buildSortExpression(sortBy: ArticleSortField): Expression<*> = when (sortBy) {
+        ArticleSortField.PUBLISHED_AT -> ArticlesTable.publishedAt
+        ArticleSortField.SET_CODE -> wrapAsExpression<String>(
+            (ParseTasksTable innerJoin ParseTaskArticlesTable)
+                .selectAll()
+                .where {
+                    (ParseTaskArticlesTable.articleId eq ArticlesTable.id) and
+                        (ParseTasksTable.keyword like "set:%")
+                }
+                .orderBy(ParseTasksTable.keyword to SortOrder.ASC)
+                .limit(1)
+        )
+    }
+
+    private fun SortDirection.toExposed() = when (this) {
+        SortDirection.ASC -> SortOrder.ASC
+        SortDirection.DESC -> SortOrder.DESC
     }
 
     internal fun findByTaskId(taskId: UUID): List<ArticleRecord> = (ArticlesTable innerJoin ParseTaskArticlesTable)

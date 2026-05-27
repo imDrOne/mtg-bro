@@ -1,10 +1,8 @@
 package xyz.candycrawler.draftsimparser.application.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import xyz.candycrawler.draftsimparser.application.port.ArticleAnalysisPublisher
 import xyz.candycrawler.draftsimparser.domain.article.model.Article
-import xyz.candycrawler.draftsimparser.domain.article.model.ArticlePage
 import xyz.candycrawler.draftsimparser.domain.article.repository.ArticleRepository
 import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
 
@@ -17,21 +15,6 @@ class ArticleService(
     private val articleAnalysisPublisher: ArticleAnalysisPublisher,
     private val articleVectorIndexService: ArticleVectorIndexService,
 ) {
-
-    private val log = LoggerFactory.getLogger(javaClass)
-
-    fun search(query: String?, page: Int, pageSize: Int, favoriteOnly: Boolean?): ArticlePage =
-        queryArticleRepository.search(query, page, pageSize, favoriteOnly)
-
-    fun semanticSearch(
-        query: String,
-        topK: Int?,
-        similarityThreshold: Double?,
-        favoriteOnly: Boolean?,
-    ): List<ArticleSemanticSearchResult> =
-        articleSemanticSearchService.search(query, topK, similarityThreshold, favoriteOnly)
-
-    fun findById(id: Long): Article = queryArticleRepository.findById(id)
 
     fun updateFavorite(id: Long, favorite: Boolean): Article =
         articleRepository.update(id) { it.copy(favorite = favorite) }
@@ -54,11 +37,5 @@ class ArticleService(
         articleVectorIndexService.replaceIndexesAsync(articles)
         articleSemanticSearchService.evictSearchCache()
         return articles
-    }
-
-    fun findByIds(ids: List<Long>): List<Article> = ids.mapNotNull { id ->
-        runCatching { queryArticleRepository.findById(id) }
-            .onFailure { log.warn("findByIds: id={} not found, skipping", id) }
-            .getOrNull()
     }
 }

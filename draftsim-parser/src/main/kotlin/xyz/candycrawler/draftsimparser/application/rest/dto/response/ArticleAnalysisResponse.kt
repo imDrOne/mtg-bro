@@ -10,7 +10,7 @@ data class ArticleAnalysisResponse(
 )
 
 fun Article.toAnalysisResponse() = ArticleAnalysisResponse(
-    id = id!!,
+    id = requireNotNull(id),
     title = title,
     analyzedText = analyzedText,
     keywords = keywords,

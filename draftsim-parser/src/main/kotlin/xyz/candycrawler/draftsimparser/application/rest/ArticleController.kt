@@ -1,5 +1,6 @@
 package xyz.candycrawler.draftsimparser.application.rest
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -26,11 +27,23 @@ import xyz.candycrawler.draftsimparser.application.rest.dto.response.toAnalysisR
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSemanticSearchResponse
 import xyz.candycrawler.draftsimparser.application.rest.dto.response.toSummaryResponse
+import xyz.candycrawler.draftsimparser.application.service.ArticleSemanticSearchService
 import xyz.candycrawler.draftsimparser.application.service.ArticleService
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSearchFilter
+import xyz.candycrawler.draftsimparser.domain.article.repository.QueryArticleRepository
+import xyz.candycrawler.draftsimparser.domain.article.model.ArticleSortField
+import xyz.candycrawler.draftsimparser.domain.article.model.SortDirection
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/api/v1/articles")
-class ArticleController(private val articleService: ArticleService) {
+class ArticleController(
+    private val articleService: ArticleService,
+    private val queryArticleRepository: QueryArticleRepository,
+    private val articleSemanticSearchService: ArticleSemanticSearchService,
+) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping
@@ -39,12 +52,29 @@ class ArticleController(private val articleService: ArticleService) {
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "20") pageSize: Int,
         @RequestParam(required = false) favorite: Boolean?,
-    ): ArticlePageResponse = articleService.search(q, page, pageSize, favorite).toResponse()
+        @RequestParam(required = false) setCode: String?,
+        @RequestParam(required = false) publishedFrom: LocalDate?,
+        @RequestParam(required = false) publishedTo: LocalDate?,
+        @RequestParam(defaultValue = "PUBLISHED_AT") sortBy: ArticleSortField,
+        @RequestParam(defaultValue = "DESC") sortDirection: SortDirection,
+    ): ArticlePageResponse = queryArticleRepository.search(
+        filter = ArticleSearchFilter(
+            query = q,
+            favoriteOnly = favorite,
+            setCode = setCode,
+            publishedFrom = publishedFrom,
+            publishedTo = publishedTo,
+            sortBy = sortBy,
+            sortDirection = sortDirection,
+        ),
+        page = page,
+        pageSize = pageSize,
+    ).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/search/semantic")
     fun semanticSearch(@RequestBody request: SemanticArticleSearchRequest): SemanticArticleSearchResponse =
-        articleService.semanticSearch(
+        articleSemanticSearchService.search(
             query = request.query,
             topK = request.topK,
             similarityThreshold = request.similarityThreshold,
@@ -53,7 +83,7 @@ class ArticleController(private val articleService: ArticleService) {
 
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): ArticleResponse = articleService.findById(id).toResponse()
+    fun getById(@PathVariable id: Long): ArticleResponse = queryArticleRepository.findById(id).toResponse()
 
     @PreAuthorize("hasAuthority('PERM_api:articles:parse')")
     @PatchMapping("/{id}/favorite")
@@ -81,5 +111,9 @@ class ArticleController(private val articleService: ArticleService) {
     @PreAuthorize("hasAuthority('PERM_api:articles:read')")
     @PostMapping("/by-ids")
     fun getByIds(@RequestBody request: GetArticlesByIdsRequest): List<ArticleAnalysisResponse> =
-        articleService.findByIds(request.ids).map { it.toAnalysisResponse() }
+        request.ids.mapNotNull { id ->
+            runCatching { queryArticleRepository.findById(id) }
+                .onFailure { log.warn("getByIds: id={} not found, skipping", id) }
+                .getOrNull()
+        }.map { it.toAnalysisResponse() }
 }
