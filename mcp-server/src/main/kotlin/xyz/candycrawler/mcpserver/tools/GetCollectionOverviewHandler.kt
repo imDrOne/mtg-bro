@@ -1,29 +1,25 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun getCollectionOverviewSchema() = ToolSchema(
-    properties = buildJsonObject {},
-    required = emptyList(),
-)
+fun getCollectionOverviewSchema(): ToolSchema = toolSchema(props = emptyMap())
 
 suspend fun handleGetCollectionOverview(
     context: ToolContext,
     @Suppress("UNUSED_PARAMETER") request: CallToolRequest,
 ): CallToolResult = runCatching {
     val url = "${context.baseUrl}/api/v1/collection/overview"
-    val response = context.httpClient.get(url).body<String>()
+    val response = context.httpClient.get(url).readTextOrFail("GET /api/v1/collection/overview")
 
     val json = Json.parseToJsonElement(response).jsonObject
 
@@ -67,5 +63,16 @@ suspend fun handleGetCollectionOverview(
 
     CallToolResult(content = listOf(TextContent(summary)))
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }

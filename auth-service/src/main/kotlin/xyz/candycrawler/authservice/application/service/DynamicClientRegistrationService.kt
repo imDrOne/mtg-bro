@@ -45,6 +45,7 @@ class DynamicClientRegistrationService(
             .scope(OidcScopes.OPENID)
             .scope("profile")
             .scope("decks:read")
+            .scope("offline_access")
             .clientSettings(
                 ClientSettings.builder()
                     .requireProofKey(true)
@@ -75,7 +76,7 @@ class DynamicClientRegistrationService(
             tokenEndpointAuthMethod = authMethod.value,
             grantTypes = listOf("authorization_code", "refresh_token"),
             responseTypes = listOf("code"),
-            scope = "openid profile decks:read",
+            scope = "openid profile decks:read offline_access",
         )
     }
 

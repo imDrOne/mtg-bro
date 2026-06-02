@@ -1,6 +1,5 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -8,30 +7,18 @@ import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun getCardSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "set_code",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Set code (e.g. neo, dmu)")
-            },
-        )
-        put(
-            "collector_number",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Collector number")
-            },
-        )
-    },
+fun getCardSchema(): ToolSchema = toolSchema(
     required = listOf("set_code", "collector_number"),
+    props = mapOf(
+        "set_code" to stringProp("Set code (e.g. neo, dmu)"),
+        "collector_number" to stringProp("Collector number"),
+    ),
 )
 
 suspend fun handleGetCard(
@@ -52,7 +39,7 @@ suspend fun handleGetCard(
                 parameter("set", setCode)
                 parameter("collector_number", collectorNumber)
                 parameter("page_size", 1)
-            }.body<String>()
+            }.readTextOrFail("GET /api/v1/cards/search")
 
             val json = Json.parseToJsonElement(response).jsonObject
             val data = json["data"]?.jsonArray
@@ -69,7 +56,18 @@ suspend fun handleGetCard(
         }
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 private fun formatCardDetail(card: JsonObject): String {

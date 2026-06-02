@@ -44,8 +44,10 @@ fun main(args: Array<String>) {
     val transport = args.getOption("--transport") ?: System.getenv("MCP_TRANSPORT") ?: "stdio"
     val port = args.getOption("--port")?.toIntOrNull() ?: System.getenv("MCP_HTTP_PORT")?.toIntOrNull() ?: 3000
     val draftsimSearchConfig = draftsimSearchConfigFromEnv()
+    val oauthEnabled = System.getenv("AUTH_ISSUER_URI") != null && System.getenv("MCP_BASE_URL") != null
+    val devToken = if (!oauthEnabled) System.getenv("MCP_DEV_TOKEN")?.takeIf { it.isNotBlank() } else null
 
-    val filteredServer = createServer(baseUrl, draftsimParserBaseUrl, wizardStatAggregatorBaseUrl, draftsimSearchConfig)
+    val filteredServer = createServer(baseUrl, draftsimParserBaseUrl, wizardStatAggregatorBaseUrl, draftsimSearchConfig, devToken)
 
     when (transport) {
         "stdio" -> runBlocking {

@@ -1,34 +1,26 @@
 package xyz.candycrawler.mcpserver.tools
 
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-fun analyzeTribalDepthSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "tribe",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    """Valid MTG creature subtype to analyze, e.g. "Merfolk", "Elf", "Goblin", "Zombie", "Dragon", "Human", "Kithkin".
+fun analyzeTribalDepthSchema(): ToolSchema = toolSchema(
+    required = listOf("tribe"),
+    props = mapOf(
+        "tribe" to stringProp(
+            """Valid MTG creature subtype to analyze, e.g. "Merfolk", "Elf", "Goblin", "Zombie", "Dragon", "Human", "Kithkin".
                 Must be an exact creature subtype as recognized by MTG rules.
                 Returns: total owned cards, CMC distribution, role breakdown (creatures / kindred spells / tribal support),
                 color spread, whether a lord/commander exists, and deck viability rating.""",
-                )
-            },
-        )
-    },
-    required = listOf("tribe"),
+        ),
+    ),
 )
 
 suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequest): CallToolResult {
@@ -40,7 +32,7 @@ suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequ
             )
 
         val url = "${context.baseUrl}/api/v1/cards/tribal/$tribe"
-        val response = context.httpClient.get(url).body<String>()
+        val response = context.httpClient.get(url).readTextOrFail("GET /api/v1/cards/tribal")
 
         val json = Json.parseToJsonElement(response).jsonObject
 
@@ -86,6 +78,17 @@ suspend fun handleAnalyzeTribalDepth(context: ToolContext, request: CallToolRequ
 
         CallToolResult(content = listOf(TextContent(summary)))
     }.getOrElse { e ->
-        CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+        when (e) {
+            is DownstreamUnauthorizedException -> CallToolResult(
+                content = listOf(
+                    TextContent(
+                        "Your session expired. Claude should refresh automatically — " +
+                            "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                    ),
+                ),
+                isError = true,
+            )
+            else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+        }
     }
 }

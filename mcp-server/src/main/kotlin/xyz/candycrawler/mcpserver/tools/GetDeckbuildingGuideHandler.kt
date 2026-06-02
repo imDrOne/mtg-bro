@@ -7,16 +7,13 @@ import io.modelcontextprotocol.kotlin.sdk.types.ReadResourceResult
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.TextResourceContents
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
-import kotlinx.serialization.json.buildJsonObject
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
 const val DECKBUILDING_GUIDE_RESOURCE_URI = "mtg-bro://guides/deckbuilding-skill.md"
 private const val DECKBUILDING_GUIDE_RESOURCE_PATH = "/guides/deckbuilding/SKILL.md"
 private const val DECKBUILDING_GUIDE_MIME_TYPE = "text/markdown"
 
-fun getDeckbuildingGuideSchema() = ToolSchema(
-    properties = buildJsonObject {},
-    required = emptyList(),
-)
+fun getDeckbuildingGuideSchema(): ToolSchema = toolSchema(props = emptyMap())
 
 fun handleGetDeckbuildingGuide(@Suppress("UNUSED_PARAMETER") request: CallToolRequest? = null): CallToolResult =
     CallToolResult(content = listOf(TextContent(loadDeckbuildingGuide())))

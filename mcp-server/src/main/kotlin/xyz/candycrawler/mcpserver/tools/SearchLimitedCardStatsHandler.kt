@@ -9,104 +9,48 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.arrayProp
+import xyz.candycrawler.mcpserver.tools.schema.integerItem
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.numberProp
+import xyz.candycrawler.mcpserver.tools.schema.stringItem
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 import java.util.Locale
 
 private const val PERCENT_MULTIPLIER = 100
 
-fun searchLimitedCardStatsSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "set_code",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Set code, for example dmu, eoe, fin.")
-            },
-        )
-        put(
-            "match_type",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "17lands event type. Default: QuickDraft. Examples: QuickDraft, Sealed.")
-            },
-        )
-        put(
-            "names",
-            buildJsonObject {
-                put("type", "array")
-                put("description", "Optional exact card names to fetch without loading the whole set.")
-                put("items", buildJsonObject { put("type", "string") })
-            },
-        )
-        put(
-            "mtga_ids",
-            buildJsonObject {
-                put("type", "array")
-                put("description", "Optional MTGA card IDs to fetch without loading the whole set.")
-                put("items", buildJsonObject { put("type", "integer") })
-            },
-        )
-        put(
-            "tiers",
-            buildJsonObject {
-                put("type", "array")
-                put("description", "Optional 17lands card grades: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F.")
-                put("items", buildJsonObject { put("type", "string") })
-            },
-        )
-        put(
-            "min_win_rate",
-            buildJsonObject {
-                put("type", "number")
-                put("description", "Minimum win rate as a decimal in [0, 1], for example 0.58.")
-            },
-        )
-        put(
-            "max_win_rate",
-            buildJsonObject {
-                put("type", "number")
-                put("description", "Maximum win rate as a decimal in [0, 1], for example 0.62.")
-            },
-        )
-        put(
-            "sort",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Sort field: name, mtga_id, win_rate, game_count, drawn_improvement_win_rate. " +
-                        "Default: win_rate.",
-                )
-            },
-        )
-        put(
-            "sort_dir",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Sort direction: asc or desc. Default: desc.")
-            },
-        )
-        put(
-            "page",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Page number (1-based, default 1).")
-            },
-        )
-        put(
-            "page_size",
-            buildJsonObject {
-                put("type", "integer")
-                put("description", "Items per page (default 20, max 100).")
-            },
-        )
-    },
+fun searchLimitedCardStatsSchema(): ToolSchema = toolSchema(
     required = listOf("set_code"),
+    props = mapOf(
+        "set_code" to stringProp("Set code, for example dmu, eoe, fin."),
+        "match_type" to stringProp("17lands event type. Default: QuickDraft. Examples: QuickDraft, Sealed."),
+        "names" to arrayProp(
+            "Optional exact card names to fetch without loading the whole set.",
+            items = stringItem,
+        ),
+        "mtga_ids" to arrayProp(
+            "Optional MTGA card IDs to fetch without loading the whole set.",
+            items = integerItem,
+        ),
+        "tiers" to arrayProp(
+            "Optional 17lands card grades: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F.",
+            items = stringItem,
+        ),
+        "min_win_rate" to numberProp("Minimum win rate as a decimal in [0, 1], for example 0.58."),
+        "max_win_rate" to numberProp("Maximum win rate as a decimal in [0, 1], for example 0.62."),
+        "sort" to stringProp(
+            "Sort field: name, mtga_id, win_rate, game_count, drawn_improvement_win_rate. " +
+                "Default: win_rate.",
+        ),
+        "sort_dir" to stringProp("Sort direction: asc or desc. Default: desc."),
+        "page" to integerProp("Page number (1-based, default 1)."),
+        "page_size" to integerProp("Items per page (default 20, max 100)."),
+    ),
 )
 
 suspend fun handleSearchLimitedCardStats(
@@ -147,7 +91,18 @@ suspend fun handleSearchLimitedCardStats(
         CallToolResult(content = listOf(TextContent(formatLimitedCardStatsResponse(json, setCode, matchType))))
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 internal fun formatLimitedCardStatsResponse(json: JsonObject, setCode: String, matchType: String): String {

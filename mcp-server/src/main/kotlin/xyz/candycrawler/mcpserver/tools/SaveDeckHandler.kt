@@ -4,6 +4,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolRequest
 import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
@@ -18,101 +19,40 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import xyz.candycrawler.mcpserver.tools.schema.arrayProp
+import xyz.candycrawler.mcpserver.tools.schema.integerProp
+import xyz.candycrawler.mcpserver.tools.schema.objectProp
+import xyz.candycrawler.mcpserver.tools.schema.stringProp
+import xyz.candycrawler.mcpserver.tools.schema.toolSchema
 
-private val deckEntryItemSchema = buildJsonObject {
-    put("type", "object")
-    put(
-        "properties",
-        buildJsonObject {
-            put(
-                "setCode",
-                buildJsonObject {
-                    put("type", "string")
-                    put("description", "Set code, e.g. \"lea\", \"m21\"")
-                },
-            )
-            put(
-                "collectorNumber",
-                buildJsonObject {
-                    put("type", "string")
-                    put("description", "Collector number, e.g. \"161\", \"42\"")
-                },
-            )
-            put(
-                "quantity",
-                buildJsonObject {
-                    put("type", "integer")
-                    put("description", "Number of copies (1-4)")
-                },
-            )
-        },
-    )
-    put(
-        "required",
-        buildJsonArray {
-            add(JsonPrimitive("setCode"))
-            add(JsonPrimitive("collectorNumber"))
-            add(JsonPrimitive("quantity"))
-        },
-    )
-}
+private val deckEntryItemSchema = objectProp(
+    properties = mapOf(
+        "setCode" to stringProp("""Set code, e.g. "lea", "m21""""),
+        "collectorNumber" to stringProp("""Collector number, e.g. "161", "42""""),
+        "quantity" to integerProp("Number of copies (1-4)"),
+    ),
+    required = listOf("setCode", "collectorNumber", "quantity"),
+)
 
-fun saveDeckSchema() = ToolSchema(
-    properties = buildJsonObject {
-        put(
-            "name",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Deck name")
-            },
-        )
-        put(
-            "format",
-            buildJsonObject {
-                put("type", "string")
-                put(
-                    "description",
-                    "Deck format: STANDARD (mainboard >= 60 cards), SEALED or DRAFT (mainboard >= 40 cards)",
-                )
-                put(
-                    "enum",
-                    buildJsonArray {
-                        add(JsonPrimitive("STANDARD"))
-                        add(JsonPrimitive("SEALED"))
-                        add(JsonPrimitive("DRAFT"))
-                    },
-                )
-            },
-        )
-        put(
-            "comment",
-            buildJsonObject {
-                put("type", "string")
-                put("description", "Optional comment about the deck (tactics, strategy, etc.)")
-            },
-        )
-        put(
-            "mainboard",
-            buildJsonObject {
-                put("type", "array")
-                put(
-                    "description",
-                    "Mainboard cards. Use setCode and collectorNumber from search_my_cards results " +
-                        "(shown as \"(set #num)\"). Max 4 copies per card.",
-                )
-                put("items", deckEntryItemSchema)
-            },
-        )
-        put(
-            "sideboard",
-            buildJsonObject {
-                put("type", "array")
-                put("description", "Sideboard cards (optional). Same format as mainboard.")
-                put("items", deckEntryItemSchema)
-            },
-        )
-    },
+fun saveDeckSchema(): ToolSchema = toolSchema(
     required = listOf("name", "format", "mainboard"),
+    props = mapOf(
+        "name" to stringProp("Deck name"),
+        "format" to stringProp(
+            "Deck format: STANDARD (mainboard >= 60 cards), SEALED or DRAFT (mainboard >= 40 cards)",
+            enum = listOf("STANDARD", "SEALED", "DRAFT"),
+        ),
+        "comment" to stringProp("Optional comment about the deck (tactics, strategy, etc.)"),
+        "mainboard" to arrayProp(
+            "Mainboard cards. Use setCode and collectorNumber from search_my_cards results " +
+                "(shown as \"(set #num)\"). Max 4 copies per card.",
+            items = deckEntryItemSchema,
+        ),
+        "sideboard" to arrayProp(
+            "Sideboard cards (optional). Same format as mainboard.",
+            items = deckEntryItemSchema,
+        ),
+    ),
 )
 
 suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): CallToolResult = runCatching {
@@ -139,7 +79,18 @@ suspend fun handleSaveDeck(context: ToolContext, request: CallToolRequest): Call
         }
     }
 }.getOrElse { e ->
-    CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    when (e) {
+        is DownstreamUnauthorizedException -> CallToolResult(
+            content = listOf(
+                TextContent(
+                    "Your session expired. Claude should refresh automatically — " +
+                        "if you see this twice in a row, disconnect and reconnect the mtg-bro connector.",
+                ),
+            ),
+            isError = true,
+        )
+        else -> CallToolResult(content = listOf(TextContent("Error: ${e.message}")), isError = true)
+    }
 }
 
 private suspend fun saveDeck(
@@ -164,6 +115,8 @@ private suspend fun saveDeck(
     }
 
     val responseText = response.bodyAsText()
+
+    if (response.status == HttpStatusCode.Unauthorized) throw DownstreamUnauthorizedException("POST /decks")
 
     return when {
         response.status.value == UNPROCESSABLE_ENTITY_STATUS -> {

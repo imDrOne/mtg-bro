@@ -80,7 +80,7 @@ class SearchLimitedCardStatsHandlerTest {
     }
 
     @Test
-    fun `401 empty body returns isError=true with HTTP 401 and endpoint label`() = runBlocking {
+    fun `401 returns isError=true with session-expired message`() = runBlocking {
         val client = HttpClient(MockEngine) {
             engine {
                 addHandler { _ ->
@@ -93,8 +93,7 @@ class SearchLimitedCardStatsHandlerTest {
 
         assertTrue(result.isError == true, "Expected isError=true")
         val text = resultText(result)
-        assertTrue("HTTP 401" in text, "Expected 'HTTP 401' in error text. Got:\n$text")
-        assertTrue("wizard-stat-aggregator" in text, "Expected 'wizard-stat-aggregator' in error text. Got:\n$text")
+        assertTrue("session expired" in text, "Expected 'session expired' in error text. Got:\n$text")
     }
 
     @Test

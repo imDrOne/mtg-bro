@@ -57,6 +57,10 @@ class AuthorizationServerConfig(
                     .authorizationServerMetadataEndpoint { metadataEndpoint ->
                         metadataEndpoint.authorizationServerMetadataCustomizer { builder ->
                             builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                            builder.scope("openid")
+                            builder.scope("profile")
+                            builder.scope("decks:read")
+                            builder.scope("offline_access")
                         }
                     }
                     .oidc { oidc ->
@@ -64,6 +68,10 @@ class AuthorizationServerConfig(
                         oidc.providerConfigurationEndpoint { providerConfig ->
                             providerConfig.providerConfigurationCustomizer { builder ->
                                 builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                                builder.scope("openid")
+                                builder.scope("profile")
+                                builder.scope("decks:read")
+                                builder.scope("offline_access")
                             }
                         }
                     }
@@ -117,7 +125,7 @@ class AuthorizationServerConfig(
             val email = context.getPrincipal<Authentication>().name
             val user = userRepository.findByEmail(email) ?: return@OAuth2TokenCustomizer
             val roles = userRoleRepository.findByUserId(user.id!!)
-            context.claims.claim("user_id", user.id)
+            context.claims.claim("user_id", user.id?.toString())
             context.claims.claim("roles", roles.map { it.name })
             val permissions = apiPermissionRepository.findByRoles(roles)
             context.claims.claim("permissions", permissions.map { it.name })

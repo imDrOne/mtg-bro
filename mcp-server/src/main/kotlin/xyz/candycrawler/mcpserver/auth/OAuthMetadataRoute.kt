@@ -18,6 +18,7 @@ fun Route.oauthMetadataRoutes(mcpBaseUrl: String, authIssuerUri: String) {
                 add("openid")
                 add("profile")
                 add("decks:read")
+                add("offline_access")
             }
             putJsonArray("bearer_methods_supported") { add("header") }
         }
