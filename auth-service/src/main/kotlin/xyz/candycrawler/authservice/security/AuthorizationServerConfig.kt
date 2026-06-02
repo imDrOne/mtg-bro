@@ -57,6 +57,10 @@ class AuthorizationServerConfig(
                     .authorizationServerMetadataEndpoint { metadataEndpoint ->
                         metadataEndpoint.authorizationServerMetadataCustomizer { builder ->
                             builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                            builder.scope("openid")
+                            builder.scope("profile")
+                            builder.scope("decks:read")
+                            builder.scope("offline_access")
                         }
                     }
                     .oidc { oidc ->
@@ -64,6 +68,10 @@ class AuthorizationServerConfig(
                         oidc.providerConfigurationEndpoint { providerConfig ->
                             providerConfig.providerConfigurationCustomizer { builder ->
                                 builder.clientRegistrationEndpoint("$issuerUri/connect/register")
+                                builder.scope("openid")
+                                builder.scope("profile")
+                                builder.scope("decks:read")
+                                builder.scope("offline_access")
                             }
                         }
                     }
